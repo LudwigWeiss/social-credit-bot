@@ -83,10 +83,25 @@ export class MessageContextManager {
       .slice(-count); // Get last N messages
   }
 
+  getInterleavedRecentContext(
+    guildId: string,
+    channelId: string,
+    count: number = 5
+  ): MessageContext[] {
+    const channelKey = `${guildId}-${channelId}`;
+    const history = this.channelHistory.get(channelKey) || [];
+    const now = Date.now();
+
+    return history
+      .filter((msg) => now - msg.timestamp < this.CONTEXT_WINDOW_MS)
+      .slice(-count);
+  }
+
   buildContextString(
     userMessages: string[],
     recentContext: MessageContext[],
-    currentMessage: string
+    currentMessage: string,
+    authorUsername: string
   ): string {
     let contextString = "";
 
@@ -102,13 +117,13 @@ export class MessageContextManager {
     // Add user's recent messages if multiple
     if (userMessages.length > 1) {
       contextString += "Недавние сообщения пользователя:\n";
-      userMessages.slice(0, -1).forEach((msg, index) => {
-        contextString += `${index + 1}. "${msg}"\n`;
+      userMessages.slice(0, -1).forEach((msg) => {
+        contextString += `${authorUsername}: "${msg}"\n`;
       });
       contextString += "\n";
     }
 
-    contextString += `Текущее сообщение для анализа: "${currentMessage}"`;
+    contextString += `Текущее сообщение для анализа от ${authorUsername}: "${currentMessage}"`;
 
     return contextString;
   }

@@ -7,6 +7,7 @@ interface UserCooldown {
     content: string;
     timestamp: number;
     messageId: string;
+    channelId: string;
   }[];
   totalMessagesInWindow: number;
   windowStart: number;
@@ -18,7 +19,8 @@ export class RateLimitManager {
   private analysisCallback?: (
     userId: string,
     guildId: string,
-    messages: string[]
+    messages: string[],
+    channelId: string
   ) => Promise<void>;
 
   // Configuration
@@ -38,7 +40,8 @@ export class RateLimitManager {
     callback: (
       userId: string,
       guildId: string,
-      messages: string[]
+      messages: string[],
+      channelId: string
     ) => Promise<void>
   ): void {
     this.analysisCallback = callback;
@@ -83,7 +86,8 @@ export class RateLimitManager {
     userId: string,
     guildId: string,
     messageContent: string,
-    messageId: string
+    messageId: string,
+    channelId: string
   ): {
     shouldAnalyze: boolean;
     reason: string;
@@ -130,6 +134,7 @@ export class RateLimitManager {
       content: messageContent,
       timestamp: now,
       messageId,
+      channelId,
     });
 
     // Start buffer timer if this is the first message in buffer
@@ -185,6 +190,8 @@ export class RateLimitManager {
 
     if (cooldown.messageBuffer.length > 0) {
       const messagesToAnalyze = cooldown.messageBuffer.map((m) => m.content);
+      const channelId =
+        cooldown.messageBuffer[cooldown.messageBuffer.length - 1].channelId;
 
       // Clear buffer and timer
       this.clearBufferTimer(cooldown);
@@ -193,7 +200,7 @@ export class RateLimitManager {
 
       // Trigger analysis callback if available
       if (this.analysisCallback) {
-        this.analysisCallback(userId, guildId, messagesToAnalyze).catch(
+        this.analysisCallback(userId, guildId, messagesToAnalyze, channelId).catch(
           (error) => {
             Logger.error("Error in buffer flush analysis callback:", error);
           }

@@ -8,6 +8,7 @@ import {
   REST,
   Routes,
   ChannelType,
+  TextChannel,
 } from "discord.js";
 import { Mistral } from "@mistralai/mistralai";
 import * as dotenv from "dotenv";
@@ -113,7 +114,8 @@ class SocialCreditBot {
       userId,
       guildId,
       sanitizedContent,
-      message.id
+      message.id,
+      message.channelId
     );
 
     if (!rateLimitResult.shouldAnalyze) {
@@ -128,12 +130,12 @@ class SocialCreditBot {
 
     try {
       // Get context for analysis
-      const recentContext = this.messageContextManager.getRecentContext(
-        guildId,
-        message.channelId,
-        userId,
-        3
-      );
+      const recentContext =
+        this.messageContextManager.getInterleavedRecentContext(
+          guildId,
+          message.channelId,
+          5
+        );
 
       const messagesToAnalyze = rateLimitResult.bufferedMessages || [
         sanitizedContent,
@@ -141,7 +143,8 @@ class SocialCreditBot {
       const analysis = await this.analyzeMessageWithContext(
         messagesToAnalyze,
         recentContext,
-        sanitizedContent
+        sanitizedContent,
+        message.author.username
       );
 
       await this.processAnalysis(message, analysis, sanitizedContent);
@@ -153,12 +156,14 @@ class SocialCreditBot {
   private async analyzeMessageWithContext(
     userMessages: string[],
     recentContext: MessageContextEntry[],
-    currentMessage: string
+    currentMessage: string,
+    authorUsername: string
   ): Promise<MessageAnalysisResult> {
     const contextString = this.messageContextManager.buildContextString(
       userMessages,
       recentContext,
-      currentMessage
+      currentMessage,
+      authorUsername
     );
 
     const prompt = `Ты - Верховный ИИ Китайской Системы Социального Рейтинга (мем версия). Проанализируй сообщения пользователя с учётом контекста и определи, хорошо ли это, плохо или нейтрально для социального рейтинга.
@@ -507,22 +512,32 @@ ${contextString}
   private async analyzeBufferedMessages(
     userId: string,
     guildId: string,
-    messages: string[]
+    messages: string[],
+    channelId: string
   ): Promise<void> {
     try {
+      const channel = this.client.channels.cache.get(channelId);
+      if (!channel || !channel.isTextBased()) {
+        Logger.error(
+          `Buffered analysis: Channel ${channelId} not found or not a text channel.`
+        );
+        return;
+      }
       // Get context for analysis
-      const recentContext = this.messageContextManager.getRecentContext(
-        guildId,
-        "buffered-analysis", // Use a placeholder channel ID for buffered analysis
-        userId,
-        3
-      );
+      const recentContext =
+        this.messageContextManager.getInterleavedRecentContext(
+          guildId,
+          channelId,
+          5
+        );
 
       const currentMessage = messages[messages.length - 1];
+      const user = await this.client.users.fetch(userId);
       const analysis = await this.analyzeMessageWithContext(
         messages,
         recentContext,
-        currentMessage
+        currentMessage,
+        user.username
       );
 
       // For buffered analysis, we process the score change directly without creating a mock message
@@ -563,6 +578,20 @@ ${contextString}
       Logger.info(
         `Buffered analysis completed for user ${userId}: ${analysis.verdict} (${analysis.score_change}) → New score: ${newScore}`
       );
+
+      // Send response to the channel where the message was buffered
+      const embed = this.createResponseEmbed(
+        {
+          username: user.username,
+          displayAvatarURL: () => user.displayAvatarURL(),
+        },
+        analysis,
+        newScore
+      );
+
+      if (channel instanceof TextChannel) {
+        await channel.send({ embeds: [embed] });
+      }
     } catch (error) {
       Logger.error("Error processing buffered messages:", error);
     }
