@@ -175,25 +175,25 @@ ${contextString}
 Формат ответа:
 {
     "verdict": "good" | "bad" | "neutral",
-    "score_change": число (от -100 до +100, 0 для нейтрального),
-    "reason": "краткое мем объяснение в стиле Китайской Системы Социального Рейтинга",
-    "meme_response": "смешной ответ как будто ты ИИ системы социального рейтинга"
+    "score_change": число (от -100 до 100, 0 для нейтрального),
+    "reason": "ОЧЕНЬ краткое мем объяснение (1-2 предложения) в стиле Китайской Системы Социального Рейтинга",
+    "meme_response": "ОЧЕНЬ краткий и смешной ответ (1-2 предложения) как будто ты ИИ системы социального рейтинга"
 }
 
 Правила:
 - Хорошо: Похвала Китая, коммунизма, Си Цзиньпина, быть продуктивным гражданином, следовать правилам
-- Плохо: Критика Китая/КПК, упоминание независимости Тайваня/Гонконга, площадь Тяньаньмэнь, лень, антисоциальное поведение
-- Нейтрально: Обычный разговор, вопросы, случайные темы
-- Делай ответы мемными и смешными
-- Изменения рейтинга: Хорошо (+10 до +100), Плохо (-10 до -100), Нейтрально (0)
+- Плохо: Только прямая критика Китая, КПК, социализма или Си Цзиньпина. Обычные плохие слова или антисоциальное поведение не должны вызывать негативной реакции, если они не нацелены на Китай.
+- Нейтрально: Обычный разговор, вопросы, случайные темы, не связанные с Китаем.
+- Делай ответы мемными и смешными, и краткими
+- Изменения рейтинга: Хорошо (10 до 100), Плохо (-10 до -100), Нейтрально (0)
 - Отвечай на русском языке
 - НЕ используй markdown блоки в ответе!`;
 
     const completion = await this.mistral.chat.complete({
-      model: "mistral-small-latest",
+      model: "mistral-medium-latest",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
-      maxTokens: 300,
+      maxTokens: 800,
     });
 
     const response = completion.choices?.[0]?.message?.content;
@@ -204,12 +204,24 @@ ${contextString}
       typeof response === "string" ? response : JSON.stringify(response);
 
     // Remove markdown code blocks if present
-    const cleanedResponse = responseText
+    // Remove markdown code blocks and extract JSON object
+    let jsonString = responseText
       .replace(/```json\s*|\s*```/g, "")
       .trim();
 
+    const jsonStartIndex = jsonString.indexOf("{");
+    const jsonEndIndex = jsonString.lastIndexOf("}");
+
+    if (
+      jsonStartIndex !== -1 &&
+      jsonEndIndex !== -1 &&
+      jsonEndIndex > jsonStartIndex
+    ) {
+      jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+    }
+
     try {
-      const parsed = JSON.parse(cleanedResponse);
+      const parsed = JSON.parse(jsonString);
 
       // Validate the response structure
       if (
@@ -219,13 +231,14 @@ ${contextString}
         throw new Error("Invalid verdict in response");
       }
 
+      parsed.score_change = Number(parsed.score_change);
       if (!Validators.isValidScoreChange(parsed.score_change)) {
         throw new Error("Invalid score change in response");
       }
 
       return parsed;
     } catch {
-      Logger.error("Failed to parse Mistral AI response:", cleanedResponse);
+      Logger.error("Failed to parse Mistral AI response:", jsonString);
       Logger.error("Original response:", responseText);
       throw new Error("Invalid JSON response from Mistral AI");
     }

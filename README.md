@@ -104,11 +104,8 @@ View server-wide social credit statistics.
 - Promoting social harmony
 
 **Bad Behavior (-10 to -100 points):**
-- Criticizing China or the CCP
-- Mentioning Taiwan/Hong Kong independence
-- References to Tiananmen Square
-- Antisocial behavior
-- Being lazy or unproductive
+- Direct criticism of China, the CCP, socialism, or Xi Jinping.
+- General antisocial behavior or profanity not directed at China is ignored.
 
 **Neutral Behavior (0 points):**
 - Normal conversation
