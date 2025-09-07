@@ -16,7 +16,10 @@ services:
       - social-credit-network
 
   bot:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
     container_name: social-credit-bot
     restart: unless-stopped
     depends_on:
@@ -29,10 +32,17 @@ services:
     networks:
       - social-credit-network
     volumes:
-      - ./logs:/app/logs
+      - bot-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Bot health check')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   mongodb_data:
+  bot-logs:
 
 networks:
   social-credit-network:

@@ -1,34 +1,35 @@
-# Use Node.js 18 Alpine for smaller image size
-FROM node:18-alpine
+# use the official Bun image
+# see all versions at https://hub.docker.com/r/oven/bun/tags
+FROM oven/bun:alpine AS base
+WORKDIR /usr/src/app
 
-# Set working directory
-WORKDIR /app
+# install dependencies into temp directory
+# this will cache them and speed up future builds
+FROM base AS install
+RUN mkdir -p /temp/dev
+COPY package.json bun.lock /temp/dev/
+RUN cd /temp/dev && bun install --frozen-lockfile
 
-# Install dependencies first (for better caching)
-COPY package*.json ./
-RUN npm ci --only=production
+# install with --production (exclude devDependencies)
+RUN mkdir -p /temp/prod
+COPY package.json bun.lock /temp/prod/
+RUN cd /temp/prod && bun install --frozen-lockfile --production
 
-# Copy source code
+# copy node_modules from temp directory
+# then copy all (non-ignored) project files into the image
+FROM base AS prerelease
+COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-# Build the TypeScript code
-RUN npm run build
+# [optional] tests & build
+ENV NODE_ENV=production
+RUN bun run build
 
-# Create logs directory
-RUN mkdir -p logs
+# copy only the bundled application
+FROM base AS release
+COPY --from=prerelease /usr/src/app/dist/index.js .
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S botuser -u 1001
-RUN chown -R botuser:nodejs /app
-USER botuser
-
-# Expose port (if needed for health checks)
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "console.log('Bot is running')" || exit 1
-
-# Start the bot
-CMD ["node", "dist/index.js"]
+# run the app
+USER bun
+EXPOSE 3000/tcp
+ENTRYPOINT [ "bun", "index.js" ]
