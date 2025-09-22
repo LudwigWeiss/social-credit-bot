@@ -205,9 +205,7 @@ ${contextString}
 
     // Remove markdown code blocks if present
     // Remove markdown code blocks and extract JSON object
-    let jsonString = responseText
-      .replace(/```json\s*|\s*```/g, "")
-      .trim();
+    let jsonString = responseText.replace(/```json\s*|\s*```/g, "").trim();
 
     const jsonStartIndex = jsonString.indexOf("{");
     const jsonEndIndex = jsonString.lastIndexOf("}");

@@ -200,11 +200,14 @@ export class RateLimitManager {
 
       // Trigger analysis callback if available
       if (this.analysisCallback) {
-        this.analysisCallback(userId, guildId, messagesToAnalyze, channelId).catch(
-          (error) => {
-            Logger.error("Error in buffer flush analysis callback:", error);
-          }
-        );
+        this.analysisCallback(
+          userId,
+          guildId,
+          messagesToAnalyze,
+          channelId
+        ).catch((error) => {
+          Logger.error("Error in buffer flush analysis callback:", error);
+        });
       }
 
       Logger.debug(
