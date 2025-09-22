@@ -12,6 +12,27 @@ A meme-themed Discord bot that analyzes messages and assigns social credit score
 - **Penalties & Privileges**: Different treatment based on your score
 - **Admin Controls**: Set which channels to monitor
 
+## Container Registry
+
+This project uses GitHub Container Registry (GHCR) for Docker images. The GitHub Actions workflow automatically builds and pushes images when code is pushed to main/develop branches or when tags are created.
+
+### Using Pre-built Images
+
+1. Copy `.env.example` to `.env`
+2. Set `GITHUB_REPOSITORY` to match your repository (e.g., `username/discord-social-credit-bot`)
+3. Run with docker-compose: `docker-compose up -d`
+
+### Building Locally
+
+If you need to build locally instead of using GHCR:
+
+```yaml
+# In docker-compose.yml, replace the image line with:
+build: 
+  context: .
+  dockerfile: Dockerfile
+```
+
 ## 🚀 Setup
 
 ### Prerequisites
