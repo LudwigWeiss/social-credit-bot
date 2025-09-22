@@ -16,7 +16,6 @@ dist/
 
 # Data files
 data/
-*.json
 
 # Logs
 logs/
