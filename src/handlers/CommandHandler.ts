@@ -7,10 +7,12 @@ import {
 } from "discord.js";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
 import { DatabaseManager } from "../managers/DatabaseManager.js";
+import { EffectManager } from "../managers/EffectManager.js";
 import { MemeResponses } from "../utils/MemeResponses.js";
 import { RateLimitManager } from "../managers/RateLimitManager.js";
 import { MessageContextManager } from "../managers/MessageContextManager.js";
 import { Logger } from "../utils/Logger.js";
+import { CONFIG } from "../config.js";
 
 export class CommandHandler {
   private monitoredChannels: Map<string, Set<string>> = new Map(); // guildId -> Set of channelIds
@@ -18,6 +20,7 @@ export class CommandHandler {
   constructor(
     private socialCreditManager: SocialCreditManager,
     private databaseManager: DatabaseManager,
+    private effectManager: EffectManager,
     private rateLimitManager?: RateLimitManager,
     private messageContextManager?: MessageContextManager
   ) {
@@ -64,6 +67,27 @@ export class CommandHandler {
           break;
         case "remove-monitor-channel":
           await this.handleRemoveMonitorChannelCommand(interaction);
+          break;
+        case "redeem-myself":
+          await this.handleRedeemMyselfCommand(interaction);
+          break;
+        case "enforce-harmony":
+          await this.handleEnforceHarmonyCommand(interaction);
+          break;
+        case "claim-daily":
+          await this.handleClaimDailyCommand(interaction);
+          break;
+        case "spread-propaganda":
+          await this.handleSpreadPropagandaCommand(interaction);
+          break;
+        case "praise-bot":
+          await this.handlePraiseBotCommand(interaction);
+          break;
+        case "report-mistake":
+          await this.handleReportMistakeCommand(interaction);
+          break;
+        case "work-for-the-party":
+          await this.handleWorkForThePartyCommand(interaction);
           break;
         default:
           await interaction.reply({
@@ -115,14 +139,15 @@ export class CommandHandler {
       })
       .setTimestamp();
 
-    // Add penalty/privilege info if applicable
+    // Add active effects info
+    const activeEffects = this.effectManager.getActiveEffects(targetUser.id);
     const penaltyLevel = this.socialCreditManager.getPenaltyLevel(score);
     const privilegeLevel = this.socialCreditManager.getPrivilegeLevel(score);
 
     if (penaltyLevel) {
       const penalty = MemeResponses.getPenalties(penaltyLevel);
       embed.addFields({
-        name: "⚠️ Active Penalties",
+        name: "⚠️ Активные Наказания",
         value: penalty.memeText,
         inline: false,
       });
@@ -131,9 +156,41 @@ export class CommandHandler {
     if (privilegeLevel) {
       const privilege = MemeResponses.getPrivileges(privilegeLevel);
       embed.addFields({
-        name: "🎁 Active Privileges",
+        name: "🎁 Активные Привилегии",
         value: privilege.memeText,
         inline: false,
+      });
+    }
+
+    // Add active effects
+    if (activeEffects.length > 0) {
+      let effectsText = "";
+      for (const effect of activeEffects) {
+        const timeLeft = Math.ceil((effect.expiresAt.getTime() - Date.now()) / (60 * 1000));
+        const effectName = this.getEffectDisplayName(effect.effectType);
+        effectsText += `• ${effectName} (${timeLeft} мин)\n`;
+      }
+      embed.addFields({
+        name: "🔄 Активные Эффекты",
+        value: effectsText || "Нет активных эффектов",
+        inline: false,
+      });
+    }
+
+    // Add daily claim status
+    const lastClaim = activeEffects.find(e => e.effectType === "DAILY_CLAIM_RESET" && e.metadata?.type === "daily_claim");
+    if (lastClaim) {
+      const timeLeft = Math.ceil((lastClaim.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000));
+      embed.addFields({
+        name: "⏰ Ежедневный Бонус",
+        value: `Доступен через ${timeLeft} часов`,
+        inline: true,
+      });
+    } else {
+      embed.addFields({
+        name: "⏰ Ежедневный Бонус",
+        value: "Доступен сейчас!",
+        inline: true,
       });
     }
 
@@ -148,6 +205,12 @@ export class CommandHandler {
 
     let leaderboard;
     let title;
+    let embedColor = 0xffd700;
+    let embedTitle = "🏆 ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА 🏆";
+
+    // Check for active events that affect appearance
+    // TODO: Implement event tracking for visual flair
+    // For now, keep default appearance
 
     if (scope === "global") {
       leaderboard = await this.socialCreditManager.getGlobalLeaderboard(10);
@@ -170,8 +233,8 @@ export class CommandHandler {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(0xffd700)
-      .setTitle("🏆 ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА 🏆")
+      .setColor(embedColor)
+      .setTitle(embedTitle)
       .setDescription(title)
       .setTimestamp();
 
@@ -362,6 +425,413 @@ export class CommandHandler {
     await interaction.reply({ embeds: [embed] });
   }
 
+  private async handleClaimDailyCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    // Check if already claimed today
+    const lastClaim = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "daily_claim"
+    );
+    if (lastClaim) {
+      const timeLeft = lastClaim.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const hoursLeft = Math.ceil(timeLeft / (60 * 60 * 1000));
+        await interaction.reply({
+          content: `⏰ Вы уже получили ежедневный бонус сегодня! Следующий бонус через ${hoursLeft} часов.`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // Get user's rank to determine bonus amount
+    const userScore = await this.socialCreditManager.getUserScore(userId, guildId);
+    const rankInfo = this.socialCreditManager.getScoreRank(userScore);
+
+    let bonusAmount = 0;
+    if (userScore >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
+      bonusAmount = CONFIG.DAILY_CLAIMS.SUPREME_CITIZEN;
+    } else if (userScore >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
+      bonusAmount = CONFIG.DAILY_CLAIMS.MODEL_CITIZEN;
+    } else if (userScore >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.GOOD_CITIZEN) {
+      bonusAmount = CONFIG.DAILY_CLAIMS.GOOD_CITIZEN;
+    } else {
+      await interaction.reply({
+        content: "❌ Недостаточный социальный рейтинг для получения ежедневного бонуса! Повысьте свой рейтинг.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Apply the bonus
+    const newScore = await this.socialCreditManager.updateScore(
+      userId,
+      guildId,
+      bonusAmount,
+      `Ежедневный бонус Партии (${rankInfo.rank})`,
+      interaction.user.username
+    );
+
+    // Set claim cooldown
+    await this.effectManager.applyEffect(
+      userId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.EFFECT_DURATIONS.DAILY_CLAIM_RESET,
+      undefined,
+      { type: "daily_claim" }
+    );
+
+    const embed = new EmbedBuilder()
+      .setColor(0x00ff00)
+      .setTitle("🎁 ЕЖЕДНЕВНЫЙ БОНУС ПАРТИИ")
+      .setDescription(
+        `**Гражданин ${interaction.user.username}!**\n\n` +
+        `Партия благосклонна к вам сегодня! Вы получили бонус за вашу лояльность.`
+      )
+      .addFields(
+        { name: "🏅 Звание", value: rankInfo.rank, inline: true },
+        { name: "💰 Бонус", value: `+${bonusAmount}`, inline: true },
+        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+      )
+      .setFooter({ text: "Партия заботится о своих лучших гражданах! 🇨🇳" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  private async handleSpreadPropagandaCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    // Check if user has high enough score
+    const userScore = await this.socialCreditManager.getUserScore(userId, guildId);
+    if (userScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
+      await interaction.reply({
+        content: `❌ Недостаточный социальный рейтинг! Требуется ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN}+ для распространения пропаганды.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Check cooldown
+    const lastPropaganda = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "propaganda_cooldown"
+    );
+    if (lastPropaganda) {
+      const timeLeft = lastPropaganda.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const hoursLeft = Math.ceil(timeLeft / (60 * 60 * 1000));
+        await interaction.reply({
+          content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим распространением пропаганды!`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // Select random propaganda image
+    const imageUrl = CONFIG.PROPAGANDA_IMAGES[
+      Math.floor(Math.random() * CONFIG.PROPAGANDA_IMAGES.length)
+    ];
+
+    // Create embed with propaganda
+    const embed = new EmbedBuilder()
+      .setColor(0xffd700)
+      .setTitle("🇨🇳 СЛАВА ПАРТИИ! 🇨🇳")
+      .setDescription(
+        `**${interaction.user.username}** напоминает вам о величии Партии!\n\n` +
+        `*"Социальная гармония достигается через единство под руководством Партии!"*`
+      )
+      .setImage(imageUrl)
+      .setFooter({ text: "Партия всегда права! 中华人民共和国万岁!" })
+      .setTimestamp();
+
+    // Send to current channel
+    await interaction.reply({ embeds: [embed] });
+
+    // Apply bonus
+    const newScore = await this.socialCreditManager.updateScore(
+      userId,
+      guildId,
+      CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS,
+      "Распространение славной пропаганды Партии",
+      interaction.user.username
+    );
+
+    // Set cooldown
+    await this.effectManager.applyEffect(
+      userId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.COOLDOWNS.SPREAD_PROPAGANDA,
+      undefined,
+      { type: "propaganda_cooldown" }
+    );
+
+    // Send confirmation
+    const confirmEmbed = new EmbedBuilder()
+      .setColor(0x00ff00)
+      .setTitle("📢 ПРОПАГАНДА РАСПРОСТРАНЕНА!")
+      .setDescription(
+        `**Спасибо за вашу преданность, гражданин ${interaction.user.username}!**\n\n` +
+        `Партия ценит вашу помощь в распространении истины.`
+      )
+      .addFields(
+        { name: "💰 Бонус", value: `+${CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS}`, inline: true },
+        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+      )
+      .setFooter({ text: "Продолжайте служить Партии! 👁️" })
+      .setTimestamp();
+
+    await interaction.followUp({ embeds: [confirmEmbed], ephemeral: true });
+  }
+
+  private async handlePraiseBotCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    // Check cooldown
+    const lastPraise = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "praise_cooldown"
+    );
+    if (lastPraise) {
+      const timeLeft = lastPraise.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
+        await interaction.reply({
+          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующей похвалой бота!`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // Apply small bonus
+    const newScore = await this.socialCreditManager.updateScore(
+      userId,
+      guildId,
+      CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS,
+      "Похвала работе системы социального рейтинга",
+      interaction.user.username
+    );
+
+    // Set cooldown
+    await this.effectManager.applyEffect(
+      userId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.COOLDOWNS.PRAISE_BOT,
+      undefined,
+      { type: "praise_cooldown" }
+    );
+
+    const embed = new EmbedBuilder()
+      .setColor(0x00ff00)
+      .setTitle("🙏 СПАСИБО ЗА ПОХВАЛУ!")
+      .setDescription(
+        `**Гражданин ${interaction.user.username}!**\n\n` +
+        `Партия ценит вашу поддержку системы социального рейтинга!`
+      )
+      .addFields(
+        { name: "💰 Бонус", value: `+${CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS}`, inline: true },
+        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+      )
+      .setFooter({ text: "Партия всегда стремится к совершенству! 👁️" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  private async handleReportMistakeCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    // Check cooldown
+    const lastReport = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "report_cooldown"
+    );
+    if (lastReport) {
+      const timeLeft = lastReport.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
+        await interaction.reply({
+          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующим отчётом об ошибке!`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // For now, just acknowledge the report and apply minor penalty
+    // In a real implementation, this could log to a database for review
+    const newScore = await this.socialCreditManager.updateScore(
+      userId,
+      guildId,
+      CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY,
+      "Отчёт об ошибке в анализе системы социального рейтинга",
+      interaction.user.username
+    );
+
+    // Set cooldown
+    await this.effectManager.applyEffect(
+      userId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.COOLDOWNS.REPORT_MISTAKE,
+      undefined,
+      { type: "report_cooldown" }
+    );
+
+    const embed = new EmbedBuilder()
+      .setColor(0xffa500)
+      .setTitle("📝 ОТЧЁТ ОБ ОШИБКЕ ЗАРЕГИСТРИРОВАН")
+      .setDescription(
+        `**Гражданин ${interaction.user.username}!**\n\n` +
+        `Ваш отчёт об ошибке в работе системы социального рейтинга принят к рассмотрению. ` +
+        `Партия благодарит за бдительность, но напоминает о необходимости осторожности в обвинениях.`
+      )
+      .addFields(
+        { name: "⚠️ Штраф", value: `${CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY}`, inline: true },
+        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+      )
+      .setFooter({ text: "Партия рассмотрит ваш отчёт! 📋" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+
+    // Log the report for manual review
+    Logger.info(`Mistake reported by user ${userId} in guild ${guildId}`);
+  }
+
+  private async handleWorkForThePartyCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    // Check cooldown
+    const lastWork = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "work_cooldown"
+    );
+    if (lastWork) {
+      const timeLeft = lastWork.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
+        await interaction.reply({
+          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующей работой для Партии!`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // Select random task
+    const task = CONFIG.WORK_TASKS[Math.floor(Math.random() * CONFIG.WORK_TASKS.length)];
+
+    const embed = new EmbedBuilder()
+      .setColor(0xffa500)
+      .setTitle("⚒️ РАБОТА ДЛЯ ПАРТИИ")
+      .setDescription(
+        `**Гражданин ${interaction.user.username}!**\n\n` +
+        `Партия нуждается в вашей помощи! Выполните задание:\n\n` +
+        `**${task.question}**\n\n` +
+        `⏱️ У вас есть 60 секунд!`
+      )
+      .setFooter({ text: "Партия ценит вашу преданность! 👁️" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+
+    // Set cooldown
+    await this.effectManager.applyEffect(
+      userId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.COOLDOWNS.WORK_FOR_PARTY,
+      undefined,
+      { type: "work_cooldown" }
+    );
+
+    // Wait for response
+    const filter = (m: any) => m.author.id === userId && m.content.trim() === task.answer;
+
+    try {
+      const channel = interaction.channel;
+      if (!channel || !channel.isTextBased()) {
+        throw new Error("Invalid channel");
+      }
+
+      const collector = (channel as any).createMessageCollector({
+        filter,
+        max: 1,
+        time: 60000
+      });
+
+      const collected: any[] = await new Promise((resolve) => {
+        collector.on('collect', (message: any) => {
+          resolve([message]);
+        });
+        collector.on('end', (collected: any, reason: string) => {
+          if (reason === 'time') {
+            resolve([]);
+          }
+        });
+      });
+
+      if (collected && collected.length > 0) {
+        // Success
+        const newScore = await this.socialCreditManager.updateScore(
+          userId,
+          guildId,
+          CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS,
+          "Успешное выполнение работы для Партии",
+          interaction.user.username
+        );
+
+        const successEmbed = new EmbedBuilder()
+          .setColor(0x00ff00)
+          .setTitle("✅ РАБОТА ВЫПОЛНЕНА!")
+          .setDescription(
+            `**Отличная работа, гражданин ${interaction.user.username}!**\n\n` +
+            `Партия благодарна за вашу преданность.`
+          )
+          .addFields(
+            { name: "💰 Награда", value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS}`, inline: true },
+            { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+          )
+          .setFooter({ text: "Продолжайте служить Партии! 🇨🇳" })
+          .setTimestamp();
+
+        await interaction.followUp({ embeds: [successEmbed] });
+      } else {
+        // No reward for failure, just inform
+        const failureEmbed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setTitle("❌ ЗАДАНИЕ НЕ ВЫПОЛНЕНО")
+          .setDescription(
+            `**Гражданин ${interaction.user.username}!**\n\n` +
+            `Вы не смогли выполнить задание Партии в срок. Попробуйте ещё раз позже.`
+          )
+          .setFooter({ text: "Партия ждёт лучших результатов! ⚠️" })
+          .setTimestamp();
+
+        await interaction.followUp({ embeds: [failureEmbed] });
+      }
+    } catch (error) {
+      Logger.error(`Error in work-for-the-party: ${error}`);
+    }
+  }
+
   private calculateHarmonyLevel(averageScore: number): string {
     if (averageScore >= 800) return "🌟 ВЫСШАЯ ГАРМОНИЯ";
     if (averageScore >= 400) return "✅ ВЫСОКАЯ ГАРМОНИЯ";
@@ -513,6 +983,253 @@ export class CommandHandler {
     }
   }
 
+  private async handleRedeemMyselfCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    // Check if user qualifies for redemption (score <= -200)
+    const score = await this.socialCreditManager.getUserScore(userId, guildId);
+    if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
+      await interaction.reply({
+        content: "❌ Вы не нуждаетесь в искуплении, гражданин! Ваш социальный рейтинг в порядке.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Check cooldown
+    const lastRedeem = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "redeem_cooldown"
+    );
+    if (lastRedeem) {
+      const timeLeft = lastRedeem.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
+        await interaction.reply({
+          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующим искуплением, гражданин!`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // Select random phrase
+    const phrase = CONFIG.ANALYSIS.REDEEM_PHRASES[
+      Math.floor(Math.random() * CONFIG.ANALYSIS.REDEEM_PHRASES.length)
+    ];
+
+    // Send the challenge
+    const embed = new EmbedBuilder()
+      .setColor(0xffa500)
+      .setTitle("🙏 ЭДИКТ ПРОЩЕНИЯ")
+      .setDescription(
+        `**Гражданин ${interaction.user.username}!**\n\n` +
+        `Партия даёт вам шанс на искупление! Повторите эту фразу в чате в течение 60 секунд:\n\n` +
+        `**"${phrase}"**\n\n` +
+        `⏱️ У вас есть 60 секунд!`
+      )
+      .setFooter({ text: "Партия милосердна, но справедлива! 👁️" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+
+    // Set up cooldown
+    await this.effectManager.applyEffect(
+      userId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.COOLDOWNS.REDEEM_MYSELF,
+      undefined,
+      { type: "redeem_cooldown" }
+    );
+
+    // Wait for response
+    const filter = (m: any) => m.author.id === userId && m.content.trim() === phrase;
+
+    try {
+      const channel = interaction.channel;
+      if (!channel || !channel.isTextBased()) {
+        throw new Error("Invalid channel");
+      }
+
+      const collector = (channel as any).createMessageCollector({
+        filter,
+        max: 1,
+        time: 60000
+      });
+
+      const collected: any[] = await new Promise((resolve) => {
+        collector.on('collect', (message: any) => {
+          resolve([message]);
+        });
+        collector.on('end', (collected: any, reason: string) => {
+          if (reason === 'time') {
+            resolve([]);
+          }
+        });
+      });
+
+      if (collected && collected.length > 0) {
+        // Success - grant forgiveness
+        const newScore = await this.socialCreditManager.updateScore(
+          userId,
+          guildId,
+          CONFIG.SCORE_CHANGES.REDEEM_SUCCESS,
+          "Искупление через Эдикт Прощения",
+          interaction.user.username
+        );
+
+        const successEmbed = new EmbedBuilder()
+          .setColor(0x00ff00)
+          .setTitle("🎉 ПРОЩЕНИЕ ПОЛУЧЕНО!")
+          .setDescription(
+            `**Поздравляем, гражданин ${interaction.user.username}!**\n\n` +
+            `Партия принимает ваше искупление! Ваш социальный рейтинг повышен.`
+          )
+          .addFields(
+            { name: "📈 Изменение Рейтинга", value: `+${CONFIG.SCORE_CHANGES.REDEEM_SUCCESS}`, inline: true },
+            { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+          )
+          .setFooter({ text: "Партия всегда даёт второй шанс! 🇨🇳" })
+          .setTimestamp();
+
+        await interaction.followUp({ embeds: [successEmbed] });
+      }
+    } catch {
+      // Failure - penalize
+      const newScore = await this.socialCreditManager.updateScore(
+        userId,
+        guildId,
+        CONFIG.SCORE_CHANGES.REDEEM_FAILURE,
+        "Провал Эдикта Прощения - недостаточное рвение",
+        interaction.user.username
+      );
+
+      const failureEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setTitle("❌ ПРОЩЕНИЕ ОТКАЗАНО")
+        .setDescription(
+          `**Гражданин ${interaction.user.username}!**\n\n` +
+          `Вы не смогли должным образом выразить преданность Партии. Ваш социальный рейтинг понижен.`
+        )
+        .addFields(
+          { name: "📉 Изменение Рейтинга", value: `${CONFIG.SCORE_CHANGES.REDEEM_FAILURE}`, inline: true },
+          { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+        )
+        .setFooter({ text: "Партия разочарована вашим поведением! ⚠️" })
+        .setTimestamp();
+
+      await interaction.followUp({ embeds: [failureEmbed] });
+    }
+  }
+
+  private async handleEnforceHarmonyCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    const enforcerId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+    const targetUser = interaction.options.getUser("target", true);
+    const reason = interaction.options.getString("reason", true);
+
+    // Check if enforcer has high enough score
+    const enforcerScore = await this.socialCreditManager.getUserScore(enforcerId, guildId);
+    if (enforcerScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
+      await interaction.reply({
+        content: `❌ Недостаточный социальный рейтинг! Требуется ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ для исполнения Мандата Гражданина.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Can't enforce on yourself
+    if (targetUser.id === enforcerId) {
+      await interaction.reply({
+        content: "🤔 Вы не можете навязывать гармонию самому себе, гражданин!",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Can't enforce on bots
+    if (targetUser.bot) {
+      await interaction.reply({
+        content: "🤖 Боты уже идеально гармоничны!",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Check cooldown
+    const lastEnforce = this.effectManager.getEffectsByType(enforcerId, "DAILY_CLAIM_RESET").find(
+      e => e.metadata?.type === "enforce_cooldown"
+    );
+    if (lastEnforce) {
+      const timeLeft = lastEnforce.expiresAt.getTime() - Date.now();
+      if (timeLeft > 0) {
+        const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
+        await interaction.reply({
+          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующим исполнением Мандата Гражданина!`,
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
+    // Apply enforcement
+    const targetNewScore = await this.socialCreditManager.updateScore(
+      targetUser.id,
+      guildId,
+      CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET,
+      `Мандат Гражданина: ${reason} (от ${interaction.user.username})`,
+      targetUser.username
+    );
+
+    const enforcerNewScore = await this.socialCreditManager.updateScore(
+      enforcerId,
+      guildId,
+      CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER,
+      `Исполнение Мандата Гражданина на ${targetUser.username}`,
+      interaction.user.username
+    );
+
+    // Set cooldown
+    await this.effectManager.applyEffect(
+      enforcerId,
+      guildId,
+      "DAILY_CLAIM_RESET",
+      CONFIG.COOLDOWNS.ENFORCE_HARMONY,
+      undefined,
+      { type: "enforce_cooldown" }
+    );
+
+    const embed = new EmbedBuilder()
+      .setColor(0xffd700)
+      .setTitle("⚖️ МАНДАТ ГРАЖДАНИНА ИСПОЛНЕН")
+      .setDescription(
+        `**Исполнитель:** ${interaction.user.username}\n` +
+        `**Нарушитель:** ${targetUser.username}\n` +
+        `**Причина:** ${reason}`
+      )
+      .addFields(
+        {
+          name: "👤 Нарушитель",
+          value: `📉 ${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET} → \`${targetNewScore}\``,
+          inline: true,
+        },
+        {
+          name: "👑 Исполнитель",
+          value: `📈 ${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER} → \`${enforcerNewScore}\``,
+          inline: true,
+        }
+      )
+      .setFooter({ text: "Партия ценит вашу бдительность! 👁️" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
   private async handleRemoveMonitorChannelCommand(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
@@ -641,5 +1358,16 @@ export class CommandHandler {
       Logger.error("Failed to remove monitored channel:", error);
       throw error;
     }
+  }
+
+  private getEffectDisplayName(effectType: string): string {
+    const effectNames: Record<string, string> = {
+      NICKNAME_CHANGE: "Изменение Никнейма",
+      TIMEOUT: "Тайм-аут",
+      ROLE_GRANT: "Предоставление Роли",
+      DAILY_CLAIM_RESET: "Кулдаун Ежедневного Бонуса",
+      EVENT_MULTIPLIER: "Множитель События",
+    };
+    return effectNames[effectType] || effectType;
   }
 }

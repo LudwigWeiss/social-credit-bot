@@ -14,6 +14,9 @@ import { Mistral } from "@mistralai/mistralai";
 import * as dotenv from "dotenv";
 import { SocialCreditManager } from "./managers/SocialCreditManager.js";
 import { DatabaseManager } from "./managers/DatabaseManager.js";
+import { EffectManager } from "./managers/EffectManager.js";
+import { Scheduler } from "./managers/Scheduler.js";
+import { HealthCheck } from "./HealthCheck.js";
 import { MemeResponses } from "./utils/MemeResponses.js";
 import { CommandHandler } from "./handlers/CommandHandler.js";
 import { Logger } from "./utils/Logger.js";
@@ -21,6 +24,7 @@ import { Validators } from "./utils/Validators.js";
 import { RateLimitManager } from "./managers/RateLimitManager.js";
 import { MessageContextManager } from "./managers/MessageContextManager.js";
 import { MessageAnalysisResult, MessageContextEntry } from "./types/index.js";
+import { CONFIG } from "./config.js";
 
 dotenv.config();
 
@@ -29,6 +33,9 @@ class SocialCreditBot {
   private mistral: Mistral;
   private socialCreditManager: SocialCreditManager;
   private databaseManager: DatabaseManager;
+  private effectManager: EffectManager;
+  private scheduler: Scheduler;
+  private healthCheck: HealthCheck;
   private commandHandler: CommandHandler;
   private rateLimitManager: RateLimitManager;
   private messageContextManager: MessageContextManager;
@@ -50,6 +57,9 @@ class SocialCreditBot {
 
     this.databaseManager = new DatabaseManager();
     this.socialCreditManager = new SocialCreditManager(this.databaseManager);
+    this.effectManager = new EffectManager(this.databaseManager);
+    this.scheduler = new Scheduler(this.effectManager, this.databaseManager);
+    this.healthCheck = new HealthCheck(this.client, this.databaseManager);
     this.rateLimitManager = new RateLimitManager();
     this.messageContextManager = new MessageContextManager();
 
@@ -61,9 +71,13 @@ class SocialCreditBot {
     this.commandHandler = new CommandHandler(
       this.socialCreditManager,
       this.databaseManager,
+      this.effectManager,
       this.rateLimitManager,
       this.messageContextManager
     );
+
+    // Set up event callback
+    this.scheduler.setEventCallback(this.handleRandomEvent.bind(this));
 
     this.setupEventListeners();
   }
@@ -109,6 +123,19 @@ class SocialCreditBot {
     const userId = message.author.id;
     const sanitizedContent = Validators.sanitizeMessage(message.content);
 
+    // Check for critically bad keywords (immediate penalty, no AI cost)
+    if (this.hasCriticallyBadKeywords(sanitizedContent)) {
+      await this.applyKeywordPenalty(message, sanitizedContent);
+      return; // Don't process further
+    }
+
+    // Check for speech re-education (critically low scores)
+    const userScore = await this.socialCreditManager.getUserScore(userId, guildId);
+    if (userScore <= CONFIG.SCORE_THRESHOLDS.PENALTIES.SEVERE) {
+      await this.applySpeechReeducation(message, sanitizedContent, userScore);
+      return; // Don't process further
+    }
+
     // Check rate limiting and buffering
     const rateLimitResult = this.rateLimitManager.shouldAnalyzeMessage(
       userId,
@@ -144,7 +171,9 @@ class SocialCreditBot {
         messagesToAnalyze,
         recentContext,
         sanitizedContent,
-        message.author.username
+        message.author.username,
+        userId,
+        guildId
       );
 
       await this.processAnalysis(message, analysis, sanitizedContent);
@@ -157,7 +186,9 @@ class SocialCreditBot {
     userMessages: string[],
     recentContext: MessageContextEntry[],
     currentMessage: string,
-    authorUsername: string
+    authorUsername: string,
+    userId?: string,
+    guildId?: string
   ): Promise<MessageAnalysisResult> {
     const contextString = this.messageContextManager.buildContextString(
       userMessages,
@@ -166,7 +197,31 @@ class SocialCreditBot {
       authorUsername
     );
 
-    const prompt = `Ты - Верховный ИИ Китайской Системы Социального Рейтинга (мем версия). Проанализируй сообщения пользователя с учётом контекста и определи, хорошо ли это, плохо или нейтрально для социального рейтинга.
+    // Dynamic prompting based on user history
+    let useCheapModel = false;
+    let simplifiedPrompt = false;
+
+    if (userId && guildId) {
+      const userScore = await this.socialCreditManager.getUserScore(userId, guildId);
+      const userHistory = await this.socialCreditManager.getUserHistory(userId, guildId, 10);
+
+      // Use cheap model for neutral users with consistent neutral history
+      const recentVerdicts = userHistory.slice(0, 5).map(h => {
+        if (h.scoreChange > 0) return 'good';
+        if (h.scoreChange < 0) return 'bad';
+        return 'neutral';
+      });
+
+      const neutralRatio = recentVerdicts.filter(v => v === 'neutral').length / recentVerdicts.length;
+      if (Math.abs(userScore) < 50 && neutralRatio > 0.6) {
+        useCheapModel = true;
+        simplifiedPrompt = true;
+      }
+    }
+
+    const prompt = simplifiedPrompt ?
+      `Анализируй сообщение на предмет отношения к Китаю/Партии. Отвечай ТОЛЬКО JSON: {"verdict": "good/bad/neutral", "score_change": число, "reason": "кратко", "meme_response": "мемно"}` :
+      `Ты - Верховный ИИ Китайской Системы Социального Рейтинга (мем версия). Проанализируй сообщения пользователя с учётом контекста и определи, хорошо ли это, плохо или нейтрально для социального рейтинга.
 
 ${contextString}
 
@@ -190,10 +245,10 @@ ${contextString}
 - НЕ используй markdown блоки в ответе!`;
 
     const completion = await this.mistral.chat.complete({
-      model: "mistral-medium-latest",
+      model: useCheapModel ? CONFIG.LLM.CHEAP_MODEL : CONFIG.LLM.STANDARD_MODEL,
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      maxTokens: 800,
+      temperature: CONFIG.LLM.TEMPERATURE,
+      maxTokens: CONFIG.LLM.MAX_TOKENS,
     });
 
     const response = completion.choices?.[0]?.message?.content;
@@ -348,43 +403,318 @@ ${contextString}
     const member = message.member;
     if (!member) return;
 
+    const userId = message.author.id;
+    const guildId = message.guild?.id || "dm";
+
     // Low score penalties
-    if (score <= -500) {
-      await this.applyPenalty(member, "SEVERE");
-    } else if (score <= -200) {
-      await this.applyPenalty(member, "MODERATE");
-    } else if (score <= -50) {
-      await this.applyPenalty(member, "MILD");
+    if (score <= CONFIG.SCORE_THRESHOLDS.PENALTIES.SEVERE) {
+      await this.applyPenalty(member, "SEVERE", userId, guildId);
+    } else if (score <= CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
+      await this.applyPenalty(member, "MODERATE", userId, guildId);
+    } else if (score <= CONFIG.SCORE_THRESHOLDS.PENALTIES.MILD) {
+      await this.applyPenalty(member, "MILD", userId, guildId);
+    }
+
+    // Remove penalties if score improved
+    if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MILD) {
+      await this.removePenalty(member, "MILD", userId, guildId);
+    }
+    if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
+      await this.removePenalty(member, "MODERATE", userId, guildId);
     }
 
     // High score privileges
-    if (score >= 1000) {
-      await this.grantPrivilege(member, "SUPREME_CITIZEN");
-    } else if (score >= 500) {
-      await this.grantPrivilege(member, "MODEL_CITIZEN");
-    } else if (score >= 200) {
-      await this.grantPrivilege(member, "GOOD_CITIZEN");
+    if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
+      await this.grantPrivilege(member, "SUPREME_CITIZEN", userId, guildId);
+    } else if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
+      await this.grantPrivilege(member, "MODEL_CITIZEN", userId, guildId);
+    } else if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.GOOD_CITIZEN) {
+      await this.grantPrivilege(member, "GOOD_CITIZEN", userId, guildId);
     }
   }
 
   private async applyPenalty(
-    member: { user: { username: string } },
-    severity: string
+    member: any,
+    severity: string,
+    userId: string,
+    guildId: string
   ): Promise<void> {
     MemeResponses.getPenalties(severity);
-    // Implementation depends on server permissions and roles
-    // This is a placeholder for penalty logic
+
+    // Apply nickname change for low scores
+    if (severity === "MODERATE" || severity === "SEVERE") {
+      const currentNickname = member.nickname || member.user.username;
+      const newNickname = severity === "SEVERE" ? "💀 Enemy of the State" : "⚠️ Problematic Citizen";
+
+      // Check if already has this effect
+      if (!this.effectManager.hasEffectType(userId, "NICKNAME_CHANGE")) {
+        try {
+          await member.setNickname(newNickname);
+          await this.effectManager.applyEffect(
+            userId,
+            guildId,
+            "NICKNAME_CHANGE",
+            CONFIG.EFFECT_DURATIONS.NICKNAME_CHANGE,
+            currentNickname
+          );
+          Logger.info(`Applied nickname penalty to ${member.user.username}: ${newNickname}`);
+        } catch (error) {
+          Logger.error(`Failed to apply nickname penalty: ${error}`);
+        }
+      }
+    }
+
     Logger.info(`Applying ${severity} penalty to ${member.user.username}`);
   }
 
   private async grantPrivilege(
     member: { user: { username: string } },
-    level: string
+    level: string,
+    userId: string,
+    guildId: string
   ): Promise<void> {
     MemeResponses.getPrivileges(level);
     // Implementation depends on server permissions and roles
     // This is a placeholder for privilege logic
     Logger.info(`Granting ${level} privilege to ${member.user.username}`);
+  }
+
+  private async removePenalty(
+    member: any,
+    severity: string,
+    userId: string,
+    guildId: string
+  ): Promise<void> {
+    // Remove nickname effects if score improved
+    if (severity === "MILD" || severity === "MODERATE") {
+      const originalNickname = this.effectManager.getOriginalValue(userId, "NICKNAME_CHANGE");
+      if (originalNickname) {
+        try {
+          await member.setNickname(originalNickname);
+          await this.effectManager.removeEffectsByType(userId, "NICKNAME_CHANGE");
+          Logger.info(`Restored original nickname for ${member.user.username}: ${originalNickname}`);
+        } catch (error) {
+          Logger.error(`Failed to restore nickname: ${error}`);
+        }
+      }
+    }
+
+    Logger.info(`Removing ${severity} penalty from ${member.user.username}`);
+  }
+
+  private async applySpeechReeducation(
+    message: Message,
+    sanitizedContent: string,
+    userScore: number
+  ): Promise<void> {
+    try {
+      // Delete the original message
+      await message.delete();
+
+      // Get corrected message from LLM
+      const correctedContent = await this.getCorrectedMessage(sanitizedContent);
+
+      // Create webhook to post as the user
+      const channel = message.channel;
+      if (!channel.isTextBased()) return;
+
+      const webhooks = await (channel as any).fetchWebhooks();
+      let webhook = webhooks.find((wh: any) => wh.name === 'Social Credit Re-education');
+
+      if (!webhook) {
+        webhook = await (channel as any).createWebhook({
+          name: 'Social Credit Re-education',
+          avatar: message.author.displayAvatarURL(),
+        });
+      }
+
+      // Post the corrected message
+      await webhook.send({
+        content: correctedContent,
+        username: message.author.username,
+        avatarURL: message.author.displayAvatarURL(),
+      });
+
+      // Apply additional penalty for requiring re-education
+      await this.socialCreditManager.updateScore(
+        message.author.id,
+        message.guild?.id || "dm",
+        -10, // Additional penalty
+        "Применена ре-образовательная коррекция речи",
+        message.author.username,
+        sanitizedContent
+      );
+
+      Logger.info(`Applied speech re-education to user ${message.author.id}`);
+    } catch (error) {
+      Logger.error(`Failed to apply speech re-education: ${error}`);
+    }
+  }
+
+  private async getCorrectedMessage(originalMessage: string): Promise<string> {
+    const prompt = CONFIG.ANALYSIS.SPEECH_REEDUCATION_PROMPT.replace('{message}', originalMessage);
+
+    const completion = await this.mistral.chat.complete({
+      model: CONFIG.LLM.STANDARD_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: CONFIG.LLM.TEMPERATURE,
+      maxTokens: CONFIG.LLM.MAX_TOKENS,
+    });
+
+    const response = completion.choices?.[0]?.message?.content;
+    if (!response) throw new Error("No response from Mistral AI for speech correction");
+
+    // Handle different response types from Mistral
+    const responseText = typeof response === "string" ? response : JSON.stringify(response);
+
+    return responseText.trim();
+  }
+
+  private async handleRandomEvent(eventType: string, data: any): Promise<void> {
+    try {
+      // Get all monitored channels across all guilds
+      const monitoredChannels = await this.databaseManager.getAllMonitoredChannels();
+
+      for (const [guildId, channels] of monitoredChannels.entries()) {
+        for (const channelId of channels) {
+          await this.triggerEventInChannel(guildId, channelId, eventType);
+        }
+      }
+    } catch (error) {
+      Logger.error(`Error handling random event ${eventType}:`, error);
+    }
+  }
+
+  private async triggerEventInChannel(guildId: string, channelId: string, eventType: string): Promise<void> {
+    try {
+      const channel = this.client.channels.cache.get(channelId);
+      if (!channel || !channel.isTextBased()) return;
+
+      const textChannel = channel as any;
+
+      switch (eventType) {
+        case "PARTY_INSPECTOR_VISIT":
+          await this.handlePartyInspectorVisit(textChannel);
+          break;
+        case "SOCIAL_HARMONY_HOUR":
+          await this.handleSocialHarmonyHour(textChannel);
+          break;
+        case "WESTERN_SPY_INFILTRATION":
+          await this.handleWesternSpyInfiltration(textChannel);
+          break;
+        case "PRODUCTION_QUOTA":
+          await this.handleProductionQuota(textChannel);
+          break;
+      }
+    } catch (error) {
+      Logger.error(`Error triggering event ${eventType} in channel ${channelId}:`, error);
+    }
+  }
+
+  private async handlePartyInspectorVisit(channel: any): Promise<void> {
+    const embed = new EmbedBuilder()
+      .setColor(0xff0000)
+      .setTitle("🚨 ВИЗИТ ИНСПЕКТОРА ПАРТИИ!")
+      .setDescription(
+        "**ВНИМАНИЕ, ГРАЖДАНЕ!**\n\n" +
+        "Партийный инспектор прибыл для проверки! Следующие 15 минут все изменения социального рейтинга **удваиваются**!\n\n" +
+        "Докажите свою преданность Партии! 🇨🇳"
+      )
+      .setFooter({ text: "Партия наблюдает! 👁️" })
+      .setTimestamp();
+
+    await channel.send({ embeds: [embed] });
+
+    // Apply multiplier effect (would need to modify scoring logic to check for active events)
+    // For now, just announce
+  }
+
+  private async handleSocialHarmonyHour(channel: any): Promise<void> {
+    const embed = new EmbedBuilder()
+      .setColor(0x00ff00)
+      .setTitle("🕊️ ЧАС СОЦИАЛЬНОЙ ГАРМОНИИ")
+      .setDescription(
+        "**БЛАГОСЛОВЕННЫЙ ЧАС НАЧАЛСЯ!**\n\n" +
+        "Следующий час только **положительные** изменения социального рейтинга возможны!\n\n" +
+        "Делитесь добротой и преданностью! 💝"
+      )
+      .setFooter({ text: "Гармония превыше всего! 🇨🇳" })
+      .setTimestamp();
+
+    await channel.send({ embeds: [embed] });
+  }
+
+  private async handleWesternSpyInfiltration(channel: any): Promise<void> {
+    const embed = new EmbedBuilder()
+      .setColor(0xff4500)
+      .setTitle("🕵️ ПРОНИКНОВЕНИЕ ЗАПАДНОГО ШПИОНА!")
+      .setDescription(
+        "**ТРЕВОГА!**\n\n" +
+        "Западный шпион проник в наши ряды! Первый, кто скажет правильную патриотическую фразу, получит **+50** социального рейтинга!\n\n" +
+        "Фраза: **\"Партия всегда права!\"**\n\n" +
+        "⏱️ У вас есть 5 минут!"
+      )
+      .setFooter({ text: "Будьте бдительны! 👁️" })
+      .setTimestamp();
+
+    await channel.send({ embeds: [embed] });
+  }
+
+  private async handleProductionQuota(channel: any): Promise<void> {
+    const embed = new EmbedBuilder()
+      .setColor(0xffd700)
+      .setTitle("🏭 ПРОИЗВОДСТВЕННАЯ КВОТА!")
+      .setDescription(
+        "**ПАРТИЯ ТРЕБУЕТ ПРОИЗВОДСТВА!**\n\n" +
+        "Отправьте **50 сообщений** в monitored каналах в следующие 10 минут!\n\n" +
+        "При успехе все онлайн пользователи получат **+10** социального рейтинга!\n\n" +
+        "За работу, товарищи! ⚒️"
+      )
+      .setFooter({ text: "Выполняйте план! 📈" })
+      .setTimestamp();
+
+    await channel.send({ embeds: [embed] });
+  }
+
+  private hasCriticallyBadKeywords(content: string): boolean {
+    const lowerContent = content.toLowerCase();
+    return CONFIG.ANALYSIS.CRITICALLY_BAD_KEYWORDS.some(keyword =>
+      lowerContent.includes(keyword.toLowerCase())
+    );
+  }
+
+  private async applyKeywordPenalty(message: Message, content: string): Promise<void> {
+    const userId = message.author.id;
+    const guildId = message.guild?.id || "dm";
+
+    // Apply immediate penalty without AI analysis
+    const newScore = await this.socialCreditManager.updateScore(
+      userId,
+      guildId,
+      CONFIG.SCORE_CHANGES.KEYWORD_PENALTY,
+      "Обнаружены критически негативные ключевые слова",
+      message.author.username,
+      content
+    );
+
+    // Create penalty embed
+    const embed = new EmbedBuilder()
+      .setColor(0xff0000)
+      .setTitle("🚨 КРИТИЧЕСКОЕ НАРУШЕНИЕ! 🚨")
+      .setDescription(
+        `**Гражданин ${message.author.username}!**\n\n` +
+        `Обнаружены крайне негативные высказывания, противоречащие принципам Партии!`
+      )
+      .addFields(
+        { name: "📉 Штраф", value: `${CONFIG.SCORE_CHANGES.KEYWORD_PENALTY}`, inline: true },
+        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true },
+        { name: "⚠️ Причина", value: "Критически негативные ключевые слова", inline: false }
+      )
+      .setFooter({ text: "Партия не терпит дисгармонию! 👁️" })
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
+    Logger.info(`Applied keyword penalty to user ${userId}: ${content}`);
   }
 
   private async registerCommands(): Promise<void> {
@@ -451,15 +781,55 @@ ${contextString}
         ),
 
       new SlashCommandBuilder()
-        .setName("remove-monitor-channel")
-        .setDescription("Remove a channel from monitoring (Admin only)")
-        .addChannelOption((option) =>
-          option
-            .setName("channel")
-            .setDescription("Channel to stop monitoring")
-            .setRequired(true)
-            .addChannelTypes(ChannelType.GuildText)
-        ),
+         .setName("remove-monitor-channel")
+         .setDescription("Remove a channel from monitoring (Admin only)")
+         .addChannelOption((option) =>
+           option
+             .setName("channel")
+             .setDescription("Channel to stop monitoring")
+             .setRequired(true)
+             .addChannelTypes(ChannelType.GuildText)
+         ),
+
+      new SlashCommandBuilder()
+         .setName("redeem-myself")
+         .setDescription("Seek forgiveness from the Party for your low social credit"),
+
+      new SlashCommandBuilder()
+         .setName("enforce-harmony")
+         .setDescription("Enforce social harmony by correcting another citizen (High social credit required)")
+         .addUserOption((option) =>
+           option
+             .setName("target")
+             .setDescription("Citizen to correct")
+             .setRequired(true)
+         )
+         .addStringOption((option) =>
+           option
+             .setName("reason")
+             .setDescription("Reason for correction")
+             .setRequired(true)
+         ),
+
+      new SlashCommandBuilder()
+         .setName("claim-daily")
+         .setDescription("Claim your daily social credit bonus from the Party"),
+
+      new SlashCommandBuilder()
+         .setName("spread-propaganda")
+         .setDescription("Spread glorious Party propaganda (Model Citizen+)"),
+
+      new SlashCommandBuilder()
+         .setName("praise-bot")
+         .setDescription("Praise the bot for a good analysis"),
+
+      new SlashCommandBuilder()
+         .setName("report-mistake")
+         .setDescription("Report a mistake in the bot's analysis"),
+
+      new SlashCommandBuilder()
+         .setName("work-for-the-party")
+         .setDescription("Complete a task to earn social credit back"),
     ];
 
     const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
@@ -491,6 +861,8 @@ ${contextString}
     }
 
     await this.databaseManager.initialize();
+    this.healthCheck.start();
+    this.scheduler.start();
     await this.client.login(process.env.DISCORD_TOKEN);
 
     // Setup graceful shutdown
@@ -502,6 +874,9 @@ ${contextString}
     Logger.info("🛑 Shutting down bot gracefully...");
 
     try {
+      this.healthCheck.stop();
+      this.scheduler.stop();
+      this.effectManager.stopCleanup();
       this.client.destroy();
       await this.databaseManager.disconnect();
       Logger.info("✅ Bot shutdown complete");
@@ -548,7 +923,9 @@ ${contextString}
         messages,
         recentContext,
         currentMessage,
-        user.username
+        user.username,
+        userId,
+        guildId
       );
 
       // For buffered analysis, we process the score change directly without creating a mock message

@@ -31,7 +31,7 @@ services:
     volumes:
       - bot-logs:/app/logs
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('Bot health check')"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
