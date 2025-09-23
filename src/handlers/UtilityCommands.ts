@@ -1,11 +1,10 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 
 export class UtilityCommands extends BaseCommandHandler {
-  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+  async handleInteraction(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
     switch (interaction.commandName) {
       case "rate-limit-status":
         await this.handleRateLimitStatusCommand(interaction);

@@ -7,7 +7,9 @@ import {
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 
 export class AdminCommands extends BaseCommandHandler {
-  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+  async handleInteraction(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
     switch (interaction.commandName) {
       case "set-monitor-channel":
         await this.handleSetMonitorChannelCommand(interaction);
@@ -127,7 +129,7 @@ export class AdminCommands extends BaseCommandHandler {
           ephemeral: true,
         });
       }
-    } catch (error) {
+    } catch {
       await interaction.reply({
         content: "❌ Ошибка при удалении канала из мониторинга.",
         ephemeral: true,
@@ -188,7 +190,7 @@ export class AdminCommands extends BaseCommandHandler {
       embed.setFooter({ text: "Партия наблюдает за всеми! 👁️" });
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
-    } catch (error) {
+    } catch {
       await interaction.reply({
         content: "❌ Ошибка при получении списка каналов.",
         ephemeral: true,

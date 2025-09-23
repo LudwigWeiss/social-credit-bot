@@ -1,13 +1,11 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
-import { MemeResponses } from "../utils/MemeResponses.js";
 
 export class PrivilegeCommands extends BaseCommandHandler {
-  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+  async handleInteraction(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
     switch (interaction.commandName) {
       case "enforce-harmony":
         await this.handleEnforceHarmonyCommand(interaction);
@@ -19,7 +17,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
         await this.handleSpreadPropagandaCommand(interaction);
         break;
       default:
-        throw new Error(`Unknown privilege command: ${interaction.commandName}`);
+        throw new Error(
+          `Unknown privilege command: ${interaction.commandName}`
+        );
     }
   }
 
@@ -32,7 +32,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
     const reason = interaction.options.getString("reason", true);
 
     // Check if enforcer has high enough score
-    const enforcerScore = await this.socialCreditManager.getUserScore(enforcerId, guildId);
+    const enforcerScore = await this.socialCreditManager.getUserScore(
+      enforcerId,
+      guildId
+    );
     if (enforcerScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
       await interaction.reply({
         content: `❌ Недостаточный социальный рейтинг! Требуется ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ для исполнения Мандата Гражданина.`,
@@ -60,9 +63,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
     }
 
     // Check cooldown
-    const lastEnforce = this.effectManager.getEffectsByType(enforcerId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "enforce_cooldown"
-    );
+    const lastEnforce = this.effectManager
+      .getEffectsByType(enforcerId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "enforce_cooldown");
     if (lastEnforce) {
       const timeLeft = lastEnforce.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -107,8 +110,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setTitle("⚖️ МАНДАТ ГРАЖДАНИНА ИСПОЛНЕН")
       .setDescription(
         `**Исполнитель:** ${interaction.user.username}\n` +
-        `**Нарушитель:** ${targetUser.username}\n` +
-        `**Причина:** ${reason}`
+          `**Нарушитель:** ${targetUser.username}\n` +
+          `**Причина:** ${reason}`
       )
       .addFields(
         {
@@ -135,9 +138,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
     const guildId = interaction.guildId || "dm";
 
     // Check if already claimed today
-    const lastClaim = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "daily_claim"
-    );
+    const lastClaim = this.effectManager
+      .getEffectsByType(userId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "daily_claim");
     if (lastClaim) {
       const timeLeft = lastClaim.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -151,7 +154,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
     }
 
     // Get user's rank to determine bonus amount
-    const userScore = await this.socialCreditManager.getUserScore(userId, guildId);
+    const userScore = await this.socialCreditManager.getUserScore(
+      userId,
+      guildId
+    );
     const rankInfo = this.socialCreditManager.getScoreRank(userScore);
 
     let bonusAmount = 0;
@@ -163,7 +169,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
       bonusAmount = CONFIG.DAILY_CLAIMS.GOOD_CITIZEN;
     } else {
       await interaction.reply({
-        content: "❌ Недостаточный социальный рейтинг для получения ежедневного бонуса! Повысьте свой рейтинг.",
+        content:
+          "❌ Недостаточный социальный рейтинг для получения ежедневного бонуса! Повысьте свой рейтинг.",
         ephemeral: true,
       });
       return;
@@ -193,7 +200,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setTitle("🎁 ЕЖЕДНЕВНЫЙ БОНУС ПАРТИИ")
       .setDescription(
         `**Гражданин ${interaction.user.username}!**\n\n` +
-        `Партия благосклонна к вам сегодня! Вы получили бонус за вашу лояльность.`
+          `Партия благосклонна к вам сегодня! Вы получили бонус за вашу лояльность.`
       )
       .addFields(
         { name: "🏅 Звание", value: rankInfo.rank, inline: true },
@@ -213,7 +220,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
     const guildId = interaction.guildId || "dm";
 
     // Check if user has high enough score
-    const userScore = await this.socialCreditManager.getUserScore(userId, guildId);
+    const userScore = await this.socialCreditManager.getUserScore(
+      userId,
+      guildId
+    );
     if (userScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
       await interaction.reply({
         content: `❌ Недостаточный социальный рейтинг! Требуется ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN}+ для распространения пропаганды.`,
@@ -223,9 +233,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
     }
 
     // Check cooldown
-    const lastPropaganda = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "propaganda_cooldown"
-    );
+    const lastPropaganda = this.effectManager
+      .getEffectsByType(userId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "propaganda_cooldown");
     if (lastPropaganda) {
       const timeLeft = lastPropaganda.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -239,9 +249,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
     }
 
     // Select random propaganda image
-    const imageUrl = CONFIG.PROPAGANDA_IMAGES[
-      Math.floor(Math.random() * CONFIG.PROPAGANDA_IMAGES.length)
-    ];
+    const imageUrl =
+      CONFIG.PROPAGANDA_IMAGES[
+        Math.floor(Math.random() * CONFIG.PROPAGANDA_IMAGES.length)
+      ];
 
     // Create embed with propaganda
     const embed = new EmbedBuilder()
@@ -249,7 +260,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setTitle("🇨🇳 СЛАВА ПАРТИИ! 🇨🇳")
       .setDescription(
         `**${interaction.user.username}** напоминает вам о величии Партии!\n\n` +
-        `*"Социальная гармония достигается через единство под руководством Партии!"*`
+          `*"Социальная гармония достигается через единство под руководством Партии!"*`
       )
       .setImage(imageUrl)
       .setFooter({ text: "Партия всегда права! 中华人民共和国万岁!" })
@@ -283,10 +294,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setTitle("📢 ПРОПАГАНДА РАСПРОСТРАНЕНА!")
       .setDescription(
         `**Спасибо за вашу преданность, гражданин ${interaction.user.username}!**\n\n` +
-        `Партия ценит вашу помощь в распространении истины.`
+          `Партия ценит вашу помощь в распространении истины.`
       )
       .addFields(
-        { name: "💰 Бонус", value: `+${CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS}`, inline: true },
+        {
+          name: "💰 Бонус",
+          value: `+${CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS}`,
+          inline: true,
+        },
         { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
       )
       .setFooter({ text: "Продолжайте служить Партии! 👁️" })

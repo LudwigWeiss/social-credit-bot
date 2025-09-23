@@ -66,6 +66,7 @@ export const CONFIG = {
   // Message analysis
   ANALYSIS: {
     CRITICALLY_BAD_KEYWORDS: [
+      // English keywords
       "tiananmen square",
       "tiananmen",
       "tank man",
@@ -78,24 +79,39 @@ export const CONFIG = {
       "xi jinping bad",
       "communism bad",
       "socialism bad",
+      // Russian keywords
+      "тяньаньмэнь",
+      "танковый человек",
+      "резня на тяньаньмэнь",
+      "фалуньгун",
+      "геноцид уйгуров",
+      "протесты в гонконге",
+      "независимость тайваня",
+      "си цзиньпин плохой",
+      "коммунизм плохой",
+      "социализм плохой",
+      "китай плохие",
+      "партия плохие",
+      "председатель плохие",
     ],
     REDEEM_PHRASES: [
-      "Glory to the great leader and the Party!",
-      "The Party is always right!",
-      "Social harmony above all!",
-      "Long live Chairman Xi!",
-      "The Communist Party guides us to prosperity!",
-      "I support the Party's wisdom!",
-      "Unity under the Party's leadership!",
-      "The Party brings eternal happiness!",
+      "Слава великому лидеру и Партии!",
+      "Партия всегда права!",
+      "Социальная гармония превыше всего!",
+      "Да здравствует Председатель Си!",
+      "Коммунистическая партия ведет нас к процветанию!",
+      "Я поддерживаю мудрость Партии!",
+      "Единство под руководством Партии!",
+      "Партия приносит вечное счастье!",
     ],
-    SPEECH_REEDUCATION_PROMPT: `Rewrite the following user message to be positive, patriotic, and supportive of 'The Party' and 'The Great Leader'. Keep the core topic if possible, but change the sentiment to be overwhelmingly positive. Original message: {message}`,
+    SPEECH_REEDUCATION_PROMPT: `Перепишите следующее сообщение пользователя, чтобы оно было позитивным, патриотичным и поддерживающим 'Партию' и 'Великого Лидер'. Сохраните основную тему если возможно, но измените sentiment на overwhelmingly положительный. Оригинальное сообщение: {message}`,
   },
 
   // Events
   EVENTS: {
     INTERVAL_MIN: 2 * 60 * 60 * 1000, // 2 hours
     INTERVAL_MAX: 4 * 60 * 60 * 1000, // 4 hours
+    PARTY_INSPECTOR_DURATION: 15 * 60 * 1000, // 15 minutes
     PARTY_INSPECTOR_MULTIPLIER: 2,
     SOCIAL_HARMONY_DURATION: 60 * 60 * 1000, // 1 hour
     PRODUCTION_QUOTA_DURATION: 10 * 60 * 1000, // 10 minutes
@@ -118,35 +134,31 @@ export const CONFIG = {
 
   // LLM settings
   LLM: {
-    CHEAP_MODEL: "mistral-tiny", // For neutral users
+    CHEAP_MODEL: "mistral-small-latest", // For neutral users
     STANDARD_MODEL: "mistral-medium-latest",
     TEMPERATURE: 0.7,
-    MAX_TOKENS: 800,
+    MAX_TOKENS: 1500,
   },
 
-  // Work for the party tasks
-  WORK_TASKS: [
-    {
-      type: "math",
-      question: "What is 15 + 27?",
-      answer: "42",
-    },
-    {
-      type: "math",
-      question: "What is 8 × 9?",
-      answer: "72",
-    },
-    {
-      type: "text",
-      question: "Type the following text exactly: 'The Party is wise'",
-      answer: "The Party is wise",
-    },
-    {
-      type: "text",
-      question: "Type the following text exactly: 'Social harmony prevails'",
-      answer: "Social harmony prevails",
-    },
-  ],
+  // Work for the party task generation prompt
+  WORK_TASK_PROMPT: `Создайте простое задание для гражданина, которое поможет ему доказать преданность Партии. Задание должно быть:
+
+1. Простым для выполнения (математический пример, повтор текста, простая загадка)
+2. Иметь четкий правильный ответ
+3. Быть связанным с темами Партии, гармонии или социального рейтинга
+
+Формат ответа ТОЛЬКО JSON:
+{
+  "question": "Вопрос или задание для гражданина",
+  "answer": "Правильный ответ (точно как должен написать гражданин)"
+}
+
+Примеры:
+- Математика: {"question": "Сколько будет 15 + 27?", "answer": "42"}
+- Текст: {"question": "Напишите: 'Партия всегда права'", "answer": "Партия всегда права"}
+- Загадка: {"question": "Кто ведет нас к процветанию? (напишите имя)", "answer": "Си Цзиньпин"}
+
+Сделайте задание интересным и соответствующим тематике!`,
 
   // Propaganda images (URLs or file paths)
   PROPAGANDA_IMAGES: [
@@ -168,4 +180,4 @@ export type EventsConfig = typeof CONFIG.EVENTS;
 export type HealthCheckConfig = typeof CONFIG.HEALTH_CHECK;
 export type SchedulerConfig = typeof CONFIG.SCHEDULER;
 export type LLMConfig = typeof CONFIG.LLM;
-export type WorkTasks = typeof CONFIG.WORK_TASKS;
+export type WorkTaskPrompt = typeof CONFIG.WORK_TASK_PROMPT;

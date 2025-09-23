@@ -1,13 +1,18 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  Message,
+  TextChannel,
+  ReadonlyCollection,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
 import { Logger } from "../utils/Logger.js";
 
 export class SanctionCommands extends BaseCommandHandler {
-  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+  async handleInteraction(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
     switch (interaction.commandName) {
       case "redeem-myself":
         await this.handleRedeemMyselfCommand(interaction);
@@ -30,16 +35,17 @@ export class SanctionCommands extends BaseCommandHandler {
     const score = await this.socialCreditManager.getUserScore(userId, guildId);
     if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
       await interaction.reply({
-        content: "❌ Вы не нуждаетесь в искуплении, гражданин! Ваш социальный рейтинг в порядке.",
+        content:
+          "❌ Вы не нуждаетесь в искуплении, гражданин! Ваш социальный рейтинг в порядке.",
         ephemeral: true,
       });
       return;
     }
 
     // Check cooldown
-    const lastRedeem = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "redeem_cooldown"
-    );
+    const lastRedeem = this.effectManager
+      .getEffectsByType(userId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "redeem_cooldown");
     if (lastRedeem) {
       const timeLeft = lastRedeem.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -53,9 +59,10 @@ export class SanctionCommands extends BaseCommandHandler {
     }
 
     // Select random phrase
-    const phrase = CONFIG.ANALYSIS.REDEEM_PHRASES[
-      Math.floor(Math.random() * CONFIG.ANALYSIS.REDEEM_PHRASES.length)
-    ];
+    const phrase =
+      CONFIG.ANALYSIS.REDEEM_PHRASES[
+        Math.floor(Math.random() * CONFIG.ANALYSIS.REDEEM_PHRASES.length)
+      ];
 
     // Send the challenge
     const embed = new EmbedBuilder()
@@ -63,9 +70,9 @@ export class SanctionCommands extends BaseCommandHandler {
       .setTitle("🙏 ЭДИКТ ПРОЩЕНИЯ")
       .setDescription(
         `**Гражданин ${interaction.user.username}!**\n\n` +
-        `Партия даёт вам шанс на искупление! Повторите эту фразу в чате в течение 60 секунд:\n\n` +
-        `**"${phrase}"**\n\n` +
-        `⏱️ У вас есть 60 секунд!`
+          `Партия даёт вам шанс на искупление! Повторите эту фразу в чате в течение 60 секунд:\n\n` +
+          `**"${phrase}"**\n\n` +
+          `⏱️ У вас есть 60 секунд!`
       )
       .setFooter({ text: "Партия милосердна, но справедлива! 👁️" })
       .setTimestamp();
@@ -83,7 +90,8 @@ export class SanctionCommands extends BaseCommandHandler {
     );
 
     // Wait for response
-    const filter = (m: any) => m.author.id === userId && m.content.trim() === phrase;
+    const filter = (m: Message) =>
+      m.author.id === userId && m.content.trim() === phrase;
 
     try {
       const channel = interaction.channel;
@@ -91,21 +99,24 @@ export class SanctionCommands extends BaseCommandHandler {
         throw new Error("Invalid channel");
       }
 
-      const collector = (channel as any).createMessageCollector({
+      const collector = (channel as TextChannel).createMessageCollector({
         filter,
         max: 1,
-        time: 60000
+        time: 60000,
       });
 
-      const collected: any[] = await new Promise((resolve) => {
-        collector.on('collect', (message: any) => {
+      const collected: Message[] = await new Promise((resolve) => {
+        collector.on("collect", (message: Message) => {
           resolve([message]);
         });
-        collector.on('end', (collected: any, reason: string) => {
-          if (reason === 'time') {
-            resolve([]);
+        collector.on(
+          "end",
+          (collected: ReadonlyCollection<string, Message>, reason: string) => {
+            if (reason === "time") {
+              resolve([]);
+            }
           }
-        });
+        );
       });
 
       if (collected && collected.length > 0) {
@@ -123,10 +134,14 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("🎉 ПРОЩЕНИЕ ПОЛУЧЕНО!")
           .setDescription(
             `**Поздравляем, гражданин ${interaction.user.username}!**\n\n` +
-            `Партия принимает ваше искупление! Ваш социальный рейтинг повышен.`
+              `Партия принимает ваше искупление! Ваш социальный рейтинг повышен.`
           )
           .addFields(
-            { name: "📈 Изменение Рейтинга", value: `+${CONFIG.SCORE_CHANGES.REDEEM_SUCCESS}`, inline: true },
+            {
+              name: "📈 Изменение Рейтинга",
+              value: `+${CONFIG.SCORE_CHANGES.REDEEM_SUCCESS}`,
+              inline: true,
+            },
             { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
           )
           .setFooter({ text: "Партия всегда даёт второй шанс! 🇨🇳" })
@@ -149,10 +164,14 @@ export class SanctionCommands extends BaseCommandHandler {
         .setTitle("❌ ПРОЩЕНИЕ ОТКАЗАНО")
         .setDescription(
           `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Вы не смогли должным образом выразить преданность Партии. Ваш социальный рейтинг понижен.`
+            `Вы не смогли должным образом выразить преданность Партии. Ваш социальный рейтинг понижен.`
         )
         .addFields(
-          { name: "📉 Изменение Рейтинга", value: `${CONFIG.SCORE_CHANGES.REDEEM_FAILURE}`, inline: true },
+          {
+            name: "📉 Изменение Рейтинга",
+            value: `${CONFIG.SCORE_CHANGES.REDEEM_FAILURE}`,
+            inline: true,
+          },
           { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
         )
         .setFooter({ text: "Партия разочарована вашим поведением! ⚠️" })
@@ -169,9 +188,9 @@ export class SanctionCommands extends BaseCommandHandler {
     const guildId = interaction.guildId || "dm";
 
     // Check cooldown
-    const lastWork = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "work_cooldown"
-    );
+    const lastWork = this.effectManager
+      .getEffectsByType(userId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "work_cooldown");
     if (lastWork) {
       const timeLeft = lastWork.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -184,17 +203,17 @@ export class SanctionCommands extends BaseCommandHandler {
       }
     }
 
-    // Select random task
-    const task = CONFIG.WORK_TASKS[Math.floor(Math.random() * CONFIG.WORK_TASKS.length)];
+    // Generate task using LLM
+    const task = await this.generateWorkTask();
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
       .setTitle("⚒️ РАБОТА ДЛЯ ПАРТИИ")
       .setDescription(
         `**Гражданин ${interaction.user.username}!**\n\n` +
-        `Партия нуждается в вашей помощи! Выполните задание:\n\n` +
-        `**${task.question}**\n\n` +
-        `⏱️ У вас есть 60 секунд!`
+          `Партия нуждается в вашей помощи! Выполните задание:\n\n` +
+          `**${task.question}**\n\n` +
+          `⏱️ У вас есть 60 секунд!`
       )
       .setFooter({ text: "Партия ценит вашу преданность! 👁️" })
       .setTimestamp();
@@ -212,7 +231,8 @@ export class SanctionCommands extends BaseCommandHandler {
     );
 
     // Wait for response
-    const filter = (m: any) => m.author.id === userId && m.content.trim() === task.answer;
+    const filter = (m: Message) =>
+      m.author.id === userId && m.content.trim() === task.answer;
 
     try {
       const channel = interaction.channel;
@@ -220,21 +240,24 @@ export class SanctionCommands extends BaseCommandHandler {
         throw new Error("Invalid channel");
       }
 
-      const collector = (channel as any).createMessageCollector({
+      const collector = (channel as TextChannel).createMessageCollector({
         filter,
         max: 1,
-        time: 60000
+        time: 60000,
       });
 
-      const collected: any[] = await new Promise((resolve) => {
-        collector.on('collect', (message: any) => {
+      const collected: Message[] = await new Promise((resolve) => {
+        collector.on("collect", (message: Message) => {
           resolve([message]);
         });
-        collector.on('end', (collected: any, reason: string) => {
-          if (reason === 'time') {
-            resolve([]);
+        collector.on(
+          "end",
+          (collected: ReadonlyCollection<string, Message>, reason: string) => {
+            if (reason === "time") {
+              resolve([]);
+            }
           }
-        });
+        );
       });
 
       if (collected && collected.length > 0) {
@@ -252,10 +275,14 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("✅ РАБОТА ВЫПОЛНЕНА!")
           .setDescription(
             `**Отличная работа, гражданин ${interaction.user.username}!**\n\n` +
-            `Партия благодарна за вашу преданность.`
+              `Партия благодарна за вашу преданность.`
           )
           .addFields(
-            { name: "💰 Награда", value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS}`, inline: true },
+            {
+              name: "💰 Награда",
+              value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS}`,
+              inline: true,
+            },
             { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
           )
           .setFooter({ text: "Продолжайте служить Партии! 🇨🇳" })
@@ -269,7 +296,7 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("❌ ЗАДАНИЕ НЕ ВЫПОЛНЕНО")
           .setDescription(
             `**Гражданин ${interaction.user.username}!**\n\n` +
-            `Вы не смогли выполнить задание Партии в срок. Попробуйте ещё раз позже.`
+              `Вы не смогли выполнить задание Партии в срок. Попробуйте ещё раз позже.`
           )
           .setFooter({ text: "Партия ждёт лучших результатов! ⚠️" })
           .setTimestamp();
@@ -278,6 +305,60 @@ export class SanctionCommands extends BaseCommandHandler {
       }
     } catch (error) {
       Logger.error(`Error in work-for-the-party: ${error}`);
+    }
+  }
+
+  private async generateWorkTask(): Promise<{
+    question: string;
+    answer: string;
+  }> {
+    try {
+      const completion = await this.mistral.chat.complete({
+        model: CONFIG.LLM.STANDARD_MODEL,
+        messages: [{ role: "user", content: CONFIG.WORK_TASK_PROMPT }],
+        temperature: CONFIG.LLM.TEMPERATURE,
+        maxTokens: CONFIG.LLM.MAX_TOKENS,
+      });
+
+      const response = completion.choices?.[0]?.message?.content;
+      if (!response)
+        throw new Error("No response from Mistral AI for work task generation");
+
+      // Handle different response types from Mistral
+      const responseText =
+        typeof response === "string" ? response : JSON.stringify(response);
+
+      // Remove markdown code blocks if present
+      let jsonString = responseText.replace(/```json\s*|\s*```/g, "").trim();
+
+      const jsonStartIndex = jsonString.indexOf("{");
+      const jsonEndIndex = jsonString.lastIndexOf("}");
+
+      if (
+        jsonStartIndex !== -1 &&
+        jsonEndIndex !== -1 &&
+        jsonEndIndex > jsonStartIndex
+      ) {
+        jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+      }
+
+      const parsed = JSON.parse(jsonString);
+
+      if (!parsed.question || !parsed.answer) {
+        throw new Error("Invalid task format from LLM");
+      }
+
+      return {
+        question: parsed.question,
+        answer: parsed.answer.trim(),
+      };
+    } catch (error) {
+      Logger.error(`Error generating work task: ${error}`);
+      // Fallback to a simple static task
+      return {
+        question: "Сколько будет 2 + 2?",
+        answer: "4",
+      };
     }
   }
 }

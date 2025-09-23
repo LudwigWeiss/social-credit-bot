@@ -1,8 +1,5 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  Interaction,
-} from "discord.js";
+import { Interaction } from "discord.js";
+import { Mistral } from "@mistralai/mistralai";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
 import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
@@ -17,6 +14,7 @@ export abstract class BaseCommandHandler {
     protected socialCreditManager: SocialCreditManager,
     protected databaseManager: DatabaseManager,
     protected effectManager: EffectManager,
+    protected mistral: Mistral,
     protected rateLimitManager?: RateLimitManager,
     protected messageContextManager?: MessageContextManager
   ) {}

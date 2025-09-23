@@ -1,13 +1,12 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
 import { Logger } from "../utils/Logger.js";
 
 export class FeedbackCommands extends BaseCommandHandler {
-  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+  async handleInteraction(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
     switch (interaction.commandName) {
       case "praise-bot":
         await this.handlePraiseBotCommand(interaction);
@@ -27,9 +26,9 @@ export class FeedbackCommands extends BaseCommandHandler {
     const guildId = interaction.guildId || "dm";
 
     // Check cooldown
-    const lastPraise = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "praise_cooldown"
-    );
+    const lastPraise = this.effectManager
+      .getEffectsByType(userId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "praise_cooldown");
     if (lastPraise) {
       const timeLeft = lastPraise.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -66,10 +65,14 @@ export class FeedbackCommands extends BaseCommandHandler {
       .setTitle("🙏 СПАСИБО ЗА ПОХВАЛУ!")
       .setDescription(
         `**Гражданин ${interaction.user.username}!**\n\n` +
-        `Партия ценит вашу поддержку системы социального рейтинга!`
+          `Партия ценит вашу поддержку системы социального рейтинга!`
       )
       .addFields(
-        { name: "💰 Бонус", value: `+${CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS}`, inline: true },
+        {
+          name: "💰 Бонус",
+          value: `+${CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS}`,
+          inline: true,
+        },
         { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
       )
       .setFooter({ text: "Партия всегда стремится к совершенству! 👁️" })
@@ -85,9 +88,9 @@ export class FeedbackCommands extends BaseCommandHandler {
     const guildId = interaction.guildId || "dm";
 
     // Check cooldown
-    const lastReport = this.effectManager.getEffectsByType(userId, "DAILY_CLAIM_RESET").find(
-      e => e.metadata?.type === "report_cooldown"
-    );
+    const lastReport = this.effectManager
+      .getEffectsByType(userId, "DAILY_CLAIM_RESET")
+      .find((e) => e.metadata?.type === "report_cooldown");
     if (lastReport) {
       const timeLeft = lastReport.expiresAt.getTime() - Date.now();
       if (timeLeft > 0) {
@@ -125,11 +128,15 @@ export class FeedbackCommands extends BaseCommandHandler {
       .setTitle("📝 ОТЧЁТ ОБ ОШИБКЕ ЗАРЕГИСТРИРОВАН")
       .setDescription(
         `**Гражданин ${interaction.user.username}!**\n\n` +
-        `Ваш отчёт об ошибке в работе системы социального рейтинга принят к рассмотрению. ` +
-        `Партия благодарит за бдительность, но напоминает о необходимости осторожности в обвинениях.`
+          `Ваш отчёт об ошибке в работе системы социального рейтинга принят к рассмотрению. ` +
+          `Партия благодарит за бдительность, но напоминает о необходимости осторожности в обвинениях.`
       )
       .addFields(
-        { name: "⚠️ Штраф", value: `${CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY}`, inline: true },
+        {
+          name: "⚠️ Штраф",
+          value: `${CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY}`,
+          inline: true,
+        },
         { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
       )
       .setFooter({ text: "Партия рассмотрит ваш отчёт! 📋" })

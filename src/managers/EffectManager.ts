@@ -9,7 +9,7 @@ export interface ActiveEffect {
   appliedAt: Date;
   expiresAt: Date;
   originalValue?: string; // For nickname changes, etc.
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type EffectType =
@@ -36,7 +36,7 @@ export class EffectManager {
     effectType: EffectType,
     durationMs: number,
     originalValue?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<string> {
     const effectId = `${userId}-${guildId}-${effectType}-${Date.now()}`;
     const appliedAt = new Date();
@@ -97,12 +97,16 @@ export class EffectManager {
     if (!userEffects) return 0;
 
     const initialLength = userEffects.length;
-    const filteredEffects = userEffects.filter((e) => e.effectType !== effectType);
+    const filteredEffects = userEffects.filter(
+      (e) => e.effectType !== effectType
+    );
     const removedCount = initialLength - filteredEffects.length;
 
     if (removedCount > 0) {
       this.activeEffects.set(userId, filteredEffects);
-      Logger.info(`Removed ${removedCount} ${effectType} effects from user ${userId}`);
+      Logger.info(
+        `Removed ${removedCount} ${effectType} effects from user ${userId}`
+      );
     }
 
     return removedCount;
@@ -119,7 +123,9 @@ export class EffectManager {
    * Get effects of a specific type for a user
    */
   getEffectsByType(userId: string, effectType: EffectType): ActiveEffect[] {
-    return this.getActiveEffects(userId).filter((e) => e.effectType === effectType);
+    return this.getActiveEffects(userId).filter(
+      (e) => e.effectType === effectType
+    );
   }
 
   /**
@@ -135,7 +141,9 @@ export class EffectManager {
   getOriginalValue(userId: string, effectType: EffectType): string | undefined {
     const effects = this.getEffectsByType(userId, effectType);
     // Return the most recent effect's original value
-    return effects.length > 0 ? effects[effects.length - 1].originalValue : undefined;
+    return effects.length > 0
+      ? effects[effects.length - 1].originalValue
+      : undefined;
   }
 
   /**
@@ -172,9 +180,12 @@ export class EffectManager {
    */
   private startCleanupInterval(): void {
     // Clean up every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupExpiredEffects();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupExpiredEffects();
+      },
+      5 * 60 * 1000
+    );
   }
 
   /**

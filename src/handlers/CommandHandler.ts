@@ -1,14 +1,10 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  Interaction,
-} from "discord.js";
+import { Interaction } from "discord.js";
+import { Mistral } from "@mistralai/mistralai";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
 import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
 import { RateLimitManager } from "../managers/RateLimitManager.js";
 import { MessageContextManager } from "../managers/MessageContextManager.js";
-import { Logger } from "../utils/Logger.js";
 import { SocialCreditCommands } from "./SocialCreditCommands.js";
 import { AdminCommands } from "./AdminCommands.js";
 import { SanctionCommands } from "./SanctionCommands.js";
@@ -28,6 +24,7 @@ export class CommandHandler {
     socialCreditManager: SocialCreditManager,
     databaseManager: DatabaseManager,
     effectManager: EffectManager,
+    mistral: Mistral,
     rateLimitManager?: RateLimitManager,
     messageContextManager?: MessageContextManager
   ) {
@@ -36,6 +33,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
+      mistral,
       rateLimitManager,
       messageContextManager
     );
@@ -44,6 +42,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
+      mistral,
       rateLimitManager,
       messageContextManager
     );
@@ -52,6 +51,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
+      mistral,
       rateLimitManager,
       messageContextManager
     );
@@ -60,6 +60,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
+      mistral,
       rateLimitManager,
       messageContextManager
     );
@@ -68,6 +69,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
+      mistral,
       rateLimitManager,
       messageContextManager
     );
@@ -76,6 +78,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
+      mistral,
       rateLimitManager,
       messageContextManager
     );
@@ -88,13 +91,32 @@ export class CommandHandler {
       const commandName = interaction.commandName;
 
       // Route commands to appropriate handlers
-      if (["social-credit", "leaderboard", "social-credit-history", "social-credit-stats"].includes(commandName)) {
+      if (
+        [
+          "social-credit",
+          "leaderboard",
+          "social-credit-history",
+          "social-credit-stats",
+        ].includes(commandName)
+      ) {
         await this.socialCreditCommands.handleInteraction(interaction);
-      } else if (["set-monitor-channel", "remove-monitor-channel", "list-monitored-channels"].includes(commandName)) {
+      } else if (
+        [
+          "set-monitor-channel",
+          "remove-monitor-channel",
+          "list-monitored-channels",
+        ].includes(commandName)
+      ) {
         await this.adminCommands.handleInteraction(interaction);
-      } else if (["redeem-myself", "work-for-the-party"].includes(commandName)) {
+      } else if (
+        ["redeem-myself", "work-for-the-party"].includes(commandName)
+      ) {
         await this.sanctionCommands.handleInteraction(interaction);
-      } else if (["enforce-harmony", "claim-daily", "spread-propaganda"].includes(commandName)) {
+      } else if (
+        ["enforce-harmony", "claim-daily", "spread-propaganda"].includes(
+          commandName
+        )
+      ) {
         await this.privilegeCommands.handleInteraction(interaction);
       } else if (["praise-bot", "report-mistake"].includes(commandName)) {
         await this.feedbackCommands.handleInteraction(interaction);
@@ -102,14 +124,16 @@ export class CommandHandler {
         await this.utilityCommands.handleInteraction(interaction);
       } else {
         await interaction.reply({
-          content: "🤔 Unknown command, citizen. The Party computers are confused.",
+          content:
+            "🤔 Неизвестная команда, гражданин. Компьютеры Партии в замешательстве.",
           ephemeral: true,
         });
       }
     } catch (error) {
       console.error("Error handling command:", error);
       await interaction.reply({
-        content: "🚨 ERROR: The social credit system has malfunctioned! Please contact your local Party representative.",
+        content:
+          "🚨 ОШИБКА: Система социального рейтинга вышла из строя! Пожалуйста, обратитесь к местному представителю Партии.",
         ephemeral: true,
       });
     }

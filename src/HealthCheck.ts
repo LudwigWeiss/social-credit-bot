@@ -5,7 +5,7 @@ import { CONFIG } from "./config.js";
 
 export class HealthCheck {
   private app: express.Application;
-  private server: any;
+  private server: import("http").Server | undefined;
 
   constructor(
     private client: Client,
@@ -32,13 +32,17 @@ export class HealthCheck {
           checks: {
             discord: {
               status: discordReady ? "healthy" : "unhealthy",
-              message: discordReady ? "Discord client is ready" : "Discord client is not ready"
+              message: discordReady
+                ? "Discord client is ready"
+                : "Discord client is not ready",
             },
             mongodb: {
               status: mongoConnected ? "healthy" : "unhealthy",
-              message: mongoConnected ? "MongoDB connected" : "MongoDB not connected"
-            }
-          }
+              message: mongoConnected
+                ? "MongoDB connected"
+                : "MongoDB not connected",
+            },
+          },
         };
 
         res.status(isHealthy ? 200 : 503).json(healthData);
@@ -46,7 +50,7 @@ export class HealthCheck {
         res.status(503).json({
           status: "unhealthy",
           timestamp: new Date().toISOString(),
-          error: error instanceof Error ? error.message : "Unknown error"
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     });
@@ -58,7 +62,7 @@ export class HealthCheck {
         version: "2.0.0",
         description: "Discord bot for social credit scoring with gamification",
         uptime: process.uptime(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     });
   }
@@ -75,7 +79,9 @@ export class HealthCheck {
 
   start(): void {
     this.server = this.app.listen(CONFIG.HEALTH_CHECK.PORT, () => {
-      console.log(`🚀 Health check server running on port ${CONFIG.HEALTH_CHECK.PORT}`);
+      console.log(
+        `🚀 Health check server running on port ${CONFIG.HEALTH_CHECK.PORT}`
+      );
     });
   }
 

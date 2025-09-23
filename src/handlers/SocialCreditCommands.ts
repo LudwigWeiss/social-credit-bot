@@ -1,13 +1,11 @@
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { MemeResponses } from "../utils/MemeResponses.js";
-import { CONFIG } from "../config.js";
 
 export class SocialCreditCommands extends BaseCommandHandler {
-  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
+  async handleInteraction(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
     switch (interaction.commandName) {
       case "social-credit":
         await this.handleSocialCreditCommand(interaction);
@@ -22,7 +20,9 @@ export class SocialCreditCommands extends BaseCommandHandler {
         await this.handleStatsCommand(interaction);
         break;
       default:
-        throw new Error(`Unknown social credit command: ${interaction.commandName}`);
+        throw new Error(
+          `Unknown social credit command: ${interaction.commandName}`
+        );
     }
   }
 
@@ -86,7 +86,9 @@ export class SocialCreditCommands extends BaseCommandHandler {
     if (activeEffects.length > 0) {
       let effectsText = "";
       for (const effect of activeEffects) {
-        const timeLeft = Math.ceil((effect.expiresAt.getTime() - Date.now()) / (60 * 1000));
+        const timeLeft = Math.ceil(
+          (effect.expiresAt.getTime() - Date.now()) / (60 * 1000)
+        );
         const effectName = this.getEffectDisplayName(effect.effectType);
         effectsText += `• ${effectName} (${timeLeft} мин)\n`;
       }
@@ -98,9 +100,15 @@ export class SocialCreditCommands extends BaseCommandHandler {
     }
 
     // Add daily claim status
-    const lastClaim = activeEffects.find(e => e.effectType === "DAILY_CLAIM_RESET" && e.metadata?.type === "daily_claim");
+    const lastClaim = activeEffects.find(
+      (e) =>
+        e.effectType === "DAILY_CLAIM_RESET" &&
+        e.metadata?.type === "daily_claim"
+    );
     if (lastClaim) {
-      const timeLeft = Math.ceil((lastClaim.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000));
+      const timeLeft = Math.ceil(
+        (lastClaim.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000)
+      );
       embed.addFields({
         name: "⏰ Ежедневный Бонус",
         value: `Доступен через ${timeLeft} часов`,
@@ -125,8 +133,8 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     let leaderboard;
     let title;
-    let embedColor = 0xffd700;
-    let embedTitle = "🏆 ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА 🏆";
+    const embedColor = 0xffd700;
+    const embedTitle = "🏆 ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА 🏆";
 
     // Check for active events that affect appearance
     // TODO: Implement event tracking for visual flair

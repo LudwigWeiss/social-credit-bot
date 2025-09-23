@@ -6,14 +6,16 @@ import { CONFIG } from "../config.js";
 
 export class Scheduler {
   private jobs: cron.ScheduledTask[] = [];
-  private eventCallback?: (eventType: string, data: any) => Promise<void>;
+  private eventCallback?: (eventType: string, data: unknown) => Promise<void>;
 
   constructor(
     private effectManager: EffectManager,
     private databaseManager: DatabaseManager
   ) {}
 
-  setEventCallback(callback: (eventType: string, data: any) => Promise<void>): void {
+  setEventCallback(
+    callback: (eventType: string, data: unknown) => Promise<void>
+  ): void {
     this.eventCallback = callback;
   }
 
@@ -31,7 +33,7 @@ export class Scheduler {
    * Stop all scheduled tasks
    */
   stop(): void {
-    this.jobs.forEach(job => job.stop());
+    this.jobs.forEach((job) => job.stop());
     this.jobs = [];
     Logger.info("📅 Scheduler stopped");
   }
@@ -40,21 +42,25 @@ export class Scheduler {
    * Schedule daily reset of daily claims at midnight UTC
    */
   private scheduleDailyReset(): void {
-    const job = cron.schedule("0 0 * * *", async () => {
-      try {
-        Logger.info("🌅 Running daily reset...");
+    const job = cron.schedule(
+      "0 0 * * *",
+      async () => {
+        try {
+          Logger.info("🌅 Running daily reset...");
 
-        // Reset daily claims by clearing DAILY_CLAIM_RESET effects
-        // This is handled automatically by EffectManager cleanup, but we can log it
-        Logger.info("✅ Daily claims reset completed");
+          // Reset daily claims by clearing DAILY_CLAIM_RESET effects
+          // This is handled automatically by EffectManager cleanup, but we can log it
+          Logger.info("✅ Daily claims reset completed");
 
-        // Could add more daily reset logic here
-      } catch (error) {
-        Logger.error("Error during daily reset:", error);
+          // Could add more daily reset logic here
+        } catch (error) {
+          Logger.error("Error during daily reset:", error);
+        }
+      },
+      {
+        timezone: "UTC",
       }
-    }, {
-      timezone: "UTC"
-    });
+    );
 
     this.jobs.push(job);
     Logger.info("📅 Daily reset scheduled for midnight UTC");
@@ -64,21 +70,26 @@ export class Scheduler {
    * Schedule periodic cleanup of old data
    */
   private scheduleCleanup(): void {
-    const job = cron.schedule("0 2 * * *", async () => { // 2 AM UTC
-      try {
-        Logger.info("🧹 Running scheduled cleanup...");
+    const job = cron.schedule(
+      "0 2 * * *",
+      async () => {
+        // 2 AM UTC
+        try {
+          Logger.info("🧹 Running scheduled cleanup...");
 
-        // Cleanup old history entries
-        await this.databaseManager.cleanupOldHistory();
+          // Cleanup old history entries
+          await this.databaseManager.cleanupOldHistory();
 
-        // EffectManager cleanup is automatic
-        Logger.info("✅ Scheduled cleanup completed");
-      } catch (error) {
-        Logger.error("Error during scheduled cleanup:", error);
+          // EffectManager cleanup is automatic
+          Logger.info("✅ Scheduled cleanup completed");
+        } catch (error) {
+          Logger.error("Error during scheduled cleanup:", error);
+        }
+      },
+      {
+        timezone: "UTC",
       }
-    }, {
-      timezone: "UTC"
-    });
+    );
 
     this.jobs.push(job);
     Logger.info("📅 Cleanup scheduled for 2 AM UTC daily");
@@ -89,21 +100,28 @@ export class Scheduler {
    */
   private scheduleRandomEvents(): void {
     // Trigger random events every 2-4 hours
-    const interval = Math.random() * (CONFIG.EVENTS.INTERVAL_MAX - CONFIG.EVENTS.INTERVAL_MIN) + CONFIG.EVENTS.INTERVAL_MIN;
+    const interval =
+      Math.random() *
+        (CONFIG.EVENTS.INTERVAL_MAX - CONFIG.EVENTS.INTERVAL_MIN) +
+      CONFIG.EVENTS.INTERVAL_MIN;
 
-    const job = cron.schedule(`*/${Math.floor(interval / (60 * 1000))} * * * *`, async () => {
-      try {
-        if (this.eventCallback) {
-          const eventType = this.getRandomEventType();
-          await this.eventCallback(eventType, {});
-          Logger.info(`🎲 Random event triggered: ${eventType}`);
+    const job = cron.schedule(
+      `*/${Math.floor(interval / (60 * 1000))} * * * *`,
+      async () => {
+        try {
+          if (this.eventCallback) {
+            const eventType = this.getRandomEventType();
+            await this.eventCallback(eventType, {});
+            Logger.info(`🎲 Random event triggered: ${eventType}`);
+          }
+        } catch (error) {
+          Logger.error("Error triggering random event:", error);
         }
-      } catch (error) {
-        Logger.error("Error triggering random event:", error);
+      },
+      {
+        timezone: "UTC",
       }
-    }, {
-      timezone: "UTC"
-    });
+    );
 
     this.jobs.push(job);
     Logger.info("📅 Random events scheduled");
@@ -114,7 +132,7 @@ export class Scheduler {
       "PARTY_INSPECTOR_VISIT",
       "SOCIAL_HARMONY_HOUR",
       "WESTERN_SPY_INFILTRATION",
-      "PRODUCTION_QUOTA"
+      "PRODUCTION_QUOTA",
     ];
     return events[Math.floor(Math.random() * events.length)];
   }
@@ -127,8 +145,8 @@ export class Scheduler {
     nextDailyReset: Date | null;
     nextCleanup: Date | null;
   } {
-    const dailyResetJob = this.jobs.find(job => job.name === 'dailyReset');
-    const cleanupJob = this.jobs.find(job => job.name === 'cleanup');
+    const dailyResetJob = this.jobs.find((job) => job.name === "dailyReset");
+    const cleanupJob = this.jobs.find((job) => job.name === "cleanup");
 
     return {
       activeJobs: this.jobs.length,
@@ -140,6 +158,7 @@ export class Scheduler {
   /**
    * Get next run time for a cron job (approximate)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private getNextRun(job: cron.ScheduledTask): Date | null {
     // This is a simplified implementation
     // In a real scenario, you'd need to calculate based on the cron expression
