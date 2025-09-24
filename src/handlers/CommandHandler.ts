@@ -10,6 +10,7 @@ import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
 import { RateLimitManager } from "../managers/RateLimitManager.js";
 import { MessageContextManager } from "../managers/MessageContextManager.js";
+import { DirectiveManager } from "../managers/DirectiveManager.js";
 import { SocialCreditCommands } from "./SocialCreditCommands.js";
 import { AdminCommands } from "./AdminCommands.js";
 import { SanctionCommands } from "./SanctionCommands.js";
@@ -24,15 +25,18 @@ export class CommandHandler {
   private privilegeCommands: PrivilegeCommands;
   private feedbackCommands: FeedbackCommands;
   private utilityCommands: UtilityCommands;
+  private directiveManager: DirectiveManager;
 
   constructor(
     socialCreditManager: SocialCreditManager,
     databaseManager: DatabaseManager,
     effectManager: EffectManager,
     openai: OpenAI,
+    directiveManager: DirectiveManager,
     rateLimitManager?: RateLimitManager,
     messageContextManager?: MessageContextManager
   ) {
+    this.directiveManager = directiveManager;
     // Initialize all command handlers
     this.socialCreditCommands = new SocialCreditCommands(
       socialCreditManager,
@@ -173,22 +177,63 @@ export class CommandHandler {
   private async handleDirectiveCommand(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
-    // This is a placeholder - we need DirectiveManager access
-    // For now, just show that the system exists
+    const userId = interaction.user.id;
+    const guildId = interaction.guildId || "dm";
+
+    const dailyDirectives = this.directiveManager.getDailyDirectives(
+      userId,
+      guildId
+    );
+    const weeklyGoals = this.directiveManager.getWeeklyGoals(userId, guildId);
+
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
-      .setTitle("📋 ВАШИ ТЕКУЩИЕ ЗАДАНИЯ")
-      .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Система директив временно недоступна. Эта функция будет активирована в следующем обновлении.\n\n` +
-          `**Скоро доступно:**\n` +
-          `📅 Ежедневные задания\n` +
-          `📊 Недельные цели\n` +
-          `🎯 Персональные задачи`
-      )
-      .setFooter({ text: "Партия готовит для вас новые задания! 🎯" })
+      .setTitle(`📋 Директивы для Гражданина ${interaction.user.username}`)
       .setTimestamp();
 
+    if (dailyDirectives.length === 0 && weeklyGoals.length === 0) {
+      embed.setDescription(
+        "У вас нет активных заданий. Партия предоставит вам новые цели в ближайшее время. Проявите активность!"
+      );
+    }
+
+    if (dailyDirectives.length > 0) {
+      const directive = dailyDirectives[0]; // Assuming one active daily directive
+      const timeLeft = Math.ceil(
+        (directive.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000)
+      );
+      embed.addFields({
+        name: `📅 Ежедневная Директива (Осталось: ${timeLeft}ч)`,
+        value: `**${directive.task}**\n*${directive.description}*\n${this.formatProgressBar(directive.currentProgress, directive.targetValue)}\n**Прогресс:** ${directive.currentProgress} / ${directive.targetValue}\n**Награда:** +${directive.reward} кредитов`,
+        inline: false,
+      });
+    }
+
+    if (weeklyGoals.length > 0) {
+      const goal = weeklyGoals[0]; // Assuming one active weekly goal
+      const timeLeft = Math.ceil(
+        (goal.expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+      );
+      embed.addFields({
+        name: `🗓️ Недельная Цель (Осталось: ${timeLeft}д)`,
+        value: `**${goal.goal}**\n*${goal.description}*\n${this.formatProgressBar(goal.currentProgress, goal.targetValue)}\n**Прогресс:** ${goal.currentProgress} / ${goal.targetValue}\n**Награда:** +${goal.reward} кредитов`,
+        inline: false,
+      });
+    }
+
     await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  }
+
+  private formatProgressBar(
+    current: number,
+    total: number,
+    length: number = 10
+  ): string {
+    if (total === 0) return "`[░░░░░░░░░░]` 0%";
+    const progress = Math.min(Math.max(current / total, 0), 1);
+    const filledBlocks = Math.round(progress * length);
+    const emptyBlocks = length - filledBlocks;
+    const bar = "█".repeat(filledBlocks) + "░".repeat(emptyBlocks);
+    return `\`[${bar}]\` ${Math.round(progress * 100)}%`;
   }
 }

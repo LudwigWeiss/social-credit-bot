@@ -629,8 +629,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
       const targetRank = this.socialCreditManager.getScoreRank(targetScore);
       const targetStatus = this.getUserStatusByScore(targetScore);
 
-      // Get recent history (fallback implementation)
-      const recentHistory: Array<{ reason: string; change: number }> = [];
+      // Get recent history
+      const recentHistory = await this.socialCreditManager.getUserHistory(
+        targetUser.id,
+        guildId,
+        25
+      );
 
       // Get active effects
       const activeEffects = this.effectManager.getActiveEffects(targetUser.id);
@@ -672,8 +676,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
       if (recentHistory && recentHistory.length > 0) {
         const historyText = recentHistory
           .map(
-            (h: { reason: string; change: number }) =>
-              `• ${h.reason} (${h.change > 0 ? "+" : ""}${h.change})`
+            (h) =>
+              `• ${h.reason} (${h.scoreChange > 0 ? "+" : ""}${h.scoreChange})`
           )
           .join("\n");
 
