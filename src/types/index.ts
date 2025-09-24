@@ -8,7 +8,7 @@ export interface MessageAnalysis {
 export interface BotConfig {
   discordToken: string;
   discordClientId: string;
-  mistralApiKey: string;
+  openaiApiKey: string;
   monitoredChannelId?: string;
 }
 

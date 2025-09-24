@@ -24,7 +24,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@mistralai/mistralai": "^1.10.0",
+    "openai": "^4.0.0",
     "@types/node-cron": "^3.0.11",
     "discord.js": "^14.22.1",
     "dotenv": "^17.2.2",

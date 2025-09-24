@@ -1,5 +1,5 @@
 import { Interaction } from "discord.js";
-import { Mistral } from "@mistralai/mistralai";
+import OpenAI from "openai";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
 import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
@@ -24,7 +24,7 @@ export class CommandHandler {
     socialCreditManager: SocialCreditManager,
     databaseManager: DatabaseManager,
     effectManager: EffectManager,
-    mistral: Mistral,
+    openai: OpenAI,
     rateLimitManager?: RateLimitManager,
     messageContextManager?: MessageContextManager
   ) {
@@ -33,7 +33,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
-      mistral,
+      openai,
       rateLimitManager,
       messageContextManager
     );
@@ -42,7 +42,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
-      mistral,
+      openai,
       rateLimitManager,
       messageContextManager
     );
@@ -51,7 +51,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
-      mistral,
+      openai,
       rateLimitManager,
       messageContextManager
     );
@@ -60,7 +60,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
-      mistral,
+      openai,
       rateLimitManager,
       messageContextManager
     );
@@ -69,7 +69,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
-      mistral,
+      openai,
       rateLimitManager,
       messageContextManager
     );
@@ -78,7 +78,7 @@ export class CommandHandler {
       socialCreditManager,
       databaseManager,
       effectManager,
-      mistral,
+      openai,
       rateLimitManager,
       messageContextManager
     );

@@ -4,7 +4,7 @@ A meme-themed Discord bot that analyzes messages and assigns social credit score
 
 ## 🎯 Features
 
-- **Message Analysis**: Uses Mistral AI to analyze messages and determine if they're "good" or "bad" for social credits
+- **Message Analysis**: Uses OpenAI-compatible API to analyze messages and determine if they're "good" or "bad" for social credits
 - **Score Tracking**: Tracks individual user scores per server and globally
 - **Meme Responses**: All interactions are in meme format with Chinese Social Credit System themes
 - **Leaderboards**: View top citizens in your server or globally
@@ -40,7 +40,8 @@ build:
 - Node.js 18 or higher
 - MongoDB (local or cloud instance)
 - Discord Bot Token
-- Mistral AI API Key
+- OpenAI Compatible API Key (e.g., Mistral AI, OpenAI, etc.)
+- Configurable API endpoint and model names via environment variables
 
 ### Installation
 
@@ -64,7 +65,10 @@ cp .env.example .env
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
 DISCORD_CLIENT_ID=your_discord_client_id_here
-MISTRAL_API_KEY=your_mistral_api_key_here
+OPENAI_API_KEY=your_api_key_here
+OPENAI_BASE_URL=https://api.mistral.ai/v1
+OPENAI_STANDARD_MODEL=mistral-medium-latest
+OPENAI_CHEAP_MODEL=mistral-small-latest
 MONGODB_URI=mongodb://localhost:27017/social-credit-bot
 ```
 
@@ -151,10 +155,11 @@ View server-wide social credit statistics.
 
 - **TypeScript**: Fully typed codebase
 - **Discord.js v14**: Latest Discord API wrapper
-- **Mistral AI**: mistral-small-latest for message analysis
+- **OpenAI SDK**: Configurable OpenAI-compatible API for message analysis
 - **MongoDB + Mongoose**: Robust database with schema validation
 - **Modular Design**: Separate managers for different concerns
 - **Graceful Shutdown**: Proper cleanup on exit
+- **Environment-based Configuration**: API endpoints and models configurable via .env
 
 ### File Structure
 

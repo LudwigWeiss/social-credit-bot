@@ -13,7 +13,7 @@ import {
   MessageCollector,
   Webhook,
 } from "discord.js";
-import { Mistral } from "@mistralai/mistralai";
+import OpenAI from "openai";
 import * as dotenv from "dotenv";
 import { SocialCreditManager } from "./managers/SocialCreditManager.js";
 import { DatabaseManager } from "./managers/DatabaseManager.js";
@@ -33,7 +33,7 @@ dotenv.config();
 
 class SocialCreditBot {
   private client: Client;
-  private mistral: Mistral;
+  private openai: OpenAI;
   private socialCreditManager: SocialCreditManager;
   private databaseManager: DatabaseManager;
   private effectManager: EffectManager;
@@ -55,8 +55,9 @@ class SocialCreditBot {
       ],
     });
 
-    this.mistral = new Mistral({
-      apiKey: process.env.MISTRAL_API_KEY || "",
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || "",
+      baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
     });
 
     this.databaseManager = new DatabaseManager();
@@ -76,7 +77,7 @@ class SocialCreditBot {
       this.socialCreditManager,
       this.databaseManager,
       this.effectManager,
-      this.mistral,
+      this.openai,
       this.rateLimitManager,
       this.messageContextManager
     );
@@ -117,14 +118,25 @@ class SocialCreditBot {
   }
 
   private async handleMessage(message: Message): Promise<void> {
-    // Ignore bot messages and non-monitored channels
-    if (message.author.bot) return;
+    const userId = message.author.id;
     const guildId = message.guild?.id || "dm";
-    if (!this.commandHandler.isChannelMonitored(guildId, message.channelId))
+    const sanitizedContent = Validators.sanitizeMessage(message.content);
+
+    Logger.debug(`Handling message from user ${userId} in guild ${guildId}, channel ${message.channelId}: ${sanitizedContent.substring(0, 100)}...`);
+
+    // Ignore bot messages and non-monitored channels
+    if (message.author.bot) {
+      Logger.debug(`Skipping bot message from ${userId}`);
       return;
+    }
+    if (!this.commandHandler.isChannelMonitored(guildId, message.channelId)) {
+      Logger.debug(`Skipping message in non-monitored channel ${message.channelId} for guild ${guildId}`);
+      return;
+    }
 
     // Add message to context history
     this.messageContextManager.addMessage(message);
+    Logger.debug(`Added message to context history for user ${userId}`);
 
     // Skip messages with attachments, links, or embeds
     if (
@@ -132,17 +144,19 @@ class SocialCreditBot {
       message.embeds.length > 0 ||
       Validators.containsLinks(message.content)
     ) {
+      Logger.debug(`Skipping message with attachments/links/embeds from user ${userId}`);
       return;
     }
 
     // Skip empty messages
-    if (!message.content.trim()) return;
-
-    const userId = message.author.id;
-    const sanitizedContent = Validators.sanitizeMessage(message.content);
+    if (!message.content.trim()) {
+      Logger.debug(`Skipping empty message from user ${userId}`);
+      return;
+    }
 
     // Check for critically bad keywords (immediate penalty, no AI cost)
     if (this.hasCriticallyBadKeywords(sanitizedContent)) {
+      Logger.info(`Detected critically bad keywords in message from user ${userId}: ${sanitizedContent}`);
       await this.applyKeywordPenalty(message, sanitizedContent);
       return; // Don't process further
     }
@@ -152,7 +166,9 @@ class SocialCreditBot {
       userId,
       guildId
     );
+    Logger.debug(`User ${userId} current score: ${userScore}`);
     if (userScore <= CONFIG.SCORE_THRESHOLDS.PENALTIES.SEVERE) {
+      Logger.info(`Applying speech re-education to user ${userId} with score ${userScore}`);
       await this.applySpeechReeducation(message, sanitizedContent);
       return; // Don't process further
     }
@@ -176,6 +192,7 @@ class SocialCreditBot {
       return;
     }
 
+    Logger.info(`Starting message analysis for user ${userId} in guild ${guildId}`);
     try {
       // Get context for analysis
       const recentContext =
@@ -184,10 +201,12 @@ class SocialCreditBot {
           message.channelId,
           5
         );
+      Logger.debug(`Retrieved ${recentContext.length} context messages for analysis`);
 
       const messagesToAnalyze = rateLimitResult.bufferedMessages || [
         sanitizedContent,
       ];
+      Logger.debug(`Analyzing ${messagesToAnalyze.length} messages (buffered: ${!!rateLimitResult.bufferedMessages})`);
       const analysis = await this.analyzeMessageWithContext(
         messagesToAnalyze,
         recentContext,
@@ -197,9 +216,10 @@ class SocialCreditBot {
         guildId
       );
 
+      Logger.info(`Analysis completed for user ${userId}: verdict=${analysis.verdict}, score_change=${analysis.score_change}`);
       await this.processAnalysis(message, analysis, sanitizedContent);
     } catch (error) {
-      Logger.error("Error processing message:", error);
+      Logger.error(`Error processing message for user ${userId}:`, error);
     }
   }
 
@@ -211,12 +231,15 @@ class SocialCreditBot {
     userId?: string,
     guildId?: string
   ): Promise<MessageAnalysisResult> {
+    Logger.debug(`Starting message analysis with context for user ${userId || 'unknown'} in guild ${guildId || 'unknown'}`);
+
     const contextString = this.messageContextManager.buildContextString(
       userMessages,
       recentContext,
       currentMessage,
       authorUsername
     );
+    Logger.debug(`Built context string of length ${contextString.length} characters`);
 
     // Dynamic prompting based on user history
     let useCheapModel = false;
@@ -232,6 +255,7 @@ class SocialCreditBot {
         guildId,
         10
       );
+      Logger.debug(`Retrieved user history: ${userHistory.length} entries, current score: ${userScore}`);
 
       // Use cheap model for neutral users with consistent neutral history
       const recentVerdicts = userHistory.slice(0, 5).map((h) => {
@@ -246,6 +270,9 @@ class SocialCreditBot {
       if (Math.abs(userScore) < 50 && neutralRatio > 0.6) {
         useCheapModel = true;
         simplifiedPrompt = true;
+        Logger.debug(`Using cheap model and simplified prompt for user ${userId} (neutral ratio: ${neutralRatio})`);
+      } else {
+        Logger.debug(`Using standard model and full prompt for user ${userId} (score: ${userScore}, neutral ratio: ${neutralRatio})`);
       }
     }
 
@@ -274,23 +301,29 @@ ${contextString}
 - Отвечай на русском языке
 - НЕ используй markdown блоки в ответе!`;
 
-    const completion = await this.mistral.chat.complete({
+    Logger.debug(`Sending analysis request to OpenAI using ${useCheapModel ? 'cheap' : 'standard'} model`);
+    const completion = await this.openai.chat.completions.create({
       model: useCheapModel ? CONFIG.LLM.CHEAP_MODEL : CONFIG.LLM.STANDARD_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: CONFIG.LLM.TEMPERATURE,
-      maxTokens: CONFIG.LLM.MAX_TOKENS,
+      max_tokens: CONFIG.LLM.MAX_TOKENS,
     });
 
     const response = completion.choices?.[0]?.message?.content;
-    if (!response) throw new Error("No response from Mistral AI");
+    if (!response) {
+      Logger.error("No response received from OpenAI API");
+      throw new Error("No response from OpenAI API");
+    }
 
     // Handle different response types from Mistral
     const responseText =
       typeof response === "string" ? response : JSON.stringify(response);
+    Logger.debug(`Received response from OpenAI: ${responseText.substring(0, 200)}...`);
 
     // Remove markdown code blocks if present
     // Remove markdown code blocks and extract JSON object
     let jsonString = responseText.replace(/```json\s*|\s*```/g, "").trim();
+    Logger.debug(`Cleaned response string: ${jsonString.substring(0, 100)}...`);
 
     const jsonStartIndex = jsonString.indexOf("{");
     const jsonEndIndex = jsonString.lastIndexOf("}");
@@ -301,29 +334,35 @@ ${contextString}
       jsonEndIndex > jsonStartIndex
     ) {
       jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+      Logger.debug(`Extracted JSON substring: ${jsonString}`);
     }
 
     try {
       const parsed = JSON.parse(jsonString);
+      Logger.debug(`Successfully parsed JSON response`);
 
       // Validate the response structure
       if (
         !parsed.verdict ||
         !["good", "bad", "neutral"].includes(parsed.verdict)
       ) {
+        Logger.error(`Invalid verdict in parsed response: ${parsed.verdict}`);
         throw new Error("Invalid verdict in response");
       }
 
       parsed.score_change = Number(parsed.score_change);
       if (!Validators.isValidScoreChange(parsed.score_change)) {
+        Logger.error(`Invalid score change in parsed response: ${parsed.score_change}`);
         throw new Error("Invalid score change in response");
       }
 
+      Logger.info(`Analysis result: verdict=${parsed.verdict}, score_change=${parsed.score_change}, reason=${parsed.reason}`);
       return parsed;
-    } catch {
-      Logger.error("Failed to parse Mistral AI response:", jsonString);
+    } catch (parseError) {
+      Logger.error("Failed to parse OpenAI API response:", jsonString);
       Logger.error("Original response:", responseText);
-      throw new Error("Invalid JSON response from Mistral AI");
+      Logger.error("Parse error:", parseError);
+      throw new Error("Invalid JSON response from OpenAI API");
     }
   }
 
@@ -623,16 +662,16 @@ ${contextString}
       originalMessage
     );
 
-    const completion = await this.mistral.chat.complete({
+    const completion = await this.openai.chat.completions.create({
       model: CONFIG.LLM.STANDARD_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: CONFIG.LLM.TEMPERATURE,
-      maxTokens: CONFIG.LLM.MAX_TOKENS,
+      max_tokens: CONFIG.LLM.MAX_TOKENS,
     });
 
     const response = completion.choices?.[0]?.message?.content;
     if (!response)
-      throw new Error("No response from Mistral AI for speech correction");
+      throw new Error("No response from OpenAI API for speech correction");
 
     // Handle different response types from Mistral
     const responseText =
@@ -1130,10 +1169,6 @@ ${contextString}
       throw new Error("Invalid Discord token provided");
     }
 
-    if (!Validators.isValidMistralKey(process.env.MISTRAL_API_KEY || "")) {
-      throw new Error("Invalid Mistral API key provided");
-    }
-
     if (!Validators.isValidSnowflake(process.env.DISCORD_CLIENT_ID || "")) {
       throw new Error("Invalid Discord client ID provided");
     }
@@ -1179,6 +1214,7 @@ ${contextString}
     messages: string[],
     channelId: string
   ): Promise<void> {
+    Logger.info(`Starting buffered message analysis for user ${userId} in guild ${guildId}, channel ${channelId} (${messages.length} messages)`);
     try {
       const channel = this.client.channels.cache.get(channelId);
       if (!channel || !channel.isTextBased()) {
@@ -1187,6 +1223,8 @@ ${contextString}
         );
         return;
       }
+      Logger.debug(`Retrieved channel ${channelId} for buffered analysis`);
+
       // Get context for analysis
       const recentContext =
         this.messageContextManager.getInterleavedRecentContext(
@@ -1194,9 +1232,12 @@ ${contextString}
           channelId,
           5
         );
+      Logger.debug(`Retrieved ${recentContext.length} context messages for buffered analysis`);
 
       const currentMessage = messages[messages.length - 1];
       const user = await this.client.users.fetch(userId);
+      Logger.debug(`Fetched user ${userId} (${user.username}) for buffered analysis`);
+
       const analysis = await this.analyzeMessageWithContext(
         messages,
         recentContext,
@@ -1208,7 +1249,10 @@ ${contextString}
 
       // For buffered analysis, we process the score change directly without creating a mock message
       // since we can't reply to the original message anyway
-      if (analysis.verdict === "neutral") return;
+      if (analysis.verdict === "neutral") {
+        Logger.debug(`Buffered analysis result: neutral - no action taken`);
+        return;
+      }
 
       // Handle score changes based on verdict
       if (analysis.verdict === "good" && analysis.score_change > 0) {
@@ -1222,6 +1266,7 @@ ${contextString}
 
         // Mark positive score given
         this.rateLimitManager.markPositiveScore(userId, guildId);
+        Logger.debug(`Marked positive score for buffered analysis user ${userId}`);
       } else if (analysis.verdict === "bad") {
         // Bad behavior is NEVER rate limited - always punish immediately
         Logger.info(
@@ -1257,9 +1302,10 @@ ${contextString}
 
       if (channel instanceof TextChannel) {
         await channel.send({ embeds: [embed] });
+        Logger.debug(`Sent buffered analysis response embed to channel ${channelId}`);
       }
     } catch (error) {
-      Logger.error("Error processing buffered messages:", error);
+      Logger.error(`Error processing buffered messages for user ${userId}:`, error);
     }
   }
 }

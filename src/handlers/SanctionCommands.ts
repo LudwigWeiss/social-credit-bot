@@ -4,12 +4,31 @@ import {
   Message,
   TextChannel,
   ReadonlyCollection,
+  MessageFlags,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
 import { Logger } from "../utils/Logger.js";
 
 export class SanctionCommands extends BaseCommandHandler {
+  private isRateLimitError(error: unknown): boolean {
+    if (error instanceof Error && error.message.includes("Status 429")) {
+      return true;
+    }
+
+    if (typeof error === "object" && error !== null) {
+      const err = error as Record<string, unknown>;
+      if (typeof err.status === "number" && err.status === 429) return true;
+      if (typeof err.code === "number" && err.code === 429) return true;
+      if (typeof err.response === "object" && err.response !== null) {
+        const resp = err.response as Record<string, unknown>;
+        if (typeof resp.status === "number" && resp.status === 429) return true;
+      }
+    }
+
+    return false;
+  }
+
   async handleInteraction(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
@@ -37,7 +56,7 @@ export class SanctionCommands extends BaseCommandHandler {
       await interaction.reply({
         content:
           "❌ Вы не нуждаетесь в искуплении, гражданин! Ваш социальный рейтинг в порядке.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -52,7 +71,7 @@ export class SanctionCommands extends BaseCommandHandler {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
           content: `⏰ Подождите ещё ${minutesLeft} минут перед следующим искуплением, гражданин!`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -197,11 +216,14 @@ export class SanctionCommands extends BaseCommandHandler {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
           content: `⏰ Подождите ещё ${minutesLeft} минут перед следующей работой для Партии!`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
     }
+
+    // Defer the reply since task generation may take time
+    await interaction.deferReply();
 
     // Generate task using LLM
     const task = await this.generateWorkTask();
@@ -218,7 +240,7 @@ export class SanctionCommands extends BaseCommandHandler {
       .setFooter({ text: "Партия ценит вашу преданность! 👁️" })
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     // Set cooldown
     await this.effectManager.applyEffect(
@@ -312,53 +334,124 @@ export class SanctionCommands extends BaseCommandHandler {
     question: string;
     answer: string;
   }> {
-    try {
-      const completion = await this.mistral.chat.complete({
-        model: CONFIG.LLM.STANDARD_MODEL,
-        messages: [{ role: "user", content: CONFIG.WORK_TASK_PROMPT }],
-        temperature: CONFIG.LLM.TEMPERATURE,
-        maxTokens: CONFIG.LLM.MAX_TOKENS,
-      });
+    const maxRetries = CONFIG.LLM.RETRY_ATTEMPTS;
+    const baseDelay = CONFIG.LLM.RETRY_DELAY_MS;
 
-      const response = completion.choices?.[0]?.message?.content;
-      if (!response)
-        throw new Error("No response from Mistral AI for work task generation");
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const completion = await this.openai.chat.completions.create({
+          model: CONFIG.LLM.STANDARD_MODEL,
+          messages: [{ role: "user", content: CONFIG.WORK_TASK_PROMPT }],
+          temperature: CONFIG.LLM.TEMPERATURE,
+          max_tokens: CONFIG.LLM.MAX_TOKENS,
+        });
 
-      // Handle different response types from Mistral
-      const responseText =
-        typeof response === "string" ? response : JSON.stringify(response);
+        const response = completion.choices?.[0]?.message?.content;
+        if (!response)
+          throw new Error(
+            "No response from OpenAI API for work task generation"
+          );
 
-      // Remove markdown code blocks if present
-      let jsonString = responseText.replace(/```json\s*|\s*```/g, "").trim();
+        // Handle different response types from Mistral
+        const responseText =
+          typeof response === "string" ? response : JSON.stringify(response);
 
-      const jsonStartIndex = jsonString.indexOf("{");
-      const jsonEndIndex = jsonString.lastIndexOf("}");
+        // Clean up the response text
+        let jsonString = responseText.trim();
 
-      if (
-        jsonStartIndex !== -1 &&
-        jsonEndIndex !== -1 &&
-        jsonEndIndex > jsonStartIndex
-      ) {
-        jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+        // Remove markdown code blocks if present
+        jsonString = jsonString.replace(/```json\s*|\s*```/g, "").trim();
+
+        // Try to parse the entire cleaned string as JSON first
+        let parsed;
+        try {
+          parsed = JSON.parse(jsonString);
+        } catch {
+          // If direct parsing fails, try to extract JSON object
+          const jsonStartIndex = jsonString.indexOf("{");
+          if (jsonStartIndex === -1) {
+            throw new Error("No JSON object found in response");
+          }
+
+          // Find the matching closing brace by counting braces
+          let braceCount = 0;
+          let jsonEndIndex = -1;
+          for (let i = jsonStartIndex; i < jsonString.length; i++) {
+            if (jsonString[i] === "{") {
+              braceCount++;
+            } else if (jsonString[i] === "}") {
+              braceCount--;
+              if (braceCount === 0) {
+                jsonEndIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (jsonEndIndex === -1) {
+            throw new Error("No matching closing brace found in JSON");
+          }
+
+          jsonString = jsonString.substring(jsonStartIndex, jsonEndIndex + 1);
+
+          // Try parsing the extracted JSON
+          parsed = JSON.parse(jsonString);
+        }
+
+        if (!parsed || typeof parsed !== "object") {
+          throw new Error("Parsed result is not a valid object");
+        }
+
+        if (!parsed.question || !parsed.answer) {
+          throw new Error(
+            "Invalid task format from LLM - missing question or answer"
+          );
+        }
+
+        // Ensure answer is a string and trim it
+        const answer =
+          typeof parsed.answer === "string"
+            ? parsed.answer.trim()
+            : String(parsed.answer).trim();
+
+        return {
+          question: String(parsed.question),
+          answer: answer,
+        };
+      } catch (error: unknown) {
+        // Check if this is a rate limit error (429)
+        const isRateLimit = this.isRateLimitError(error);
+
+        if (isRateLimit && attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+          Logger.warn(
+            `Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        // If not a rate limit error or max retries reached, log and fallback
+        Logger.error(
+          `Error generating work task (attempt ${attempt + 1}/${maxRetries + 1}): ${error}`
+        );
+        if (attempt < maxRetries) {
+          Logger.info(`Retrying work task generation...`);
+          continue;
+        }
+
+        // Fallback to a simple static task
+        return {
+          question: "Сколько будет 2 + 2?",
+          answer: "4",
+        };
       }
-
-      const parsed = JSON.parse(jsonString);
-
-      if (!parsed.question || !parsed.answer) {
-        throw new Error("Invalid task format from LLM");
-      }
-
-      return {
-        question: parsed.question,
-        answer: parsed.answer.trim(),
-      };
-    } catch (error) {
-      Logger.error(`Error generating work task: ${error}`);
-      // Fallback to a simple static task
-      return {
-        question: "Сколько будет 2 + 2?",
-        answer: "4",
-      };
     }
+
+    // This should never be reached, but just in case
+    return {
+      question: "Сколько будет 2 + 2?",
+      answer: "4",
+    };
   }
 }

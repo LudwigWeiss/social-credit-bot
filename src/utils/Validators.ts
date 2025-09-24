@@ -5,12 +5,6 @@ export class Validators {
       token && token.length >= 24 && /^[A-Za-z0-9._-]+$/.test(token)
     );
   }
-
-  static isValidMistralKey(key: string): boolean {
-    // Mistral API keys are typically long alphanumeric strings
-    return Boolean(key && key.length >= 20 && /^[A-Za-z0-9]+$/.test(key));
-  }
-
   static isValidSnowflake(id: string): boolean {
     // Discord snowflakes are 17-19 digit numbers
     return /^\d{17,19}$/.test(id);

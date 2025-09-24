@@ -134,10 +134,13 @@ export const CONFIG = {
 
   // LLM settings
   LLM: {
-    CHEAP_MODEL: "mistral-small-latest", // For neutral users
-    STANDARD_MODEL: "mistral-medium-latest",
+    CHEAP_MODEL: process.env.OPENAI_CHEAP_MODEL || "mistral-small-latest", // For neutral users
+    STANDARD_MODEL:
+      process.env.OPENAI_STANDARD_MODEL || "mistral-medium-latest",
     TEMPERATURE: 0.7,
     MAX_TOKENS: 1500,
+    RETRY_ATTEMPTS: 3,
+    RETRY_DELAY_MS: 1000, // Base delay for exponential backoff
   },
 
   // Work for the party task generation prompt
