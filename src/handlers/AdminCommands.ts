@@ -3,6 +3,7 @@ import {
   EmbedBuilder,
   PermissionFlagsBits,
   ChannelType,
+  MessageFlags,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 
@@ -35,7 +36,7 @@ export class AdminCommands extends BaseCommandHandler {
       await interaction.reply({
         content:
           "🚫 Доступ запрещён! Только партийные чиновники (администраторы) могут устанавливать каналы мониторинга!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -47,7 +48,7 @@ export class AdminCommands extends BaseCommandHandler {
       await interaction.reply({
         content:
           "❌ Неверный канал! Пожалуйста, выберите текстовый канал для мониторинга.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -86,7 +87,7 @@ export class AdminCommands extends BaseCommandHandler {
       await interaction.reply({
         content:
           "🚫 Доступ запрещён! Только партийные чиновники (администраторы) могут управлять мониторингом!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -97,7 +98,7 @@ export class AdminCommands extends BaseCommandHandler {
     if (!channel || channel.type !== ChannelType.GuildText) {
       await interaction.reply({
         content: "❌ Неверный канал! Пожалуйста, выберите текстовый канал.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -126,13 +127,13 @@ export class AdminCommands extends BaseCommandHandler {
       } else {
         await interaction.reply({
           content: `❌ Канал ${channel} не был в списке отслеживаемых.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     } catch {
       await interaction.reply({
         content: "❌ Ошибка при удалении канала из мониторинга.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }
@@ -147,7 +148,7 @@ export class AdminCommands extends BaseCommandHandler {
       await interaction.reply({
         content:
           "🚫 Доступ запрещён! Только партийные чиновники (администраторы) могут просматривать мониторинг!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -162,7 +163,7 @@ export class AdminCommands extends BaseCommandHandler {
         await interaction.reply({
           content:
             "📊 В этом сервере нет отслеживаемых каналов. Используйте `/set-monitor-channel` для добавления.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -189,11 +190,14 @@ export class AdminCommands extends BaseCommandHandler {
 
       embed.setFooter({ text: "Партия наблюдает за всеми! 👁️" });
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({
+        embeds: [embed],
+        flags: MessageFlags.Ephemeral,
+      });
     } catch {
       await interaction.reply({
         content: "❌ Ошибка при получении списка каналов.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

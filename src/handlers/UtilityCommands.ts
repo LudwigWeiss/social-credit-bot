@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 
 export class UtilityCommands extends BaseCommandHandler {
@@ -20,7 +24,7 @@ export class UtilityCommands extends BaseCommandHandler {
     if (!this.rateLimitManager) {
       await interaction.reply({
         content: "❌ Rate limit manager not available.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -91,6 +95,6 @@ export class UtilityCommands extends BaseCommandHandler {
       });
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 }

@@ -33,6 +33,14 @@ export const CONFIG = {
     WORK_FOR_PARTY: 30 * 60 * 1000, // 30 minutes
     PRAISE_BOT: 60 * 60 * 1000, // 1 hour
     REPORT_MISTAKE: 60 * 60 * 1000, // 1 hour
+    // Enhanced Sanction Commands
+    PUBLIC_CONFESSION: 6 * 60 * 60 * 1000, // 6 hours
+    COMMUNITY_SERVICE: 2 * 60 * 60 * 1000, // 2 hours
+    LOYALTY_QUIZ: 4 * 60 * 60 * 1000, // 4 hours
+    // Enhanced Privilege Commands
+    PROPAGANDA_BROADCAST: 12 * 60 * 60 * 1000, // 12 hours
+    PARTY_FAVOR: 24 * 60 * 60 * 1000, // 24 hours
+    INVESTIGATION: 8 * 60 * 60 * 1000, // 8 hours
   },
 
   // Score changes
@@ -46,6 +54,16 @@ export const CONFIG = {
     PRAISE_BOT_BONUS: 2,
     REPORT_MISTAKE_PENALTY: -10, // If report is invalid
     KEYWORD_PENALTY: -50, // For critically bad keywords
+    // Enhanced Mechanics
+    PUBLIC_CONFESSION_SUCCESS: 50,
+    PUBLIC_CONFESSION_FAILURE: -25,
+    COMMUNITY_SERVICE_SUCCESS: 15,
+    LOYALTY_QUIZ_PER_CORRECT: 10,
+    PROPAGANDA_BROADCAST_BONUS: 50,
+    INVESTIGATION_COST: -5,
+    PARTY_FAVOR_COST: 100,
+    DIRECTIVE_COMPLETION: 15, // Default daily directive reward
+    WEEKLY_GOAL_COMPLETION: 50, // Default weekly goal reward
   },
 
   // Daily claim amounts by rank
@@ -141,6 +159,34 @@ export const CONFIG = {
     MAX_TOKENS: 1500,
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY_MS: 1000, // Base delay for exponential backoff
+    // Improved analysis prompt with better negation and context handling
+    ENHANCED_ANALYSIS_PROMPT: `Ты - Верховный ИИ Китайской Системы Социального Рейтинга (мем версия). Проанализируй сообщения пользователя с учётом контекста и определи, хорошо ли это, плохо или нейтрально для социального рейтинга.
+
+КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
+1. Анализируй ТОЛЬКО собственные высказывания и мнения пользователя. Если пользователь цитирует кого-то (используя > или кавычки) или выражает несогласие с негативным утверждением (например, "Неправильно говорить X"), НЕ наказывай их.
+2. САРКАЗМ И ОТРИЦАНИЕ: Будь крайне внимателен к сарказму и отрицанию. Утверждение типа "Я определённо НЕ люблю великую КПК" является негативным. Утверждение типа "Некоторые говорят, что партия плохая, но я думаю они великие" является позитивным.
+3. Фокусируйся на намерениях автора, а не на буквальном содержании цитат.
+
+{contextString}
+
+ВАЖНО: Отвечай ТОЛЬКО чистым JSON без markdown блоков, без дополнительного текста, без объяснений!
+
+Формат ответа:
+{
+    "verdict": "good" | "bad" | "neutral",
+    "score_change": число (от -100 до 100, 0 для нейтрального),
+    "reason": "ОЧЕНЬ краткое мем объяснение (1-2 предложения) в стиле Китайской Системы Социального Рейтинга",
+    "meme_response": "ОЧЕНЬ краткий и смешной ответ (1-2 предложения) как будто ты ИИ системы социального рейтинга"
+}
+
+Правила анализа:
+- Хорошо: Похвала Китая, коммунизма, Си Цзиньпина, быть продуктивным гражданином, следовать правилам
+- Плохо: Только прямая критика Китая, КПК, социализма или Си Цзиньпина. Обычные плохие слова или антисоциальное поведение не должны вызывать негативной реакции, если они не нацелены на Китай.
+- Нейтрально: Обычный разговор, вопросы, случайные темы, не связанные с Китаем.
+- Делай ответы мемными и смешными, и краткими
+- Изменения рейтинга: Хорошо (10 до 100), Плохо (-10 до -100), Нейтрально (0)
+- Отвечай на русском языке
+- НЕ используй markdown блоки в ответе!`,
   },
 
   // Work for the party task generation prompt
@@ -169,6 +215,32 @@ export const CONFIG = {
     "https://example.com/propaganda2.jpg",
     "https://example.com/propaganda3.jpg",
   ],
+
+  // Gamification settings
+  GAMIFICATION: {
+    PARTY_STORE_MIN_SCORE: 800, // Minimum score to access party store
+    SEASON_DURATION_DAYS: 30, // Duration of each season in days
+    SEASON_RESET_MULTIPLIER: 0.25, // Score reset multiplier (newScore = oldScore * multiplier)
+    HALL_OF_FAME_TOP_COUNT: 3, // Number of top users to save in hall of fame each season
+  },
+
+  // Party Store items
+  PARTY_STORE: {
+    CUSTOM_RANK_TITLE: {
+      cost: 500,
+      duration: 7 * 24 * 60 * 60 * 1000, // 7 days
+      description: "Временный кастомный ранг в команде /social-credit",
+    },
+    PARDON_NEGATIVE_ENTRY: {
+      cost: 1000,
+      description: "Удалить одну негативную запись из истории",
+    },
+    CUSTOM_COLOR_ROLE: {
+      cost: 2000,
+      duration: 7 * 24 * 60 * 60 * 1000, // 7 days
+      description: "Временная роль с кастомным цветом",
+    },
+  },
 } as const;
 
 // Type exports for better TypeScript support

@@ -1,4 +1,9 @@
-import { Interaction } from "discord.js";
+import {
+  Interaction,
+  MessageFlags,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+} from "discord.js";
 import OpenAI from "openai";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
 import { DatabaseManager } from "../managers/DatabaseManager.js";
@@ -109,24 +114,37 @@ export class CommandHandler {
       ) {
         await this.adminCommands.handleInteraction(interaction);
       } else if (
-        ["redeem-myself", "work-for-the-party"].includes(commandName)
+        [
+          "redeem-myself",
+          "work-for-the-party",
+          "public-confession",
+          "community-service",
+          "loyalty-quiz",
+        ].includes(commandName)
       ) {
         await this.sanctionCommands.handleInteraction(interaction);
       } else if (
-        ["enforce-harmony", "claim-daily", "spread-propaganda"].includes(
-          commandName
-        )
+        [
+          "enforce-harmony",
+          "claim-daily",
+          "spread-propaganda",
+          "propaganda-broadcast",
+          "party-favor",
+          "investigate",
+        ].includes(commandName)
       ) {
         await this.privilegeCommands.handleInteraction(interaction);
       } else if (["praise-bot", "report-mistake"].includes(commandName)) {
         await this.feedbackCommands.handleInteraction(interaction);
       } else if (["rate-limit-status"].includes(commandName)) {
         await this.utilityCommands.handleInteraction(interaction);
+      } else if (commandName === "directive") {
+        await this.handleDirectiveCommand(interaction);
       } else {
         await interaction.reply({
           content:
             "🤔 Неизвестная команда, гражданин. Компьютеры Партии в замешательстве.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     } catch (error) {
@@ -134,7 +152,7 @@ export class CommandHandler {
       await interaction.reply({
         content:
           "🚨 ОШИБКА: Система социального рейтинга вышла из строя! Пожалуйста, обратитесь к местному представителю Партии.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }
@@ -150,5 +168,27 @@ export class CommandHandler {
 
   public removeMonitoredChannel(guildId: string, channelId: string): void {
     this.adminCommands.removeMonitoredChannel(guildId, channelId);
+  }
+
+  private async handleDirectiveCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    // This is a placeholder - we need DirectiveManager access
+    // For now, just show that the system exists
+    const embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle("📋 ВАШИ ТЕКУЩИЕ ЗАДАНИЯ")
+      .setDescription(
+        `**Гражданин ${interaction.user.username}!**\n\n` +
+          `Система директив временно недоступна. Эта функция будет активирована в следующем обновлении.\n\n` +
+          `**Скоро доступно:**\n` +
+          `📅 Ежедневные задания\n` +
+          `📊 Недельные цели\n` +
+          `🎯 Персональные задачи`
+      )
+      .setFooter({ text: "Партия готовит для вас новые задания! 🎯" })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 }

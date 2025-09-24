@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { MemeResponses } from "../utils/MemeResponses.js";
 
@@ -155,7 +159,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
       await interaction.reply({
         content:
           "📊 Данные о социальном рейтинге не найдены! Начните мониторинг канала для отслеживания поведения граждан!",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -210,7 +214,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
     if (history.length === 0) {
       await interaction.reply({
         content: `📜 История социального рейтинга для ${targetUser.username} не найдена. Чистый лист, гражданин!`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }

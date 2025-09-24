@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
 import { Logger } from "../utils/Logger.js";
@@ -35,7 +39,7 @@ export class FeedbackCommands extends BaseCommandHandler {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
           content: `⏰ Подождите ещё ${minutesLeft} минут перед следующей похвалой бота!`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -97,7 +101,7 @@ export class FeedbackCommands extends BaseCommandHandler {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
           content: `⏰ Подождите ещё ${minutesLeft} минут перед следующим отчётом об ошибке!`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

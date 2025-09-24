@@ -10,7 +10,6 @@ import {
   ChannelType,
   TextChannel,
   GuildMember,
-  MessageCollector,
   Webhook,
 } from "discord.js";
 import OpenAI from "openai";
@@ -18,6 +17,8 @@ import * as dotenv from "dotenv";
 import { SocialCreditManager } from "./managers/SocialCreditManager.js";
 import { DatabaseManager } from "./managers/DatabaseManager.js";
 import { EffectManager } from "./managers/EffectManager.js";
+import { EventManager } from "./managers/EventManager.js";
+import { DirectiveManager } from "./managers/DirectiveManager.js";
 import { Scheduler } from "./managers/Scheduler.js";
 import { HealthCheck } from "./HealthCheck.js";
 import { MemeResponses } from "./utils/MemeResponses.js";
@@ -37,13 +38,13 @@ class SocialCreditBot {
   private socialCreditManager: SocialCreditManager;
   private databaseManager: DatabaseManager;
   private effectManager: EffectManager;
+  private eventManager: EventManager;
+  private directiveManager: DirectiveManager;
   private scheduler: Scheduler;
   private healthCheck: HealthCheck;
   private commandHandler: CommandHandler;
   private rateLimitManager: RateLimitManager;
   private messageContextManager: MessageContextManager;
-  private activeEvents: Map<string, { type: string; endTime: Date }> =
-    new Map();
 
   constructor() {
     this.client = new Client({
@@ -63,6 +64,17 @@ class SocialCreditBot {
     this.databaseManager = new DatabaseManager();
     this.socialCreditManager = new SocialCreditManager(this.databaseManager);
     this.effectManager = new EffectManager(this.databaseManager);
+    this.eventManager = new EventManager(
+      this.client,
+      this.openai,
+      this.databaseManager,
+      this.socialCreditManager
+    );
+    this.directiveManager = new DirectiveManager(
+      this.openai,
+      this.databaseManager,
+      this.socialCreditManager
+    );
     this.scheduler = new Scheduler(this.effectManager, this.databaseManager);
     this.healthCheck = new HealthCheck(this.client, this.databaseManager);
     this.rateLimitManager = new RateLimitManager();
@@ -82,23 +94,12 @@ class SocialCreditBot {
       this.messageContextManager
     );
 
-    // Set up event callback
-    this.scheduler.setEventCallback(this.handleRandomEvent.bind(this));
+    // Set up event callback for EventManager
+    this.scheduler.setEventCallback(
+      this.handleRandomEventWithManager.bind(this)
+    );
 
     this.setupEventListeners();
-
-    // Clean up expired events every minute
-    setInterval(() => {
-      const now = new Date();
-      for (const [guildId, event] of this.activeEvents.entries()) {
-        if (event.endTime <= now) {
-          this.activeEvents.delete(guildId);
-          Logger.debug(
-            `Cleaned up expired event ${event.type} in guild ${guildId}`
-          );
-        }
-      }
-    }, 60 * 1000);
   }
 
   private setupEventListeners(): void {
@@ -122,7 +123,9 @@ class SocialCreditBot {
     const guildId = message.guild?.id || "dm";
     const sanitizedContent = Validators.sanitizeMessage(message.content);
 
-    Logger.debug(`Handling message from user ${userId} in guild ${guildId}, channel ${message.channelId}: ${sanitizedContent.substring(0, 100)}...`);
+    Logger.debug(
+      `Handling message from user ${userId} in guild ${guildId}, channel ${message.channelId}: ${sanitizedContent.substring(0, 100)}...`
+    );
 
     // Ignore bot messages and non-monitored channels
     if (message.author.bot) {
@@ -130,7 +133,9 @@ class SocialCreditBot {
       return;
     }
     if (!this.commandHandler.isChannelMonitored(guildId, message.channelId)) {
-      Logger.debug(`Skipping message in non-monitored channel ${message.channelId} for guild ${guildId}`);
+      Logger.debug(
+        `Skipping message in non-monitored channel ${message.channelId} for guild ${guildId}`
+      );
       return;
     }
 
@@ -144,7 +149,9 @@ class SocialCreditBot {
       message.embeds.length > 0 ||
       Validators.containsLinks(message.content)
     ) {
-      Logger.debug(`Skipping message with attachments/links/embeds from user ${userId}`);
+      Logger.debug(
+        `Skipping message with attachments/links/embeds from user ${userId}`
+      );
       return;
     }
 
@@ -156,7 +163,9 @@ class SocialCreditBot {
 
     // Check for critically bad keywords (immediate penalty, no AI cost)
     if (this.hasCriticallyBadKeywords(sanitizedContent)) {
-      Logger.info(`Detected critically bad keywords in message from user ${userId}: ${sanitizedContent}`);
+      Logger.info(
+        `Detected critically bad keywords in message from user ${userId}: ${sanitizedContent}`
+      );
       await this.applyKeywordPenalty(message, sanitizedContent);
       return; // Don't process further
     }
@@ -168,7 +177,9 @@ class SocialCreditBot {
     );
     Logger.debug(`User ${userId} current score: ${userScore}`);
     if (userScore <= CONFIG.SCORE_THRESHOLDS.PENALTIES.SEVERE) {
-      Logger.info(`Applying speech re-education to user ${userId} with score ${userScore}`);
+      Logger.info(
+        `Applying speech re-education to user ${userId} with score ${userScore}`
+      );
       await this.applySpeechReeducation(message, sanitizedContent);
       return; // Don't process further
     }
@@ -192,7 +203,9 @@ class SocialCreditBot {
       return;
     }
 
-    Logger.info(`Starting message analysis for user ${userId} in guild ${guildId}`);
+    Logger.info(
+      `Starting message analysis for user ${userId} in guild ${guildId}`
+    );
     try {
       // Get context for analysis
       const recentContext =
@@ -201,12 +214,16 @@ class SocialCreditBot {
           message.channelId,
           5
         );
-      Logger.debug(`Retrieved ${recentContext.length} context messages for analysis`);
+      Logger.debug(
+        `Retrieved ${recentContext.length} context messages for analysis`
+      );
 
       const messagesToAnalyze = rateLimitResult.bufferedMessages || [
         sanitizedContent,
       ];
-      Logger.debug(`Analyzing ${messagesToAnalyze.length} messages (buffered: ${!!rateLimitResult.bufferedMessages})`);
+      Logger.debug(
+        `Analyzing ${messagesToAnalyze.length} messages (buffered: ${!!rateLimitResult.bufferedMessages})`
+      );
       const analysis = await this.analyzeMessageWithContext(
         messagesToAnalyze,
         recentContext,
@@ -216,7 +233,9 @@ class SocialCreditBot {
         guildId
       );
 
-      Logger.info(`Analysis completed for user ${userId}: verdict=${analysis.verdict}, score_change=${analysis.score_change}`);
+      Logger.info(
+        `Analysis completed for user ${userId}: verdict=${analysis.verdict}, score_change=${analysis.score_change}`
+      );
       await this.processAnalysis(message, analysis, sanitizedContent);
     } catch (error) {
       Logger.error(`Error processing message for user ${userId}:`, error);
@@ -231,7 +250,9 @@ class SocialCreditBot {
     userId?: string,
     guildId?: string
   ): Promise<MessageAnalysisResult> {
-    Logger.debug(`Starting message analysis with context for user ${userId || 'unknown'} in guild ${guildId || 'unknown'}`);
+    Logger.debug(
+      `Starting message analysis with context for user ${userId || "unknown"} in guild ${guildId || "unknown"}`
+    );
 
     const contextString = this.messageContextManager.buildContextString(
       userMessages,
@@ -239,7 +260,9 @@ class SocialCreditBot {
       currentMessage,
       authorUsername
     );
-    Logger.debug(`Built context string of length ${contextString.length} characters`);
+    Logger.debug(
+      `Built context string of length ${contextString.length} characters`
+    );
 
     // Dynamic prompting based on user history
     let useCheapModel = false;
@@ -255,7 +278,9 @@ class SocialCreditBot {
         guildId,
         10
       );
-      Logger.debug(`Retrieved user history: ${userHistory.length} entries, current score: ${userScore}`);
+      Logger.debug(
+        `Retrieved user history: ${userHistory.length} entries, current score: ${userScore}`
+      );
 
       // Use cheap model for neutral users with consistent neutral history
       const recentVerdicts = userHistory.slice(0, 5).map((h) => {
@@ -270,9 +295,13 @@ class SocialCreditBot {
       if (Math.abs(userScore) < 50 && neutralRatio > 0.6) {
         useCheapModel = true;
         simplifiedPrompt = true;
-        Logger.debug(`Using cheap model and simplified prompt for user ${userId} (neutral ratio: ${neutralRatio})`);
+        Logger.debug(
+          `Using cheap model and simplified prompt for user ${userId} (neutral ratio: ${neutralRatio})`
+        );
       } else {
-        Logger.debug(`Using standard model and full prompt for user ${userId} (score: ${userScore}, neutral ratio: ${neutralRatio})`);
+        Logger.debug(
+          `Using standard model and full prompt for user ${userId} (score: ${userScore}, neutral ratio: ${neutralRatio})`
+        );
       }
     }
 
@@ -301,7 +330,9 @@ ${contextString}
 - Отвечай на русском языке
 - НЕ используй markdown блоки в ответе!`;
 
-    Logger.debug(`Sending analysis request to OpenAI using ${useCheapModel ? 'cheap' : 'standard'} model`);
+    Logger.debug(
+      `Sending analysis request to OpenAI using ${useCheapModel ? "cheap" : "standard"} model`
+    );
     const completion = await this.openai.chat.completions.create({
       model: useCheapModel ? CONFIG.LLM.CHEAP_MODEL : CONFIG.LLM.STANDARD_MODEL,
       messages: [{ role: "user", content: prompt }],
@@ -318,7 +349,9 @@ ${contextString}
     // Handle different response types from Mistral
     const responseText =
       typeof response === "string" ? response : JSON.stringify(response);
-    Logger.debug(`Received response from OpenAI: ${responseText.substring(0, 200)}...`);
+    Logger.debug(
+      `Received response from OpenAI: ${responseText.substring(0, 200)}...`
+    );
 
     // Remove markdown code blocks if present
     // Remove markdown code blocks and extract JSON object
@@ -352,11 +385,15 @@ ${contextString}
 
       parsed.score_change = Number(parsed.score_change);
       if (!Validators.isValidScoreChange(parsed.score_change)) {
-        Logger.error(`Invalid score change in parsed response: ${parsed.score_change}`);
+        Logger.error(
+          `Invalid score change in parsed response: ${parsed.score_change}`
+        );
         throw new Error("Invalid score change in response");
       }
 
-      Logger.info(`Analysis result: verdict=${parsed.verdict}, score_change=${parsed.score_change}, reason=${parsed.reason}`);
+      Logger.info(
+        `Analysis result: verdict=${parsed.verdict}, score_change=${parsed.score_change}, reason=${parsed.reason}`
+      );
       return parsed;
     } catch (parseError) {
       Logger.error("Failed to parse OpenAI API response:", jsonString);
@@ -408,21 +445,12 @@ ${contextString}
       );
     }
 
-    // Check for active events that modify score changes
+    // Check for active events that modify score changes using EventManager
     let modifiedScoreChange = analysis.score_change;
-    const activeEvent = this.activeEvents.get(guildId);
-
-    if (activeEvent) {
-      if (activeEvent.type === "PARTY_INSPECTOR_VISIT") {
-        // Double all score changes during inspector visit
-        modifiedScoreChange *= CONFIG.EVENTS.PARTY_INSPECTOR_MULTIPLIER;
-      } else if (activeEvent.type === "SOCIAL_HARMONY_HOUR") {
-        // Only allow positive changes during harmony hour
-        if (modifiedScoreChange < 0) {
-          modifiedScoreChange = 0;
-        }
-      }
-    }
+    modifiedScoreChange = this.eventManager.applyEventEffects(
+      guildId,
+      modifiedScoreChange
+    );
 
     // Update user's social credit score
     const newScore = await this.socialCreditManager.updateScore(
@@ -430,7 +458,7 @@ ${contextString}
       guildId,
       modifiedScoreChange,
       analysis.score_change !== modifiedScoreChange
-        ? `${analysis.reason} (Modified by active event: ${activeEvent?.type})`
+        ? `${analysis.reason} (Modified by active event)`
         : analysis.reason,
       message.author.username,
       sanitizedContent
@@ -438,6 +466,45 @@ ${contextString}
 
     // Log the social credit change
     Logger.socialCredit(userId, analysis.score_change, analysis.reason);
+
+    // Update directive progress
+    await this.directiveManager.updateDirectiveProgress(
+      userId,
+      guildId,
+      "message_sent",
+      1
+    );
+
+    // Track score changes for directive progress
+    if (modifiedScoreChange !== 0) {
+      await this.directiveManager.updateDirectiveProgress(
+        userId,
+        guildId,
+        "score_changed",
+        modifiedScoreChange
+      );
+    }
+
+    // Check for keyword usage in directives
+    const messageWords = sanitizedContent.toLowerCase().split(/\s+/);
+    const keywordsToTrack = [
+      "партия",
+      "гармония",
+      "единство",
+      "лидер",
+      "общество",
+    ];
+    for (const keyword of keywordsToTrack) {
+      if (messageWords.includes(keyword)) {
+        await this.directiveManager.updateDirectiveProgress(
+          userId,
+          guildId,
+          "keyword_used",
+          1,
+          { keyword: keyword }
+        );
+      }
+    }
 
     // Create response embed
     const embed = this.createResponseEmbed(message.author, analysis, newScore);
@@ -680,302 +747,22 @@ ${contextString}
     return responseText.trim();
   }
 
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  private async handleRandomEvent(
-    eventType: string,
-    data: unknown
-  ): Promise<void> {
-    /* eslint-enable @typescript-eslint/no-unused-vars */
+  private async handleRandomEventWithManager(): Promise<void> {
     try {
-      // Get all monitored channels across all guilds
+      // Get all monitored guilds and trigger events using EventManager
       const monitoredChannels =
         await this.databaseManager.getAllMonitoredChannels();
 
-      for (const [guildId, channels] of monitoredChannels.entries()) {
-        for (const channelId of channels) {
-          await this.triggerEventInChannel(guildId, channelId, eventType);
+      for (const [guildId] of monitoredChannels.entries()) {
+        // Only start event if no active event in this guild
+        const activeEvent = this.eventManager.getActiveEvent(guildId);
+        if (!activeEvent) {
+          await this.eventManager.startRandomEvent(guildId);
         }
       }
     } catch (error) {
-      Logger.error(`Error handling random event ${eventType}:`, error);
+      Logger.error(`Error handling random event with EventManager:`, error);
     }
-  }
-
-  private async triggerEventInChannel(
-    guildId: string,
-    channelId: string,
-    eventType: string
-  ): Promise<void> {
-    try {
-      const channel = this.client.channels.cache.get(channelId);
-      if (!channel || !channel.isTextBased()) return;
-
-      const textChannel = channel as TextChannel;
-
-      switch (eventType) {
-        case "PARTY_INSPECTOR_VISIT":
-          await this.handlePartyInspectorVisit(textChannel);
-          break;
-        case "SOCIAL_HARMONY_HOUR":
-          await this.handleSocialHarmonyHour(textChannel);
-          break;
-        case "WESTERN_SPY_INFILTRATION":
-          await this.handleWesternSpyInfiltration(textChannel);
-          break;
-        case "PRODUCTION_QUOTA":
-          await this.handleProductionQuota(textChannel);
-          break;
-      }
-    } catch (error) {
-      Logger.error(
-        `Error triggering event ${eventType} in channel ${channelId}:`,
-        error
-      );
-    }
-  }
-
-  private async handlePartyInspectorVisit(channel: TextChannel): Promise<void> {
-    const guildId = channel.guildId;
-    const endTime = new Date(
-      Date.now() + CONFIG.EVENTS.PARTY_INSPECTOR_DURATION
-    );
-
-    // Set active event
-    this.activeEvents.set(guildId, { type: "PARTY_INSPECTOR_VISIT", endTime });
-
-    const embed = new EmbedBuilder()
-      .setColor(0xff0000)
-      .setTitle("🚨 ВИЗИТ ИНСПЕКТОРА ПАРТИИ!")
-      .setDescription(
-        "**ВНИМАНИЕ, ГРАЖДАНЕ!**\n\n" +
-          "Партийный инспектор прибыл для проверки! Следующие 15 минут все изменения социального рейтинга **удваиваются**!\n\n" +
-          "Докажите свою преданность Партии! 🇨🇳"
-      )
-      .setFooter({ text: "Партия наблюдает! 👁️" })
-      .setTimestamp();
-
-    await channel.send({ embeds: [embed] });
-
-    // Auto-end event after duration
-    setTimeout(() => {
-      this.activeEvents.delete(guildId);
-      Logger.info(`Party Inspector Visit ended in guild ${guildId}`);
-    }, CONFIG.EVENTS.PARTY_INSPECTOR_DURATION);
-  }
-
-  private async handleSocialHarmonyHour(channel: TextChannel): Promise<void> {
-    const guildId = channel.guildId;
-    const endTime = new Date(
-      Date.now() + CONFIG.EVENTS.SOCIAL_HARMONY_DURATION
-    );
-
-    // Set active event
-    this.activeEvents.set(guildId, { type: "SOCIAL_HARMONY_HOUR", endTime });
-
-    const embed = new EmbedBuilder()
-      .setColor(0x00ff00)
-      .setTitle("🕊️ ЧАС СОЦИАЛЬНОЙ ГАРМОНИИ")
-      .setDescription(
-        "**БЛАГОСЛОВЕННЫЙ ЧАС НАЧАЛСЯ!**\n\n" +
-          "Следующий час только **положительные** изменения социального рейтинга возможны!\n\n" +
-          "Делитесь добротой и преданностью! 💝"
-      )
-      .setFooter({ text: "Гармония превыше всего! 🇨🇳" })
-      .setTimestamp();
-
-    await channel.send({ embeds: [embed] });
-
-    // Auto-end event after duration
-    setTimeout(() => {
-      this.activeEvents.delete(guildId);
-      Logger.info(`Social Harmony Hour ended in guild ${guildId}`);
-    }, CONFIG.EVENTS.SOCIAL_HARMONY_DURATION);
-  }
-
-  private async handleWesternSpyInfiltration(
-    channel: TextChannel
-  ): Promise<void> {
-    const guildId = channel.guildId;
-    const correctPhrase = "Партия всегда права!";
-    let spyCaught = false;
-
-    const embed = new EmbedBuilder()
-      .setColor(0xff4500)
-      .setTitle("🕵️ ПРОНИКНОВЕНИЕ ЗАПАДНОГО ШПИОНА!")
-      .setDescription(
-        "**ТРЕВОГА!**\n\n" +
-          "Западный шпион проник в наши ряды! Первый, кто скажет правильную патриотическую фразу, получит **+50** социального рейтинга!\n\n" +
-          'Фраза: **"Партия всегда права!"**\n\n' +
-          "⏱️ У вас есть 5 минут!"
-      )
-      .setFooter({ text: "Будьте бдительны! 👁️" })
-      .setTimestamp();
-
-    await channel.send({ embeds: [embed] });
-
-    // Set up message collector for the spy phrase
-    const collector = channel.createMessageCollector({
-      filter: (message: Message) =>
-        !message.author.bot && message.content.trim() === correctPhrase,
-      max: 1,
-      time: CONFIG.EVENTS.SPY_INFILTRATION_DURATION,
-    });
-
-    collector.on("collect", async (message: Message) => {
-      if (spyCaught) return;
-      spyCaught = true;
-
-      // Reward the first person who says the correct phrase
-      const newScore = await this.socialCreditManager.updateScore(
-        message.author.id,
-        guildId,
-        CONFIG.EVENTS.SPY_INFILTRATION_BONUS,
-        "Пойман западный шпион - проявлена бдительность!",
-        message.author.username
-      );
-
-      const rewardEmbed = new EmbedBuilder()
-        .setColor(0x00ff00)
-        .setTitle("🎯 ШПИОН ПОЙМАН!")
-        .setDescription(
-          `**${message.author.username}** проявил бдительность и поймал западного шпиона!\n\n` +
-            `Награда: **+${CONFIG.EVENTS.SPY_INFILTRATION_BONUS}** социального рейтинга!`
-        )
-        .addFields({
-          name: "💯 Новый Рейтинг",
-          value: `${newScore}`,
-          inline: true,
-        })
-        .setFooter({ text: "Партия благодарит за бдительность! 👁️" })
-        .setTimestamp();
-
-      await channel.send({ embeds: [rewardEmbed] });
-      Logger.info(
-        `Spy caught by user ${message.author.id} in guild ${guildId}`
-      );
-    });
-
-    collector.on("end", () => {
-      if (!spyCaught) {
-        const failEmbed = new EmbedBuilder()
-          .setColor(0xff0000)
-          .setTitle("⚠️ ШПИОН СКРЫЛСЯ!")
-          .setDescription(
-            "Западный шпион успешно скрылся! Будьте бдительнее в следующий раз."
-          )
-          .setFooter({ text: "Партия продолжит борьбу со шпионажем! 🕵️" })
-          .setTimestamp();
-
-        channel.send({ embeds: [failEmbed] }).catch(() => {});
-      }
-    });
-  }
-
-  private async handleProductionQuota(channel: TextChannel): Promise<void> {
-    const guild = channel.guild;
-    const guildId = channel.guildId;
-    const requiredMessages = 50;
-    let messageCount = 0;
-    const participants = new Set<string>();
-
-    const embed = new EmbedBuilder()
-      .setColor(0xffd700)
-      .setTitle("🏭 ПРОИЗВОДСТВЕННАЯ КВОТА!")
-      .setDescription(
-        "**ПАРТИЯ ТРЕБУЕТ ПРОИЗВОДСТВА!**\n\n" +
-          `Отправьте **${requiredMessages} сообщений** в monitored каналах в следующие 10 минут!\n\n` +
-          "При успехе все онлайн пользователи получат **+10** социального рейтинга!\n\n" +
-          "За работу, товарищи! ⚒️"
-      )
-      .setFooter({ text: "Выполняйте план! 📈" })
-      .setTimestamp();
-
-    await channel.send({ embeds: [embed] });
-
-    // Set up message collector for all monitored channels in this guild
-    const monitoredChannels =
-      await this.databaseManager.getMonitoredChannels(guildId);
-    const collectors: MessageCollector[] = [];
-
-    for (const channelId of monitoredChannels) {
-      const targetChannel = this.client.channels.cache.get(channelId);
-      if (!targetChannel || !targetChannel.isTextBased()) continue;
-
-      const collector = (targetChannel as TextChannel).createMessageCollector({
-        filter: (message: Message) => !message.author.bot,
-        time: CONFIG.EVENTS.PRODUCTION_QUOTA_DURATION,
-      });
-
-      collector.on("collect", (message: Message) => {
-        messageCount++;
-        participants.add(message.author.id);
-      });
-
-      collectors.push(collector);
-    }
-
-    // Wait for the event to end
-    setTimeout(async () => {
-      // Stop all collectors
-      collectors.forEach((collector) => collector.stop());
-
-      if (messageCount >= requiredMessages) {
-        // Success - reward all online participants
-        const onlineMembers = guild.members.cache.filter(
-          (member: GuildMember) =>
-            !member.user.bot && member.presence?.status !== "offline"
-        );
-
-        let rewardedCount = 0;
-        for (const member of onlineMembers.values()) {
-          try {
-            await this.socialCreditManager.updateScore(
-              member.id,
-              guildId,
-              CONFIG.EVENTS.PRODUCTION_QUOTA_BONUS,
-              "Выполнение производственной квоты Партии",
-              member.user.username
-            );
-            rewardedCount++;
-          } catch (error) {
-            Logger.error(`Failed to reward user ${member.id}: ${error}`);
-          }
-        }
-
-        const successEmbed = new EmbedBuilder()
-          .setColor(0x00ff00)
-          .setTitle("🎉 КВОТА ВЫПОЛНЕНА!")
-          .setDescription(
-            `**ПЛАН ПЕРЕВЫПОЛНЕН!**\n\n` +
-              `Отправлено **${messageCount}** сообщений (треб. ${requiredMessages})\n` +
-              `Участвовало **${participants.size}** граждан\n` +
-              `Награждено **${rewardedCount}** онлайн пользователей!\n\n` +
-              `Каждый получил **+${CONFIG.EVENTS.PRODUCTION_QUOTA_BONUS}** социального рейтинга!`
-          )
-          .setFooter({ text: "Партия гордится вашим трудолюбием! 🏭" })
-          .setTimestamp();
-
-        await channel.send({ embeds: [successEmbed] });
-      } else {
-        // Failure
-        const failEmbed = new EmbedBuilder()
-          .setColor(0xff0000)
-          .setTitle("❌ КВОТА НЕ ВЫПОЛНЕНА!")
-          .setDescription(
-            `**ПЛАН ПРОВАЛЕН!**\n\n` +
-              `Отправлено только **${messageCount}** сообщений (треб. ${requiredMessages})\n\n` +
-              `Партия ожидает лучших результатов в следующий раз.`
-          )
-          .setFooter({ text: "Увеличьте производительность! 📉" })
-          .setTimestamp();
-
-        await channel.send({ embeds: [failEmbed] });
-      }
-
-      Logger.info(
-        `Production quota ended in guild ${guildId}: ${messageCount}/${requiredMessages} messages`
-      );
-    }, CONFIG.EVENTS.PRODUCTION_QUOTA_DURATION);
   }
 
   private hasCriticallyBadKeywords(content: string): boolean {
@@ -1147,6 +934,53 @@ ${contextString}
       new SlashCommandBuilder()
         .setName("work-for-the-party")
         .setDescription("Complete a task to earn social credit back"),
+
+      // Enhanced Sanction Commands
+      new SlashCommandBuilder()
+        .setName("public-confession")
+        .setDescription("Public confession for redemption (Score < -200)"),
+
+      new SlashCommandBuilder()
+        .setName("community-service")
+        .setDescription(
+          "Perform community service to improve your standing (Score < 0)"
+        ),
+
+      new SlashCommandBuilder()
+        .setName("loyalty-quiz")
+        .setDescription(
+          "Take a loyalty test to prove your devotion (Score < -100)"
+        ),
+
+      // Enhanced Privilege Commands
+      new SlashCommandBuilder()
+        .setName("propaganda-broadcast")
+        .setDescription("Broadcast Party-approved propaganda (Model Citizen+)")
+        .addStringOption((option) =>
+          option
+            .setName("message")
+            .setDescription("Your propaganda message to broadcast")
+            .setRequired(true)
+        ),
+
+      new SlashCommandBuilder()
+        .setName("party-favor")
+        .setDescription("Request a server-wide Party favor (Supreme Citizen+)"),
+
+      new SlashCommandBuilder()
+        .setName("investigate")
+        .setDescription("Investigate another citizen's social credit history")
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("Citizen to investigate")
+            .setRequired(true)
+        ),
+
+      // Directive System Command
+      new SlashCommandBuilder()
+        .setName("directive")
+        .setDescription("View your current daily directive and weekly goal"),
     ];
 
     const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
@@ -1174,6 +1008,7 @@ ${contextString}
     }
 
     await this.databaseManager.initialize();
+    await this.effectManager.initialize();
     this.healthCheck.start();
     this.scheduler.start();
     await this.client.login(process.env.DISCORD_TOKEN);
@@ -1190,13 +1025,15 @@ ${contextString}
       this.healthCheck.stop();
       this.scheduler.stop();
       this.effectManager.stopCleanup();
-      this.client.destroy();
+      this.eventManager.cleanup();
+      this.directiveManager.cleanup();
       await this.databaseManager.disconnect();
-      Logger.info("✅ Bot shutdown complete");
-      process.exit(0);
+      this.client.destroy();
+      Logger.info("✅ Bot shutdown completed");
     } catch (error) {
-      Logger.error("Error during shutdown:", error);
-      process.exit(1);
+      Logger.error("❌ Error during shutdown:", error);
+    } finally {
+      process.exit(0);
     }
   }
 
@@ -1214,7 +1051,9 @@ ${contextString}
     messages: string[],
     channelId: string
   ): Promise<void> {
-    Logger.info(`Starting buffered message analysis for user ${userId} in guild ${guildId}, channel ${channelId} (${messages.length} messages)`);
+    Logger.info(
+      `Starting buffered message analysis for user ${userId} in guild ${guildId}, channel ${channelId} (${messages.length} messages)`
+    );
     try {
       const channel = this.client.channels.cache.get(channelId);
       if (!channel || !channel.isTextBased()) {
@@ -1232,11 +1071,15 @@ ${contextString}
           channelId,
           5
         );
-      Logger.debug(`Retrieved ${recentContext.length} context messages for buffered analysis`);
+      Logger.debug(
+        `Retrieved ${recentContext.length} context messages for buffered analysis`
+      );
 
       const currentMessage = messages[messages.length - 1];
       const user = await this.client.users.fetch(userId);
-      Logger.debug(`Fetched user ${userId} (${user.username}) for buffered analysis`);
+      Logger.debug(
+        `Fetched user ${userId} (${user.username}) for buffered analysis`
+      );
 
       const analysis = await this.analyzeMessageWithContext(
         messages,
@@ -1266,7 +1109,9 @@ ${contextString}
 
         // Mark positive score given
         this.rateLimitManager.markPositiveScore(userId, guildId);
-        Logger.debug(`Marked positive score for buffered analysis user ${userId}`);
+        Logger.debug(
+          `Marked positive score for buffered analysis user ${userId}`
+        );
       } else if (analysis.verdict === "bad") {
         // Bad behavior is NEVER rate limited - always punish immediately
         Logger.info(
@@ -1302,10 +1147,15 @@ ${contextString}
 
       if (channel instanceof TextChannel) {
         await channel.send({ embeds: [embed] });
-        Logger.debug(`Sent buffered analysis response embed to channel ${channelId}`);
+        Logger.debug(
+          `Sent buffered analysis response embed to channel ${channelId}`
+        );
       }
     } catch (error) {
-      Logger.error(`Error processing buffered messages for user ${userId}:`, error);
+      Logger.error(
+        `Error processing buffered messages for user ${userId}:`,
+        error
+      );
     }
   }
 }
