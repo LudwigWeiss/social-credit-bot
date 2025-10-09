@@ -10,7 +10,6 @@ import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
 import { RateLimitManager } from "../managers/RateLimitManager.js";
 import { MessageContextManager } from "../managers/MessageContextManager.js";
-import { DirectiveManager } from "../managers/DirectiveManager.js";
 import { SocialCreditCommands } from "./SocialCreditCommands.js";
 import { AdminCommands } from "./AdminCommands.js";
 import { SanctionCommands } from "./SanctionCommands.js";
@@ -25,18 +24,15 @@ export class CommandHandler {
   private privilegeCommands: PrivilegeCommands;
   private feedbackCommands: FeedbackCommands;
   private utilityCommands: UtilityCommands;
-  private directiveManager: DirectiveManager;
 
   constructor(
     socialCreditManager: SocialCreditManager,
     databaseManager: DatabaseManager,
     effectManager: EffectManager,
     openai: OpenAI,
-    directiveManager: DirectiveManager,
     rateLimitManager?: RateLimitManager,
     messageContextManager?: MessageContextManager
   ) {
-    this.directiveManager = directiveManager;
     // Initialize all command handlers
     this.socialCreditCommands = new SocialCreditCommands(
       socialCreditManager,
@@ -142,8 +138,6 @@ export class CommandHandler {
         await this.feedbackCommands.handleInteraction(interaction);
       } else if (["rate-limit-status"].includes(commandName)) {
         await this.utilityCommands.handleInteraction(interaction);
-      } else if (commandName === "directive") {
-        await this.handleDirectiveCommand(interaction);
       } else {
         await interaction.reply({
           content:
@@ -174,66 +168,4 @@ export class CommandHandler {
     this.adminCommands.removeMonitoredChannel(guildId, channelId);
   }
 
-  private async handleDirectiveCommand(
-    interaction: ChatInputCommandInteraction
-  ): Promise<void> {
-    const userId = interaction.user.id;
-    const guildId = interaction.guildId || "dm";
-
-    const dailyDirectives = this.directiveManager.getDailyDirectives(
-      userId,
-      guildId
-    );
-    const weeklyGoals = this.directiveManager.getWeeklyGoals(userId, guildId);
-
-    const embed = new EmbedBuilder()
-      .setColor(0x0099ff)
-      .setTitle(`📋 Directives for Citizen ${interaction.user.username}`)
-      .setTimestamp();
-
-    if (dailyDirectives.length === 0 && weeklyGoals.length === 0) {
-      embed.setDescription(
-        "You have no active directives. The Party will provide you with new goals soon. Be active!"
-      );
-    }
-
-    if (dailyDirectives.length > 0) {
-      const directive = dailyDirectives[0]; // Assuming one active daily directive
-      const timeLeft = Math.ceil(
-        (directive.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000)
-      );
-      embed.addFields({
-        name: `📅 Daily Directive (Time left: ${timeLeft}h)`,
-        value: `**${directive.task}**\n*${directive.description}*\n${this.formatProgressBar(directive.currentProgress, directive.targetValue)}\n**Progress:** ${directive.currentProgress} / ${directive.targetValue}\n**Reward:** +${directive.reward} credits`,
-        inline: false,
-      });
-    }
-
-    if (weeklyGoals.length > 0) {
-      const goal = weeklyGoals[0]; // Assuming one active weekly goal
-      const timeLeft = Math.ceil(
-        (goal.expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
-      );
-      embed.addFields({
-        name: `🗓️ Weekly Goal (Time left: ${timeLeft}d)`,
-        value: `**${goal.goal}**\n*${goal.description}*\n${this.formatProgressBar(goal.currentProgress, goal.targetValue)}\n**Progress:** ${goal.currentProgress} / ${goal.targetValue}\n**Reward:** +${goal.reward} credits`,
-        inline: false,
-      });
-    }
-
-    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-  }
-
-  private formatProgressBar(
-    current: number,
-    total: number,
-    length: number = 10
-  ): string {
-    if (total === 0) return "`[░░░░░░░░░░]` 0%";
-    const progress = Math.min(Math.max(current / total, 0), 1);
-    const filledBlocks = Math.round(progress * length);
-    const emptyBlocks = length - filledBlocks;
-    const bar = "█".repeat(filledBlocks) + "░".repeat(emptyBlocks);
-    return `\`[${bar}]\` ${Math.round(progress * 100)}%`;
-  }
 }

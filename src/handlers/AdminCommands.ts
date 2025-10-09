@@ -35,7 +35,7 @@ export class AdminCommands extends BaseCommandHandler {
     ) {
       await interaction.reply({
         content:
-          "🚫 Access denied! Only party officials (administrators) can set monitoring channels!",
+          "🚫 Access denied! Only officials can set monitoring channels!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -71,7 +71,7 @@ export class AdminCommands extends BaseCommandHandler {
         { name: "📺 Monitored Channel", value: `${channel}`, inline: true },
         { name: "👁️ Status", value: "ACTIVE", inline: true }
       )
-      .setFooter({ text: "The Party sees all! 👁️" })
+      .setFooter({ text: "Imagination sees all! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -86,7 +86,7 @@ export class AdminCommands extends BaseCommandHandler {
     ) {
       await interaction.reply({
         content:
-          "🚫 Access denied! Only party officials (administrators) can manage monitoring!",
+          "🚫 Access denied! Only officials can manage monitoring!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -120,7 +120,7 @@ export class AdminCommands extends BaseCommandHandler {
             { name: "📺 Channel", value: `${channel}`, inline: true },
             { name: "👁️ Status", value: "DEACTIVATED", inline: true }
           )
-          .setFooter({ text: "The Party has stopped watching this channel." })
+          .setFooter({ text: "Imagination has stopped watching this channel." })
           .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
@@ -147,7 +147,7 @@ export class AdminCommands extends BaseCommandHandler {
     ) {
       await interaction.reply({
         content:
-          "🚫 Access denied! Only party officials (administrators) can view monitoring!",
+          "🚫 Access denied! Only officials can view monitoring!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -188,7 +188,7 @@ export class AdminCommands extends BaseCommandHandler {
         inline: false,
       });
 
-      embed.setFooter({ text: "The Party is watching everyone! 👁️" });
+      embed.setFooter({ text: "Imagination is watching everyone! 👁️" });
 
       await interaction.reply({
         embeds: [embed],

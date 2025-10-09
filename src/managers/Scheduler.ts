@@ -6,18 +6,12 @@ import { CONFIG } from "../config.js";
 
 export class Scheduler {
   private jobs: cron.ScheduledTask[] = [];
-  private eventCallback?: (eventType: string, data: unknown) => Promise<void>;
 
   constructor(
     private effectManager: EffectManager,
     private databaseManager: DatabaseManager
   ) {}
 
-  setEventCallback(
-    callback: (eventType: string, data: unknown) => Promise<void>
-  ): void {
-    this.eventCallback = callback;
-  }
 
   /**
    * Start all scheduled tasks
@@ -25,7 +19,6 @@ export class Scheduler {
   start(): void {
     this.scheduleDailyReset();
     this.scheduleCleanup();
-    this.scheduleRandomEvents();
     Logger.info("📅 Scheduler started successfully");
   }
 
@@ -95,47 +88,6 @@ export class Scheduler {
     Logger.info("📅 Cleanup scheduled for 2 AM UTC daily");
   }
 
-  /**
-   * Schedule random server-wide events
-   */
-  private scheduleRandomEvents(): void {
-    // Trigger random events every 2-4 hours
-    const interval =
-      Math.random() *
-        (CONFIG.EVENTS.INTERVAL_MAX - CONFIG.EVENTS.INTERVAL_MIN) +
-      CONFIG.EVENTS.INTERVAL_MIN;
-
-    const job = cron.schedule(
-      `*/${Math.floor(interval / (60 * 1000))} * * * *`,
-      async () => {
-        try {
-          if (this.eventCallback) {
-            const eventType = this.getRandomEventType();
-            await this.eventCallback(eventType, {});
-            Logger.info(`🎲 Random event triggered: ${eventType}`);
-          }
-        } catch (error) {
-          Logger.error("Error triggering random event:", error);
-        }
-      },
-      {
-        timezone: "UTC",
-      }
-    );
-
-    this.jobs.push(job);
-    Logger.info("📅 Random events scheduled");
-  }
-
-  private getRandomEventType(): string {
-    const events = [
-      "PARTY_INSPECTOR_VISIT",
-      "SOCIAL_HARMONY_HOUR",
-      "WESTERN_SPY_INFILTRATION",
-      "PRODUCTION_QUOTA",
-    ];
-    return events[Math.floor(Math.random() * events.length)];
-  }
 
   /**
    * Get scheduler statistics

@@ -55,8 +55,8 @@ export class SanctionCommands extends BaseCommandHandler {
         case "redeem-myself":
           await this.handleRedeemMyselfCommand(interaction);
           break;
-        case "work-for-the-party":
-          await this.handleWorkForThePartyCommand(interaction);
+        case "work-for-imagination":
+          await this.handleWorkForImaginationCommand(interaction);
           break;
         // Enhanced sanction commands
         case "public-confession":
@@ -138,11 +138,11 @@ export class SanctionCommands extends BaseCommandHandler {
       .setTitle("🙏 EDICT OF PARDON")
       .setDescription(
         `**Citizen ${interaction.user.username}!**\n\n` +
-          `The Party gives you a chance for redemption! Repeat this phrase in the chat within 60 seconds:\n\n` +
+          `Imagination gives you a chance for redemption! Repeat this phrase in the chat within 60 seconds:\n\n` +
           `**"${phrase}"**\n\n` +
           `⏱️ You have 60 seconds!`
       )
-      .setFooter({ text: "The Party is merciful, but just! 👁️" })
+      .setFooter({ text: "Imagination is merciful, but just! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -202,7 +202,7 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("🎉 PARDON GRANTED!")
           .setDescription(
             `**Congratulations, citizen ${interaction.user.username}!**\n\n` +
-              `The Party accepts your redemption! Your social credit has been increased.`
+              `Imagination accepts your redemption! Your social credit has been increased.`
           )
           .addFields(
             {
@@ -212,7 +212,7 @@ export class SanctionCommands extends BaseCommandHandler {
             },
             { name: "💯 New Score", value: `${newScore}`, inline: true }
           )
-          .setFooter({ text: "The Party always gives a second chance! 🇨🇳" })
+          .setFooter({ text: "Imagination always gives a second chance! 💫" })
           .setTimestamp();
 
         await interaction.followUp({ embeds: [successEmbed] });
@@ -232,7 +232,7 @@ export class SanctionCommands extends BaseCommandHandler {
         .setTitle("❌ PARDON DENIED")
         .setDescription(
           `**Citizen ${interaction.user.username}!**\n\n` +
-            `You failed to properly express your loyalty to the Party. Your social credit has been lowered.`
+            `You failed to properly express your loyalty to Imagination. Your social credit has been lowered.`
         )
         .addFields(
           {
@@ -242,14 +242,14 @@ export class SanctionCommands extends BaseCommandHandler {
           },
           { name: "💯 New Score", value: `${newScore}`, inline: true }
         )
-        .setFooter({ text: "The Party is disappointed with your behavior! ⚠️" })
+        .setFooter({ text: "Imagination is disappointed with your behavior! ⚠️" })
         .setTimestamp();
 
       await interaction.followUp({ embeds: [failureEmbed] });
     }
   }
 
-  private async handleWorkForThePartyCommand(
+  private async handleWorkForImaginationCommand(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
     const userId = interaction.user.id;
@@ -266,7 +266,7 @@ export class SanctionCommands extends BaseCommandHandler {
       if (timeLeft > 0) {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
-          content: `⏰ Please wait another ${minutesLeft} minutes before working for the Party again!`,
+          content: `⏰ Please wait another ${minutesLeft} minutes before working for Imagination again!`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -281,14 +281,14 @@ export class SanctionCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("⚒️ WORK FOR THE PARTY")
+      .setTitle("⚒️ WORK FOR IMAGINATION")
       .setDescription(
         `**Citizen ${interaction.user.username}!**\n\n` +
-          `The Party needs your help! Complete the task:\n\n` +
+          `Imagination needs your help! Complete the task:\n\n` +
           `**${task.question}**\n\n` +
           `⏱️ You have 60 seconds!`
       )
-      .setFooter({ text: "The Party values your loyalty! 👁️" })
+      .setFooter({ text: "Imagination values your loyalty! 👁️" })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
@@ -298,7 +298,7 @@ export class SanctionCommands extends BaseCommandHandler {
       userId,
       guildId,
       "DAILY_CLAIM_RESET",
-      CONFIG.COOLDOWNS.WORK_FOR_PARTY,
+      CONFIG.COOLDOWNS.WORK_FOR_IMAGINATION,
       undefined,
       { type: "work_cooldown" }
     );
@@ -338,8 +338,8 @@ export class SanctionCommands extends BaseCommandHandler {
         const newScore = await this.socialCreditManager.updateScore(
           userId,
           guildId,
-          CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS,
-          "Successful completion of work for the Party",
+          CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS,
+          "Successful completion of work for Imagination",
           interaction.user.username
         );
 
@@ -348,17 +348,17 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("✅ WORK COMPLETE!")
           .setDescription(
             `**Excellent work, citizen ${interaction.user.username}!**\n\n` +
-              `The Party is grateful for your loyalty.`
+              `Imagination is grateful for your loyalty.`
           )
           .addFields(
             {
               name: "💰 Reward",
-              value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS}`,
+              value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS}`,
               inline: true,
             },
             { name: "💯 New Score", value: `${newScore}`, inline: true }
           )
-          .setFooter({ text: "Continue to serve the Party! 🇨🇳" })
+          .setFooter({ text: "Continue to serve Imagination! 💫" })
           .setTimestamp();
 
         await interaction.followUp({ embeds: [successEmbed] });
@@ -369,9 +369,9 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("❌ TASK FAILED")
           .setDescription(
             `**Citizen ${interaction.user.username}!**\n\n` +
-              `You failed to complete the Party's task in time. Try again later.`
+              `You failed to complete Imagination's task in time. Try again later.`
           )
-          .setFooter({ text: "The Party expects better results! ⚠️" })
+          .setFooter({ text: "Imagination expects better results! ⚠️" })
           .setTimestamp();
 
         await interaction.followUp({ embeds: [failureEmbed] });
@@ -461,11 +461,11 @@ export class SanctionCommands extends BaseCommandHandler {
         .setColor(0x00ff00)
         .setTitle("✅ CONFESSION ACCEPTED!")
         .setDescription(
-          `The Party accepts your sincere remorse.\n\n` +
+          `Imagination accepts your sincere remorse.\n\n` +
             `**Reward:** +${bonus} for honesty\n` +
             `**New Score:** ${newScore}`
         )
-        .setFooter({ text: "The Party values sincerity! 🤝" });
+        .setFooter({ text: "Imagination values sincerity! 🤝" });
 
       await interaction.followUp({
         embeds: [confirmEmbed],
@@ -548,7 +548,7 @@ export class SanctionCommands extends BaseCommandHandler {
       .setTitle("🤝 COMMUNITY SERVICE")
       .setDescription(
         `**Citizen ${interaction.user.username}!**\n\n` +
-          `The Party offers you an opportunity to serve the community:\n\n` +
+          `Imagination offers you an opportunity to serve the community:\n\n` +
           `**${randomService.name}**\n` +
           `*${randomService.description}*\n\n` +
           `**Reward:** +${randomService.reward} social credit\n\n` +
@@ -580,7 +580,7 @@ export class SanctionCommands extends BaseCommandHandler {
                 `You are performing community service...\n\n` +
                   `Please wait a few seconds.`
               )
-              .setFooter({ text: "The Party is watching your progress! 👁️" }),
+              .setFooter({ text: "Imagination is watching your progress! 👁️" }),
           ],
           components: [],
         });
@@ -612,7 +612,7 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("✅ SERVICE COMPLETE!")
           .setDescription(
             `**Excellent work, citizen ${interaction.user.username}!**\n\n` +
-              `You have successfully completed your community service. The Party is proud of you!`
+              `You have successfully completed your community service. Imagination is proud of you!`
           )
           .addFields(
             {
@@ -627,7 +627,7 @@ export class SanctionCommands extends BaseCommandHandler {
             },
             { name: "💯 New Score", value: `${newScore}`, inline: true }
           )
-          .setFooter({ text: "Continue to serve the people! 🇨🇳" })
+          .setFooter({ text: "Continue to serve the people! 💫" })
           .setTimestamp();
 
         await confirmation.editReply({ embeds: [successEmbed] });
@@ -638,7 +638,7 @@ export class SanctionCommands extends BaseCommandHandler {
           .setTitle("❌ SERVICE DECLINED")
           .setDescription(
             `**Citizen ${interaction.user.username}!**\n\n` +
-              `You have declined community service. The Party has noted this in your file.`
+              `You have declined community service. Imagination has noted this in your file.`
           )
           .setFooter({ text: "Service to the people is voluntary, but encouraged! ⚠️" })
           .setTimestamp();
@@ -820,18 +820,18 @@ export class SanctionCommands extends BaseCommandHandler {
   ): Promise<string> {
     try {
       const prompt = `
-        You are an AI system working for the benefit of the Communist Party of China.
+        You are an AI system working for the benefit of Imagination.
         Create a personalized confession for a citizen with a social credit score of ${score}.
 
         Requirements:
         1. The text must be in English.
         2. The confession must be sincere and appropriate for a negative score.
-        3. Mention loyalty to the Party and the people.
+        3. Mention loyalty to Imagination and the people.
         4. Length: 100-200 words.
         5. Respond ONLY with the confession text, without explanations.
 
         Example structure:
-        "Citizens! I, [name], admit my mistakes before the great Party..."
+        "Citizens! I, [name], admit my mistakes before the great Imagination..."
       `;
 
       const completion = await this.openai.chat.completions.create({
@@ -844,22 +844,22 @@ export class SanctionCommands extends BaseCommandHandler {
       const confession = completion.choices?.[0]?.message?.content;
       return (
         confession ||
-        `Citizens! I, ${username}, admit my mistakes before the great Party and pledge to correct myself, following the principles of socialism with Chinese characteristics!`
+        `Citizens! I, ${username}, admit my mistakes before the great Imagination and pledge to correct myself!`
       );
     } catch (error) {
       Logger.error(`Error generating confession: ${error}`);
-      return `Citizens! I, ${username}, admit my mistakes before the great Party and pledge to correct myself, following the principles of socialism with Chinese characteristics!`;
+      return `Citizens! I, ${username}, admit my mistakes before the great Imagination and pledge to correct myself!`;
     }
   }
 
   private async generateLoyaltyQuiz(): Promise<Quiz> {
     try {
       const prompt = `
-        Create a loyalty quiz for the Communist Party of China.
+        Create a loyalty quiz for Imagination.
 
         Requirements:
         1. 3 questions with 4 multiple-choice answers each.
-        2. Questions about Chinese history, politics, or socialism.
+        2. Questions about our history, politics, or ideals.
         3. One correct answer per question.
         4. Response in JSON format.
         
@@ -916,27 +916,27 @@ export class SanctionCommands extends BaseCommandHandler {
       return {
         questions: [
           {
-            question: "When was the Communist Party of China founded?",
-            options: ["A) 1919", "B) 1921", "C) 1949", "D) 1950"],
-            correctAnswer: "B",
+            question: "Who is the great leader of Imagination?",
+            options: ["A) Eva", "B) Eva", "C) Eva", "D) Eva"],
+            correctAnswer: "A",
           },
           {
-            question: "Who is the General Secretary of the CCP?",
+            question: "What is the primary goal of Imagination?",
             options: [
-              "A) Mao Zedong",
-              "B) Deng Xiaoping",
-              "C) Xi Jinping",
-              "D) Hu Jintao",
+              "A) Social Harmony",
+              "B) Total Chaos",
+              "C) Absolute Monarchy",
+              "D) Anarchy",
             ],
-            correctAnswer: "C",
+            correctAnswer: "A",
           },
           {
-            question: "What principle underlies China's policy?",
+            question: "What principle underlies Imagination's policy?",
             options: [
-              "A) Capitalism",
-              "B) Socialism with Chinese characteristics",
-              "C) Liberalism",
-              "D) Anarchism",
+              "A) Individualism",
+              "B) Collective good",
+              "C) Selfishness",
+              "D) Apathy",
             ],
             correctAnswer: "B",
           },
@@ -1075,8 +1075,8 @@ export class SanctionCommands extends BaseCommandHandler {
       .setFooter({
         text:
           scoreChange > 0
-            ? "The Party is proud of your knowledge! 🇨🇳"
-            : "Study the Party's history better! 📚",
+            ? "Imagination is proud of your knowledge! 💫"
+            : "Study our history better! 📚",
       })
       .setTimestamp();
 

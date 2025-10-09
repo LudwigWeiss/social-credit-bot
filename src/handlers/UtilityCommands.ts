@@ -79,7 +79,7 @@ export class UtilityCommands extends BaseCommandHandler {
         }
       )
       .setFooter({
-        text: "The Party controls the pace! 👁️",
+        text: "Imagination controls the pace! 👁️",
       })
       .setTimestamp();
 

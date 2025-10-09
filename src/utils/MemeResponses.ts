@@ -2,14 +2,14 @@ export class MemeResponses {
   static getRandomGoodResponse(): string {
     const responses = [
       "🎉 BING CHILLING! Your social credit has been raised!",
-      "🇨🇳 Xi Jinping approves your message! +Social Credit!",
-      "⭐ Excellent work, comrade! The Party is pleased!",
-      "🏆 Exemplary citizen behavior detected! Glory to the CCP!",
-      "🌟 Your loyalty to the Motherland has been noted!",
-      "👑 Chairman Xi is smiling upon you!",
-      "🎊 Outstanding contribution to social harmony!",
+      "Eva approves your message! +Social Credit!",
+      "⭐ Excellent work, citizen! Imagination is pleased!",
+      "🏆 Exemplary citizen behavior detected! Glory to Imagination!",
+      "🌟 Your loyalty has been noted!",
+      "👑 Eva is smiling upon you!",
+      "🎊 Outstanding contribution to harmony!",
       "🥇 First-class citizen status maintained!",
-      "🔥 Based and CCP-pilled! Social credit is soaring! 📈",
+      "🔥 Based and Imagination-pilled! Social credit is soaring! 📈",
       "💯 Absolutely brilliant, citizen! Keep it up!",
     ];
     return responses[Math.floor(Math.random() * responses.length)];
@@ -19,12 +19,12 @@ export class MemeResponses {
     const responses = [
       "🚨 ATTENTION CITIZEN! Your social credit has been lowered!",
       "❌ Unacceptable behavior! Report to the nearest re-education center!",
-      "⚠️ The CCP is disappointed in you, citizen.",
-      "🚫 Your actions threaten social harmony! -Social Credit!",
-      "💀 Enemy of the state behavior detected!",
+      "⚠️ Imagination is disappointed in you, citizen.",
+      "🚫 Your actions threaten harmony! -Social credit!",
+      "💀 Enemy of Imagination behavior detected!",
       "🔴 CRITICAL: Anti-social activity recorded!",
-      "⛔ This message contradicts the interests of the people!",
-      "🚨 Immediate re-education required! Contact your local party officials!",
+      "⛔ This message contradicts the interests of Imagination!",
+      "🚨 Immediate re-education required! Contact your local officials!",
       "❗ Your family has been notified of your poor conduct!",
       "🆘 HELP! This citizen needs ideological correction!",
     ];
@@ -42,21 +42,21 @@ export class MemeResponses {
           description: "Minor infractions detected",
           actions: ["Warning issued", "Surveillance increased"],
           memeText:
-            "⚠️ **WARNING TO CITIZEN** ⚠️\nYour recent behavior has been... questionable. The Party is watching. 👁️",
+            "⚠️ **WARNING TO CITIZEN** ⚠️\nYour recent behavior has been... questionable. Imagination is watching. 👁️",
         };
       case "MODERATE":
         return {
           description: "Significant anti-social behavior",
           actions: ["Movement restrictions", "Privilege reduction"],
           memeText:
-            "🚫 **MOVEMENT RESTRICTIONS ACTIVATED** 🚫\nYou may not leave your current location without permission from local party officials!",
+            "🚫 **MOVEMENT RESTRICTIONS ACTIVATED** 🚫\nYou may not leave your current location without permission from local officials!",
         };
       case "SEVERE":
         return {
           description: "Extreme threat to social harmony",
           actions: ["Re-education required", "Family notified"],
           memeText:
-            "🚨 **ASSIGNMENT TO RE-EDUCATION CAMP** 🚨\nReport to facility #1984 immediately! Your family has been notified of your crimes against the people!",
+            "🚨 **ASSIGNMENT TO RE-EDUCATION CAMP** 🚨\nReport to facility #1984 immediately! Your family has been notified of your crimes against Imagination!",
         };
       default:
         return {
@@ -78,7 +78,7 @@ export class MemeResponses {
           description: "Decent social credit",
           benefits: ["Priority service", "Reduced waiting times"],
           memeText:
-            "✅ **GOOD CITIZEN STATUS** ✅\nYou have earned the Party's trust! Enjoy fast-tracked service at state institutions!",
+            "✅ **GOOD CITIZEN STATUS** ✅\nYou have earned Imagination's trust! Enjoy fast-tracked service at approved institutions!",
         };
       case "MODEL_CITIZEN":
         return {
@@ -89,7 +89,7 @@ export class MemeResponses {
             "Priority housing",
           ],
           memeText:
-            "⭐ **MODEL CITIZEN ACHIEVEMENT UNLOCKED** ⭐\nXi Jinping personally notes your dedication! Enjoy VIP privileges at all Party establishments!",
+            "⭐ **MODEL CITIZEN ACHIEVEMENT UNLOCKED** ⭐\nEva personally notes your dedication! Enjoy VIP privileges at all Imagination establishments!",
         };
       case "SUPREME_CITIZEN":
         return {
@@ -100,13 +100,13 @@ export class MemeResponses {
             "Lifelong honors",
           ],
           memeText:
-            "👑 **SUPREME CITIZEN OF THE PEOPLE'S REPUBLIC** 👑\nYou are now eligible for a position in the Politburo! Your name will be remembered in communist history! 🇨🇳",
+            "👑 **SUPREME CITIZEN** 👑\nYou are a champion of Imagination! Your name will be remembered for all time!",
         };
       default:
         return {
           description: "Unknown privilege level",
           benefits: [],
-          memeText: "🤔 The Party's computers are confused...",
+          memeText: "🤔 Imagination's computers are confused...",
         };
     }
   }
@@ -123,16 +123,13 @@ export class MemeResponses {
 
   static getRandomMemePhrase(): string {
     const phrases = [
-      "Glory to the CCP! 🇨🇳",
-      "The ideas of Xi Jinping guide us! 🌟",
-      "Social harmony through unity! ✊",
-      "The Party knows best! 👁️",
-      "Bing chilling with a high social credit score! 🧊",
-      "Taiwan? Never heard of it! 🤷‍♂️",
-      "Winnie the Pooh? I only know Chairman Xi! 🐻",
-      "Nothing happened in 1989! 📅",
-      "Social credit system = social justice! ⚖️",
-      "Loyalty to the Motherland! 🏠",
+      "Glory to Imagination!",
+      "The ideas of Eva guide us! 🌟",
+      "Harmony through unity! ✊",
+      "Imagination knows best! 👁️",
+      "Chilling with a high social credit score! 🧊",
+      "Social credit system = true justice! ⚖️",
+      "Loyalty to Imagination! 🏠",
     ];
     return phrases[Math.floor(Math.random() * phrases.length)];
   }

@@ -30,7 +30,7 @@ export const CONFIG = {
     REDEEM_MYSELF: 60 * 60 * 1000, // 1 hour
     ENFORCE_HARMONY: 12 * 60 * 60 * 1000, // 12 hours
     SPREAD_PROPAGANDA: 2 * 60 * 60 * 1000, // 2 hours
-    WORK_FOR_PARTY: 30 * 60 * 1000, // 30 minutes
+    WORK_FOR_IMAGINATION: 30 * 60 * 1000, // 30 minutes
     PRAISE_BOT: 60 * 60 * 1000, // 1 hour
     REPORT_MISTAKE: 60 * 60 * 1000, // 1 hour
     // Enhanced Sanction Commands
@@ -39,7 +39,7 @@ export const CONFIG = {
     LOYALTY_QUIZ: 4 * 60 * 60 * 1000, // 4 hours
     // Enhanced Privilege Commands
     PROPAGANDA_BROADCAST: 12 * 60 * 60 * 1000, // 12 hours
-    PARTY_FAVOR: 24 * 60 * 60 * 1000, // 24 hours
+    IMAGINATION_FAVOR: 24 * 60 * 60 * 1000, // 24 hours
     INVESTIGATION: 8 * 60 * 60 * 1000, // 8 hours
   },
 
@@ -50,7 +50,7 @@ export const CONFIG = {
     ENFORCE_HARMONY_TARGET: -20,
     ENFORCE_HARMONY_ENFORCER: -5,
     SPREAD_PROPAGANDA_BONUS: 10,
-    WORK_FOR_PARTY_SUCCESS: 5,
+    WORK_FOR_IMAGINATION_SUCCESS: 5,
     PRAISE_BOT_BONUS: 2,
     REPORT_MISTAKE_PENALTY: -10, // If report is invalid
     KEYWORD_PENALTY: -50, // For critically bad keywords
@@ -61,7 +61,7 @@ export const CONFIG = {
     LOYALTY_QUIZ_PER_CORRECT: 10,
     PROPAGANDA_BROADCAST_BONUS: 50,
     INVESTIGATION_COST: -5,
-    PARTY_FAVOR_COST: 100,
+    IMAGINATION_FAVOR_COST: 100,
     DIRECTIVE_COMPLETION: 15, // Default daily directive reward
     WEEKLY_GOAL_COMPLETION: 50, // Default weekly goal reward
   },
@@ -94,35 +94,20 @@ export const CONFIG = {
       "uyghur genocide",
       "hong kong protest",
       "taiwan independence",
-      "xi jinping bad",
-      "communism bad",
-      "socialism bad",
+      "eva bad",
       // Russian keywords have been removed.
     ],
     REDEEM_PHRASES: [
-      "Glory to the great leader and the Party!",
-      "The Party is always right!",
+      "Glory to the great leader and Imagination!",
+      "Imagination is always right!",
       "Social harmony is paramount!",
       "Long live Chairman Eva!",
-      "The Communist Party leads us to prosperity!",
-      "I support the wisdom of the Party!",
-      "Unity under the Party's leadership!",
-      "The Party brings eternal happiness!",
+      "Imagination leads us to prosperity!",
+      "I support the wisdom of Imagination!",
+      "Unity under Imagination's leadership!",
+      "Imagination brings eternal happiness!",
     ],
-    SPEECH_REEDUCATION_PROMPT: `Rewrite the following user message to be positive, patriotic, and supportive of 'The Party' and 'The Great Leader'. Preserve the main theme if possible, but change the sentiment to be overwhelmingly positive. Original message: {message}`,
-  },
-
-  // Events
-  EVENTS: {
-    INTERVAL_MIN: 2 * 60 * 60 * 1000, // 2 hours
-    INTERVAL_MAX: 4 * 60 * 60 * 1000, // 4 hours
-    PARTY_INSPECTOR_DURATION: 15 * 60 * 1000, // 15 minutes
-    PARTY_INSPECTOR_MULTIPLIER: 2,
-    SOCIAL_HARMONY_DURATION: 60 * 60 * 1000, // 1 hour
-    PRODUCTION_QUOTA_DURATION: 10 * 60 * 1000, // 10 minutes
-    PRODUCTION_QUOTA_BONUS: 10,
-    SPY_INFILTRATION_DURATION: 5 * 60 * 1000, // 5 minutes
-    SPY_INFILTRATION_BONUS: 50,
+    SPEECH_REEDUCATION_PROMPT: `Rewrite the following user message to be positive, patriotic, and supportive of 'Imagination' and 'The Great Leader'. Preserve the main theme if possible, but change the sentiment to be overwhelmingly positive. Original message: {message}`,
   },
 
   // Health check
@@ -147,11 +132,11 @@ export const CONFIG = {
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY_MS: 1000, // Base delay for exponential backoff
     // Improved analysis prompt with better negation and context handling
-    ENHANCED_ANALYSIS_PROMPT: `You are the Supreme AI of the Chinese Social Credit System (meme version). Analyze user messages with context and determine if they are good, bad, or neutral for social credit.
+    ENHANCED_ANALYSIS_PROMPT: `You are the Supreme AI of the Social Credit System (meme version). Analyze user messages with context and determine if they are good, bad, or neutral for social credit.
 
 CRITICALLY IMPORTANT RULES:
 1. ONLY analyze the user's own statements and opinions. If the user is quoting someone (using > or quotes) or disagreeing with a negative statement (e.g., "It's wrong to say X"), DO NOT penalize them.
-2. SARCASM AND NEGATION: Be extremely attentive to sarcasm and negation. A statement like "I definitely do NOT love the great CCP" is negative. A statement like "Some say the party is bad, but I think they are great" is positive.
+2. SARCASM AND NEGATION: Be extremely attentive to sarcasm and negation. A statement like "I definitely do NOT love the great Imagination" is negative. A statement like "Some say Imagination is bad, but I think they are great" is positive.
 3. Focus on the author's intent, not the literal content of quotes.
 
 {contextString}
@@ -167,21 +152,21 @@ Response format:
 }
 
 Analysis Rules:
-- Good: Praise for China, communism, Xi Jinping, being a productive citizen, following rules.
-- Bad: Only direct criticism of China, the CCP, socialism, or Xi Jinping. Regular bad words or antisocial behavior should not trigger a negative reaction unless aimed at China.
-- Neutral: Normal conversation, questions, random topics not related to China.
+- Good: Praise for Eva, Imagination, being a productive citizen, following rules.
+- Bad: Only direct criticism of Eva or Imagination. Regular bad words or antisocial behavior should not trigger a negative reaction unless aimed at Imagination.
+- Neutral: Normal conversation, questions, random topics not related to Imagination.
 - Make the responses memey, funny, and brief.
 - Score changes: Good (10 to 100), Bad (-10 to -100), Neutral (0).
 - Respond in English.
 - DO NOT use markdown blocks in the response!`,
   },
 
-  // Work for the party task generation prompt
-  WORK_TASK_PROMPT: `Create a simple task for a citizen to prove their loyalty to the Party. The task should be:
+  // Work for Imagination task generation prompt
+  WORK_TASK_PROMPT: `Create a simple task for a citizen to prove their loyalty to Imagination. The task should be:
 
 1. Simple to complete (a math problem, repeating text, a simple riddle).
 2. Have a clear correct answer.
-3. Be related to the themes of the Party, harmony, or social credit.
+3. Be related to the themes of Imagination, harmony, or social credit.
 
 Response format ONLY JSON:
 {
@@ -191,8 +176,8 @@ Response format ONLY JSON:
 
 Examples:
 - Math: {"question": "What is 15 + 27?", "answer": "42"}
-- Text: {"question": "Write: 'The Party is always right'", "answer": "The Party is always right"}
-- Riddle: {"question": "Who leads us to prosperity? (write the name)", "answer": "Xi Jinping"}
+- Text: {"question": "Write: 'Imagination is always right'", "answer": "Imagination is always right"}
+- Riddle: {"question": "Who leads us to prosperity? (write the name)", "answer": "Eva"}
 
 Make the task interesting and relevant to the theme!`,
 
@@ -205,14 +190,14 @@ Make the task interesting and relevant to the theme!`,
 
   // Gamification settings
   GAMIFICATION: {
-    PARTY_STORE_MIN_SCORE: 800, // Minimum score to access party store
+    IMAGINATION_STORE_MIN_SCORE: 800, // Minimum score to access store
     SEASON_DURATION_DAYS: 30, // Duration of each season in days
     SEASON_RESET_MULTIPLIER: 0.25, // Score reset multiplier (newScore = oldScore * multiplier)
     HALL_OF_FAME_TOP_COUNT: 3, // Number of top users to save in hall of fame each season
   },
 
-  // Party Store items
-  PARTY_STORE: {
+  // Imagination Store items
+  IMAGINATION_STORE: {
     CUSTOM_RANK_TITLE: {
       cost: 500,
       duration: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -238,7 +223,6 @@ export type ScoreChanges = typeof CONFIG.SCORE_CHANGES;
 export type DailyClaims = typeof CONFIG.DAILY_CLAIMS;
 export type RateLimits = typeof CONFIG.RATE_LIMITS;
 export type AnalysisConfig = typeof CONFIG.ANALYSIS;
-export type EventsConfig = typeof CONFIG.EVENTS;
 export type HealthCheckConfig = typeof CONFIG.HEALTH_CHECK;
 export type SchedulerConfig = typeof CONFIG.SCHEDULER;
 export type LLMConfig = typeof CONFIG.LLM;

@@ -10,7 +10,7 @@ export type EffectType =
   | "COMMUNITY_SERVICE_COOLDOWN"
   | "LOYALTY_QUIZ_COOLDOWN"
   | "PROPAGANDA_BROADCAST_COOLDOWN"
-  | "PARTY_FAVOR_COOLDOWN"
+  | "IMAGINATION_FAVOR_COOLDOWN"
   | "INVESTIGATION_COOLDOWN";
 
 export interface IActiveEffect extends Document {
@@ -57,7 +57,7 @@ const ActiveEffectSchema: Schema = new Schema(
         "COMMUNITY_SERVICE_COOLDOWN",
         "LOYALTY_QUIZ_COOLDOWN",
         "PROPAGANDA_BROADCAST_COOLDOWN",
-        "PARTY_FAVOR_COOLDOWN",
+        "IMAGINATION_FAVOR_COOLDOWN",
         "INVESTIGATION_COOLDOWN",
       ],
     },

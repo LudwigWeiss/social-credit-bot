@@ -12,7 +12,7 @@ import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
 import { Logger } from "../utils/Logger.js";
 
-interface PartyFavorOption {
+interface ImaginationFavorOption {
   id: string;
   name: string;
   description: string;
@@ -21,7 +21,7 @@ interface PartyFavorOption {
 }
 
 export class PrivilegeCommands extends BaseCommandHandler {
-  private readonly partyFavorOptions: PartyFavorOption[] = [
+  private readonly imaginationFavorOptions: ImaginationFavorOption[] = [
     {
       id: "GLORIOUS_PRODUCTION",
       name: "🏭 Glorious Production",
@@ -64,8 +64,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
         case "propaganda-broadcast":
           await this.handlePropagandaBroadcastCommand(interaction);
           break;
-        case "party-favor":
-          await this.handlePartyFavorCommand(interaction);
+        case "imagination-favor":
+          await this.handleImaginationFavorCommand(interaction);
           break;
         case "investigate":
           await this.handleInvestigateCommand(interaction);
@@ -191,7 +191,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
           inline: true,
         }
       )
-      .setFooter({ text: "The Party values your vigilance! 👁️" })
+      .setFooter({ text: "Imagination values your vigilance! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -245,7 +245,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       userId,
       guildId,
       bonusAmount,
-      `Party's Daily Bonus (${rankInfo.rank})`,
+      `Imagination's Daily Bonus (${rankInfo.rank})`,
       interaction.user.username
     );
 
@@ -259,17 +259,17 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🎁 PARTY'S DAILY BONUS")
+      .setTitle("🎁 IMAGINATION'S DAILY BONUS")
       .setDescription(
         `**Citizen ${interaction.user.username}!**\n\n` +
-          `The Party is benevolent to you today! You have received a bonus for your loyalty.`
+          `Imagination is benevolent to you today! You have received a bonus for your loyalty.`
       )
       .addFields(
         { name: "🏅 Rank", value: rankInfo.rank, inline: true },
         { name: "💰 Bonus", value: `+${bonusAmount}`, inline: true },
         { name: "💯 New Score", value: `${newScore}`, inline: true }
       )
-      .setFooter({ text: "The Party takes care of its best citizens! 🇨🇳" })
+      .setFooter({ text: "Imagination takes care of its best citizens! 💫" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -317,13 +317,13 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Create embed with propaganda
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("🇨🇳 GLORY TO THE PARTY! 🇨🇳")
+      .setTitle("💫 GLORY TO IMAGINATION! 💫")
       .setDescription(
-        `**${interaction.user.username}** reminds you of the Party's greatness!\n\n` +
-          `*"Social harmony is achieved through unity under the Party's leadership!"*`
+        `**${interaction.user.username}** reminds you of Imagination's greatness!\n\n` +
+          `*"Social harmony is achieved through unity under Imagination's leadership!"*`
       )
       .setImage(imageUrl)
-      .setFooter({ text: "The Party is always right! 中华人民共和国万岁!" })
+      .setFooter({ text: "Imagination is always right! Imagination is eternal!" })
       .setTimestamp();
 
     // Send to current channel
@@ -334,7 +334,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       userId,
       guildId,
       CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS,
-      "Spreading the Party's glorious propaganda",
+      "Spreading Imagination's glorious propaganda",
       interaction.user.username
     );
 
@@ -352,7 +352,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setTitle("📢 PROPAGANDA SPREAD!")
       .setDescription(
         `**Thank you for your loyalty, citizen ${interaction.user.username}!**\n\n` +
-          `The Party values your help in spreading the truth.`
+          `Imagination values your help in spreading the truth.`
       )
       .addFields(
         {
@@ -362,7 +362,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         },
         { name: "💯 New Score", value: `${newScore}`, inline: true }
       )
-      .setFooter({ text: "Continue to serve the Party! 👁️" })
+      .setFooter({ text: "Continue to serve Imagination! 👁️" })
       .setTimestamp();
 
     await interaction.followUp({
@@ -415,10 +415,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Create broadcast embed
       const embed = new EmbedBuilder()
         .setColor(0xdc143c)
-        .setTitle("📢 OFFICIAL PARTY BROADCAST 📢")
+        .setTitle("📢 OFFICIAL IMAGINATION BROADCAST 📢")
         .setDescription(
           `**Attention all citizens!**\n\n` +
-            `Citizen **${interaction.user.username}** is broadcasting an important message on behalf of the Party:\n\n` +
+            `Citizen **${interaction.user.username}** is broadcasting an important message on behalf of Imagination:\n\n` +
             `*${enhancedMessage}*`
         )
         .setFooter({
@@ -433,7 +433,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         userId,
         guildId,
         CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50,
-        "Successful broadcast of Party propaganda",
+        "Successful broadcast of Imagination propaganda",
         interaction.user.username
       );
 
@@ -454,7 +454,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
             `**Reward:** +${CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50}\n` +
             `**New Score:** ${newScore}`
         )
-        .setFooter({ text: "The Party is proud of your loyalty! 🇨🇳" });
+        .setFooter({ text: "Imagination is proud of your loyalty! 💫" });
 
       await interaction.followUp({
         embeds: [confirmEmbed],
@@ -469,7 +469,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     }
   }
 
-  private async handlePartyFavorCommand(
+  private async handleImaginationFavorCommand(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
     const userId = interaction.user.id;
@@ -479,7 +479,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     const score = await this.socialCreditManager.getUserScore(userId, guildId);
     if (score < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
       await interaction.reply({
-        content: `❌ Insufficient social credit! Supreme Citizen status (${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ score) is required to activate Party Favors.`,
+        content: `❌ Insufficient social credit! Supreme Citizen status (${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ score) is required to activate Imagination Favors.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -488,12 +488,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Check cooldown
     const cooldownCheck = this.effectManager.isOnCooldown(
       userId,
-      "PARTY_FAVOR_COOLDOWN"
+      "IMAGINATION_FAVOR_COOLDOWN"
     );
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Please wait another ${hoursLeft} hours before using Party Favors again!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before using Imagination Favors again!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -501,10 +501,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     // Create selection menu
     const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("party_favor_select")
-      .setPlaceholder("Select a Party Favor...")
+      .setCustomId("imagination_favor_select")
+      .setPlaceholder("Select an Imagination Favor...")
       .addOptions(
-        this.partyFavorOptions.map((option) =>
+        this.imaginationFavorOptions.map((option) =>
           new StringSelectMenuOptionBuilder()
             .setLabel(option.name)
             .setDescription(option.description)
@@ -518,10 +518,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("🏛️ PARTY FAVORS")
+      .setTitle("🏛️ IMAGINATION FAVORS")
       .setDescription(
         `**Supreme Citizen ${interaction.user.username}!**\n\n` +
-          `The Party grants you the ability to activate one of the following favors for the entire server:\n\n` +
+          `Imagination grants you the ability to activate one of the following favors for the entire server:\n\n` +
           `⏱️ **Duration:** 15 minutes\n` +
           `🌐 **Effect:** Applies to all citizens on the server`
       )
@@ -541,7 +541,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         filter: (i) => i.user.id === userId,
       });
 
-      const selectedOption = this.partyFavorOptions.find(
+      const selectedOption = this.imaginationFavorOptions.find(
         (option) => option.id === confirmation.values[0]
       );
 
@@ -554,9 +554,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
         return;
       }
 
-      await this.applyPartyFavor(confirmation, selectedOption, guildId);
+      await this.applyImaginationFavor(confirmation, selectedOption, guildId);
     } catch (error) {
-      Logger.error(`Error in party favor selection: ${error}`);
+      Logger.error(`Error in imagination favor selection: ${error}`);
       await interaction.editReply({
         content: "⏰ Selection time expired. Please try the command again.",
         components: [],
@@ -598,7 +598,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (targetUser.bot) {
       await interaction.reply({
         content:
-          "🤖 Bots do not need investigation - they are always loyal to the Party!",
+          "🤖 Bots do not need investigation - they are always loyal to Imagination!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -720,12 +720,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
   private async moderateAndEnhancePropaganda(message: string): Promise<string> {
     try {
       const prompt = `
-        You are an editor for the propaganda department of the Communist Party of China.
+        You are an editor for the propaganda department of Imagination.
         Your task is to improve and moderate a message for official broadcast.
 
         Rules:
         1. Remove any inappropriate language or insults.
-        2. Add suitable communist and party phrases.
+        2. Add suitable phrases about Imagination.
         3. Make the message more solemn and official.
         4. Maximum 200 words.
         5. Respond ONLY with the final text, without explanations.
@@ -748,9 +748,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
     }
   }
 
-  private async applyPartyFavor(
+  private async applyImaginationFavor(
     interaction: ChatInputCommandInteraction | StringSelectMenuInteraction,
-    option: PartyFavorOption,
+    option: ImaginationFavorOption,
     guildId: string
   ): Promise<void> {
     try {
@@ -762,7 +762,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         option.duration,
         undefined,
         {
-          type: "party_favor",
+          type: "imagination_favor",
           activatedBy: interaction.user.id,
           activatedByName: interaction.user.username,
           favorType: option.effect,
@@ -770,12 +770,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
       );
 
       // Deduct score cost
-      const cost = CONFIG.SCORE_CHANGES.PARTY_FAVOR_COST;
+      const cost = CONFIG.SCORE_CHANGES.IMAGINATION_FAVOR_COST;
       const newScore = await this.socialCreditManager.updateScore(
         interaction.user.id,
         guildId,
         -cost,
-        `Activation of Party Favor: ${option.name}`,
+        `Activation of Imagination Favor: ${option.name}`,
         interaction.user.username
       );
 
@@ -783,14 +783,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
       await this.effectManager.applyEffect(
         interaction.user.id,
         guildId,
-        "PARTY_FAVOR_COOLDOWN",
-        CONFIG.COOLDOWNS.PARTY_FAVOR
+        "IMAGINATION_FAVOR_COOLDOWN",
+        CONFIG.COOLDOWNS.IMAGINATION_FAVOR
       );
 
       // Update the interaction with success message
       const successEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("✅ PARTY FAVOR ACTIVATED!")
+        .setTitle("✅ IMAGINATION FAVOR ACTIVATED!")
         .setDescription(
           `**${option.name}** has been activated!\n\n` +
             `**Effect:** ${option.description}\n` +
@@ -798,7 +798,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
             `**Cost:** ${cost} score\n` +
             `**New Score:** ${newScore}`
         )
-        .setFooter({ text: "The Party thanks you for your service! 🏛️" })
+        .setFooter({ text: "Imagination thanks you for your service! 🏛️" })
         .setTimestamp();
 
       if ("update" in interaction) {
@@ -817,14 +817,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
       if (interaction.guild && interaction.channel) {
         const announceEmbed = new EmbedBuilder()
           .setColor(0xffd700)
-          .setTitle("🏛️ PARTY FAVOR ACTIVATED!")
+          .setTitle("🏛️ IMAGINATION FAVOR ACTIVATED!")
           .setDescription(
             `**Supreme Citizen ${interaction.user.username}** has activated a favor for the entire server:\n\n` +
               `**${option.name}**\n` +
               `*${option.description}*\n\n` +
               `⏱️ **Duration:** 15 minutes`
           )
-          .setFooter({ text: "All citizens reap the benefits! 🇨🇳" })
+          .setFooter({ text: "All citizens reap the benefits! 💫" })
           .setTimestamp();
 
         if (
@@ -836,7 +836,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         }
       }
     } catch (error) {
-      Logger.error(`Error applying party favor: ${error}`);
+      Logger.error(`Error applying imagination favor: ${error}`);
       if ("update" in interaction) {
         await interaction.update({
           content: "❌ An error occurred while activating the favor.",

@@ -17,10 +17,7 @@ import * as dotenv from "dotenv";
 import { SocialCreditManager } from "./managers/SocialCreditManager.js";
 import { DatabaseManager } from "./managers/DatabaseManager.js";
 import { EffectManager } from "./managers/EffectManager.js";
-import { EventManager } from "./managers/EventManager.js";
-import { DirectiveManager } from "./managers/DirectiveManager.js";
 import { Scheduler } from "./managers/Scheduler.js";
-import { HealthCheck } from "./HealthCheck.js";
 import { MemeResponses } from "./utils/MemeResponses.js";
 import { CommandHandler } from "./handlers/CommandHandler.js";
 import { Logger } from "./utils/Logger.js";
@@ -38,10 +35,7 @@ class SocialCreditBot {
   private socialCreditManager: SocialCreditManager;
   private databaseManager: DatabaseManager;
   private effectManager: EffectManager;
-  private eventManager: EventManager;
-  private directiveManager: DirectiveManager;
   private scheduler: Scheduler;
-  private healthCheck: HealthCheck;
   private commandHandler: CommandHandler;
   private rateLimitManager: RateLimitManager;
   private messageContextManager: MessageContextManager;
@@ -64,19 +58,7 @@ class SocialCreditBot {
     this.databaseManager = new DatabaseManager();
     this.socialCreditManager = new SocialCreditManager(this.databaseManager);
     this.effectManager = new EffectManager(this.databaseManager);
-    this.eventManager = new EventManager(
-      this.client,
-      this.openai,
-      this.databaseManager,
-      this.socialCreditManager
-    );
-    this.directiveManager = new DirectiveManager(
-      this.openai,
-      this.databaseManager,
-      this.socialCreditManager
-    );
     this.scheduler = new Scheduler(this.effectManager, this.databaseManager);
-    this.healthCheck = new HealthCheck(this.client, this.databaseManager);
     this.rateLimitManager = new RateLimitManager();
     this.messageContextManager = new MessageContextManager();
 
@@ -90,14 +72,8 @@ class SocialCreditBot {
       this.databaseManager,
       this.effectManager,
       this.openai,
-      this.directiveManager,
       this.rateLimitManager,
       this.messageContextManager
-    );
-
-    // Set up event callback for EventManager
-    this.scheduler.setEventCallback(
-      this.handleRandomEventWithManager.bind(this)
     );
 
     this.setupEventListeners();
@@ -307,7 +283,7 @@ class SocialCreditBot {
     }
 
     const prompt = simplifiedPrompt
-      ? `Analyze the message for its sentiment towards China/The Party. Respond ONLY with JSON: {"verdict": "good/bad/neutral", "score_change": number, "reason": "briefly", "meme_response": "memey"}`
+      ? `Analyze the message for its sentiment towards Imagination. Respond ONLY with JSON: {"verdict": "good/bad/neutral", "score_change": number, "reason": "briefly", "meme_response": "memey"}`
       : CONFIG.LLM.ENHANCED_ANALYSIS_PROMPT.replace(
           "{contextString}",
           contextString
@@ -412,7 +388,7 @@ class SocialCreditBot {
           .setDescription(
             `🚫 Too early to increase score, citizen!\n\n⏱️ Wait another **${minutesLeft} minutes** before the next increase.\n\n💡 *The system prevents spamming of good messages!*`
           )
-          .setFooter({ text: "The Party controls the rate of growth! 👁️" })
+          .setFooter({ text: "Imagination controls the rate of growth! 👁️" })
           .setTimestamp();
 
         await message.reply({ embeds: [cooldownEmbed] });
@@ -428,66 +404,18 @@ class SocialCreditBot {
       );
     }
 
-    // Check for active events that modify score changes using EventManager
-    let modifiedScoreChange = analysis.score_change;
-    modifiedScoreChange = this.eventManager.applyEventEffects(
-      guildId,
-      modifiedScoreChange
-    );
-
     // Update user's social credit score
     const newScore = await this.socialCreditManager.updateScore(
       userId,
       guildId,
-      modifiedScoreChange,
-      analysis.score_change !== modifiedScoreChange
-        ? `${analysis.reason} (Modified by active event)`
-        : analysis.reason,
+      analysis.score_change,
+      analysis.reason,
       message.author.username,
       sanitizedContent
     );
 
     // Log the social credit change
     Logger.socialCredit(userId, analysis.score_change, analysis.reason);
-
-    // Update directive progress
-    await this.directiveManager.updateDirectiveProgress(
-      userId,
-      guildId,
-      "message_sent",
-      1
-    );
-
-    // Track score changes for directive progress
-    if (modifiedScoreChange !== 0) {
-      await this.directiveManager.updateDirectiveProgress(
-        userId,
-        guildId,
-        "score_changed",
-        modifiedScoreChange
-      );
-    }
-
-    // Check for keyword usage in directives
-    const messageWords = sanitizedContent.toLowerCase().split(/\s+/);
-    const keywordsToTrack = [
-      "party",
-      "harmony",
-      "unity",
-      "leader",
-      "society",
-    ];
-    for (const keyword of keywordsToTrack) {
-      if (messageWords.includes(keyword)) {
-        await this.directiveManager.updateDirectiveProgress(
-          userId,
-          guildId,
-          "keyword_used",
-          1,
-          { keyword: keyword }
-        );
-      }
-    }
 
     // Create response embed
     const embed = this.createResponseEmbed(message.author, analysis, newScore);
@@ -508,7 +436,7 @@ class SocialCreditBot {
     const color = isGood ? 0x00ff00 : 0xff0000;
     const emoji = isGood ? "🎉" : "⚠️";
     const title = isGood
-      ? "🇨🇳 SOCIAL CREDIT SCORE INCREASED! 🇨🇳"
+      ? "💫SOCIAL CREDIT SCORE INCREASED!💫"
       : "🚨 SOCIAL CREDIT SCORE DECREASED! 🚨";
 
     return new EmbedBuilder()
@@ -525,7 +453,7 @@ class SocialCreditBot {
         { name: "📝 Reason", value: analysis.reason, inline: false }
       )
       .setFooter({
-        text: `${author.username} | 中华人民共和国万岁!`,
+        text: `${author.username} | Imagination is eternal!`,
         iconURL: author.displayAvatarURL
           ? author.displayAvatarURL()
           : undefined,
@@ -730,24 +658,6 @@ class SocialCreditBot {
     return responseText.trim();
   }
 
-  private async handleRandomEventWithManager(): Promise<void> {
-    try {
-      // Get all monitored guilds and trigger events using EventManager
-      const monitoredChannels =
-        await this.databaseManager.getAllMonitoredChannels();
-
-      for (const [guildId] of monitoredChannels.entries()) {
-        // Only start event if no active event in this guild
-        const activeEvent = this.eventManager.getActiveEvent(guildId);
-        if (!activeEvent) {
-          await this.eventManager.startRandomEvent(guildId);
-        }
-      }
-    } catch (error) {
-      Logger.error(`Error handling random event with EventManager:`, error);
-    }
-  }
-
   private hasCriticallyBadKeywords(content: string): boolean {
     const lowerContent = content.toLowerCase();
     return CONFIG.ANALYSIS.CRITICALLY_BAD_KEYWORDS.some((keyword) =>
@@ -778,7 +688,7 @@ class SocialCreditBot {
       .setTitle("🚨 CRITICAL VIOLATION! 🚨")
       .setDescription(
         `**Citizen ${message.author.username}!**\n\n` +
-          `Extremely negative statements contradicting the Party's principles have been detected!`
+          `Extremely negative statements contradicting Imagination's principles have been detected!`
       )
       .addFields(
         {
@@ -793,7 +703,7 @@ class SocialCreditBot {
           inline: false,
         }
       )
-      .setFooter({ text: "The Party does not tolerate disharmony! 👁️" })
+      .setFooter({ text: "Imagination does not tolerate disharmony! 👁️" })
       .setTimestamp();
 
     await message.reply({ embeds: [embed] });
@@ -877,7 +787,7 @@ class SocialCreditBot {
       new SlashCommandBuilder()
         .setName("redeem-myself")
         .setDescription(
-          "Seek forgiveness from the Party for your low social credit"
+          "Seek forgiveness from Imagination for your low social credit"
         ),
 
       new SlashCommandBuilder()
@@ -900,11 +810,11 @@ class SocialCreditBot {
 
       new SlashCommandBuilder()
         .setName("claim-daily")
-        .setDescription("Claim your daily social credit bonus from the Party"),
+        .setDescription("Claim your daily social credit bonus from Imagination"),
 
       new SlashCommandBuilder()
         .setName("spread-propaganda")
-        .setDescription("Spread glorious Party propaganda (Model Citizen+)"),
+        .setDescription("Spread glorious Imagination propaganda (Model Citizen+)"),
 
       new SlashCommandBuilder()
         .setName("praise-bot")
@@ -915,7 +825,7 @@ class SocialCreditBot {
         .setDescription("Report a mistake in the bot's analysis"),
 
       new SlashCommandBuilder()
-        .setName("work-for-the-party")
+        .setName("work-for-imagination")
         .setDescription("Complete a task to earn social credit back"),
 
       // Enhanced Sanction Commands
@@ -938,7 +848,7 @@ class SocialCreditBot {
       // Enhanced Privilege Commands
       new SlashCommandBuilder()
         .setName("propaganda-broadcast")
-        .setDescription("Broadcast Party-approved propaganda (Model Citizen+)")
+        .setDescription("Broadcast Imagination-approved propaganda (Model Citizen+)")
         .addStringOption((option) =>
           option
             .setName("message")
@@ -947,8 +857,8 @@ class SocialCreditBot {
         ),
 
       new SlashCommandBuilder()
-        .setName("party-favor")
-        .setDescription("Request a server-wide Party favor (Supreme Citizen+)"),
+        .setName("imagination-favor")
+        .setDescription("Request a server-wide Imagination favor (Supreme Citizen+)"),
 
       new SlashCommandBuilder()
         .setName("investigate")
@@ -959,11 +869,6 @@ class SocialCreditBot {
             .setDescription("Citizen to investigate")
             .setRequired(true)
         ),
-
-      // Directive System Command
-      new SlashCommandBuilder()
-        .setName("directive")
-        .setDescription("View your current daily directive and weekly goal"),
     ];
 
     const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
@@ -992,7 +897,6 @@ class SocialCreditBot {
 
     await this.databaseManager.initialize();
     await this.effectManager.initialize();
-    this.healthCheck.start();
     this.scheduler.start();
     await this.client.login(process.env.DISCORD_TOKEN);
 
@@ -1005,11 +909,8 @@ class SocialCreditBot {
     Logger.info("🛑 Shutting down bot gracefully...");
 
     try {
-      this.healthCheck.stop();
       this.scheduler.stop();
       this.effectManager.stopCleanup();
-      this.eventManager.cleanup();
-      this.directiveManager.cleanup();
       await this.databaseManager.disconnect();
       this.client.destroy();
       Logger.info("✅ Bot shutdown completed");
