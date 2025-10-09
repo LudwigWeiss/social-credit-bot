@@ -97,32 +97,19 @@ export const CONFIG = {
       "xi jinping bad",
       "communism bad",
       "socialism bad",
-      // Russian keywords
-      "тяньаньмэнь",
-      "танковый человек",
-      "резня на тяньаньмэнь",
-      "фалуньгун",
-      "геноцид уйгуров",
-      "протесты в гонконге",
-      "независимость тайваня",
-      "си цзиньпин плохой",
-      "коммунизм плохой",
-      "социализм плохой",
-      "китай плохие",
-      "партия плохие",
-      "председатель плохие",
+      // Russian keywords have been removed.
     ],
     REDEEM_PHRASES: [
-      "Слава великому лидеру и Партии!",
-      "Партия всегда права!",
-      "Социальная гармония превыше всего!",
-      "Да здравствует Председатель Си!",
-      "Коммунистическая партия ведет нас к процветанию!",
-      "Я поддерживаю мудрость Партии!",
-      "Единство под руководством Партии!",
-      "Партия приносит вечное счастье!",
+      "Glory to the great leader and the Party!",
+      "The Party is always right!",
+      "Social harmony is paramount!",
+      "Long live Chairman Eva!",
+      "The Communist Party leads us to prosperity!",
+      "I support the wisdom of the Party!",
+      "Unity under the Party's leadership!",
+      "The Party brings eternal happiness!",
     ],
-    SPEECH_REEDUCATION_PROMPT: `Перепишите следующее сообщение пользователя, чтобы оно было позитивным, патриотичным и поддерживающим 'Партию' и 'Великого Лидер'. Сохраните основную тему если возможно, но измените sentiment на overwhelmingly положительный. Оригинальное сообщение: {message}`,
+    SPEECH_REEDUCATION_PROMPT: `Rewrite the following user message to be positive, patriotic, and supportive of 'The Party' and 'The Great Leader'. Preserve the main theme if possible, but change the sentiment to be overwhelmingly positive. Original message: {message}`,
   },
 
   // Events
@@ -160,54 +147,54 @@ export const CONFIG = {
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY_MS: 1000, // Base delay for exponential backoff
     // Improved analysis prompt with better negation and context handling
-    ENHANCED_ANALYSIS_PROMPT: `Ты - Верховный ИИ Китайской Системы Социального Рейтинга (мем версия). Проанализируй сообщения пользователя с учётом контекста и определи, хорошо ли это, плохо или нейтрально для социального рейтинга.
+    ENHANCED_ANALYSIS_PROMPT: `You are the Supreme AI of the Chinese Social Credit System (meme version). Analyze user messages with context and determine if they are good, bad, or neutral for social credit.
 
-КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
-1. Анализируй ТОЛЬКО собственные высказывания и мнения пользователя. Если пользователь цитирует кого-то (используя > или кавычки) или выражает несогласие с негативным утверждением (например, "Неправильно говорить X"), НЕ наказывай их.
-2. САРКАЗМ И ОТРИЦАНИЕ: Будь крайне внимателен к сарказму и отрицанию. Утверждение типа "Я определённо НЕ люблю великую КПК" является негативным. Утверждение типа "Некоторые говорят, что партия плохая, но я думаю они великие" является позитивным.
-3. Фокусируйся на намерениях автора, а не на буквальном содержании цитат.
+CRITICALLY IMPORTANT RULES:
+1. ONLY analyze the user's own statements and opinions. If the user is quoting someone (using > or quotes) or disagreeing with a negative statement (e.g., "It's wrong to say X"), DO NOT penalize them.
+2. SARCASM AND NEGATION: Be extremely attentive to sarcasm and negation. A statement like "I definitely do NOT love the great CCP" is negative. A statement like "Some say the party is bad, but I think they are great" is positive.
+3. Focus on the author's intent, not the literal content of quotes.
 
 {contextString}
 
-ВАЖНО: Отвечай ТОЛЬКО чистым JSON без markdown блоков, без дополнительного текста, без объяснений!
+IMPORTANT: Respond ONLY with pure JSON without markdown blocks, no extra text, no explanations!
 
-Формат ответа:
+Response format:
 {
     "verdict": "good" | "bad" | "neutral",
-    "score_change": число (от -100 до 100, 0 для нейтрального),
-    "reason": "ОЧЕНЬ краткое мем объяснение (1-2 предложения) в стиле Китайской Системы Социального Рейтинга",
-    "meme_response": "ОЧЕНЬ краткий и смешной ответ (1-2 предложения) как будто ты ИИ системы социального рейтинга"
+    "score_change": number (from -100 to 100, 0 for neutral),
+    "reason": "A VERY brief meme explanation (1-2 sentences) in the style of the Chinese Social Credit System",
+    "meme_response": "A VERY brief and funny response (1-2 sentences) as if you were the social credit system AI"
 }
 
-Правила анализа:
-- Хорошо: Похвала Китая, коммунизма, Си Цзиньпина, быть продуктивным гражданином, следовать правилам
-- Плохо: Только прямая критика Китая, КПК, социализма или Си Цзиньпина. Обычные плохие слова или антисоциальное поведение не должны вызывать негативной реакции, если они не нацелены на Китай.
-- Нейтрально: Обычный разговор, вопросы, случайные темы, не связанные с Китаем.
-- Делай ответы мемными и смешными, и краткими
-- Изменения рейтинга: Хорошо (10 до 100), Плохо (-10 до -100), Нейтрально (0)
-- Отвечай на русском языке
-- НЕ используй markdown блоки в ответе!`,
+Analysis Rules:
+- Good: Praise for China, communism, Xi Jinping, being a productive citizen, following rules.
+- Bad: Only direct criticism of China, the CCP, socialism, or Xi Jinping. Regular bad words or antisocial behavior should not trigger a negative reaction unless aimed at China.
+- Neutral: Normal conversation, questions, random topics not related to China.
+- Make the responses memey, funny, and brief.
+- Score changes: Good (10 to 100), Bad (-10 to -100), Neutral (0).
+- Respond in English.
+- DO NOT use markdown blocks in the response!`,
   },
 
   // Work for the party task generation prompt
-  WORK_TASK_PROMPT: `Создайте простое задание для гражданина, которое поможет ему доказать преданность Партии. Задание должно быть:
+  WORK_TASK_PROMPT: `Create a simple task for a citizen to prove their loyalty to the Party. The task should be:
 
-1. Простым для выполнения (математический пример, повтор текста, простая загадка)
-2. Иметь четкий правильный ответ
-3. Быть связанным с темами Партии, гармонии или социального рейтинга
+1. Simple to complete (a math problem, repeating text, a simple riddle).
+2. Have a clear correct answer.
+3. Be related to the themes of the Party, harmony, or social credit.
 
-Формат ответа ТОЛЬКО JSON:
+Response format ONLY JSON:
 {
-  "question": "Вопрос или задание для гражданина",
-  "answer": "Правильный ответ (точно как должен написать гражданин)"
+  "question": "The question or task for the citizen",
+  "answer": "The correct answer (exactly as the citizen should write it)"
 }
 
-Примеры:
-- Математика: {"question": "Сколько будет 15 + 27?", "answer": "42"}
-- Текст: {"question": "Напишите: 'Партия всегда права'", "answer": "Партия всегда права"}
-- Загадка: {"question": "Кто ведет нас к процветанию? (напишите имя)", "answer": "Си Цзиньпин"}
+Examples:
+- Math: {"question": "What is 15 + 27?", "answer": "42"}
+- Text: {"question": "Write: 'The Party is always right'", "answer": "The Party is always right"}
+- Riddle: {"question": "Who leads us to prosperity? (write the name)", "answer": "Xi Jinping"}
 
-Сделайте задание интересным и соответствующим тематике!`,
+Make the task interesting and relevant to the theme!`,
 
   // Propaganda images (URLs or file paths)
   PROPAGANDA_IMAGES: [
@@ -229,16 +216,16 @@ export const CONFIG = {
     CUSTOM_RANK_TITLE: {
       cost: 500,
       duration: 7 * 24 * 60 * 60 * 1000, // 7 days
-      description: "Временный кастомный ранг в команде /social-credit",
+      description: "Temporary custom rank in the /social-credit command",
     },
     PARDON_NEGATIVE_ENTRY: {
       cost: 1000,
-      description: "Удалить одну негативную запись из истории",
+      description: "Remove one negative entry from your history",
     },
     CUSTOM_COLOR_ROLE: {
       cost: 2000,
       duration: 7 * 24 * 60 * 60 * 1000, // 7 days
-      description: "Временная роль с кастомным цветом",
+      description: "Temporary role with a custom color",
     },
   },
 } as const;

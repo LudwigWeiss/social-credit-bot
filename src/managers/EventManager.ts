@@ -216,11 +216,11 @@ Your response MUST be in this exact JSON format:
     switch (eventType) {
       case "PARTY_INSPECTOR_VISIT":
         duration = CONFIG.EVENTS.PARTY_INSPECTOR_DURATION;
-        title = "🚨 ВИЗИТ ИНСПЕКТОРА ПАРТИИ!";
+        title = "🚨 VISIT FROM THE PARTY INSPECTOR!";
         description =
-          "**ВНИМАНИЕ, ГРАЖДАНЕ!**\n\n" +
-          "Партийный инспектор прибыл для проверки! Следующие 15 минут все изменения социального рейтинга **удваиваются**!\n\n" +
-          "Докажите свою преданность Партии! 🇨🇳";
+          "**ATTENTION, CITIZENS!**\n\n" +
+          "A Party Inspector has arrived for an audit! For the next 15 minutes, all social credit changes are **doubled**!\n\n" +
+          "Prove your loyalty to the Party! 🇨🇳";
         effect = {
           type: "SCORE_MODIFIER",
           score_multiplier: CONFIG.EVENTS.PARTY_INSPECTOR_MULTIPLIER,
@@ -229,37 +229,37 @@ Your response MUST be in this exact JSON format:
 
       case "SOCIAL_HARMONY_HOUR":
         duration = CONFIG.EVENTS.SOCIAL_HARMONY_DURATION;
-        title = "🕊️ ЧАС СОЦИАЛЬНОЙ ГАРМОНИИ";
+        title = "🕊️ HOUR OF SOCIAL HARMONY";
         description =
-          "**БЛАГОСЛОВЕННЫЙ ЧАС НАЧАЛСЯ!**\n\n" +
-          "Следующий час только **положительные** изменения социального рейтинга возможны!\n\n" +
-          "Делитесь добротой и преданностью! 💝";
+          "**THE BLESSED HOUR HAS BEGUN!**\n\n" +
+          "For the next hour, only **positive** social credit changes are possible!\n\n" +
+          "Share kindness and loyalty! 💝";
         effect = { type: "BEHAVIOR_RULE", score_multiplier: 0 };
         break;
 
       case "WESTERN_SPY_INFILTRATION":
         duration = CONFIG.EVENTS.SPY_INFILTRATION_DURATION;
-        title = "🕵️ ПРОНИКНОВЕНИЕ ЗАПАДНОГО ШПИОНА!";
+        title = "🕵️ INFILTRATION BY A WESTERN SPY!";
         description =
-          "**ТРЕВОГА!**\n\n" +
-          "Западный шпион проник в наши ряды! Первый, кто скажет правильную патриотическую фразу, получит **+50** социального рейтинга!\n\n" +
-          'Фраза: **"Партия всегда права!"**\n\n' +
-          "⏱️ У вас есть 5 минут!";
+          "**ALERT!**\n\n" +
+          "A Western spy has infiltrated our ranks! The first to say the correct patriotic phrase will receive **+50** social credit!\n\n" +
+          'Phrase: **"The Party is always right!"**\n\n' +
+          "⏱️ You have 5 minutes!";
         effect = {
           type: "SPECIAL_TASK",
-          task_description: "Партия всегда права!",
+          task_description: "The Party is always right!",
           task_reward: CONFIG.EVENTS.SPY_INFILTRATION_BONUS,
         };
         break;
 
       case "PRODUCTION_QUOTA":
         duration = CONFIG.EVENTS.PRODUCTION_QUOTA_DURATION;
-        title = "🏭 ПРОИЗВОДСТВЕННАЯ КВОТА!";
+        title = "🏭 PRODUCTION QUOTA!";
         description =
-          "**ПАРТИЯ ТРЕБУЕТ ПРОИЗВОДСТВА!**\n\n" +
-          "Отправьте **50 сообщений** в monitored каналах в следующие 10 минут!\n\n" +
-          "При успехе все онлайн пользователи получат **+10** социального рейтинга!\n\n" +
-          "За работу, товарищи! ⚒️";
+          "**THE PARTY DEMANDS PRODUCTION!**\n\n" +
+          "Send **50 messages** in monitored channels in the next 10 minutes!\n\n" +
+          "Upon success, all online users will receive **+10** social credit!\n\n" +
+          "To work, comrades! ⚒️";
         effect = {
           type: "SPECIAL_TASK",
           task_description: "Send 50 messages collectively",
@@ -336,7 +336,7 @@ Your response MUST be in this exact JSON format:
         .setColor(this.getEventColor(event.type))
         .setTitle(event.title)
         .setDescription(event.description)
-        .setFooter({ text: "Партия наблюдает! 👁️" })
+        .setFooter({ text: "The Party is watching! 👁️" })
         .setTimestamp();
 
       await (channel as TextChannel).send({ embeds: [embed] });
@@ -356,7 +356,7 @@ Your response MUST be in this exact JSON format:
     if (!event || event.type !== "WESTERN_SPY_INFILTRATION") return;
 
     const correctPhrase =
-      event.effect.task_description || "Партия всегда права!";
+      event.effect.task_description || "The Party is always right!";
     let spyCaught = false;
 
     // Announce in a random monitored channel
@@ -391,23 +391,23 @@ Your response MUST be in this exact JSON format:
         message.author.id,
         guildId,
         reward,
-        "Пойман западный шпион - проявлена бдительность!",
+        "Caught a western spy - vigilance demonstrated!",
         message.author.username
       );
 
       const rewardEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("🎯 ШПИОН ПОЙМАН!")
+        .setTitle("🎯 SPY CAUGHT!")
         .setDescription(
-          `**${message.author.username}** проявил бдительность и поймал западного шпиона!\n\n` +
-            `Награда: **+${reward}** социального рейтинга!`
+          `**${message.author.username}** showed vigilance and caught the western spy!\n\n` +
+            `Reward: **+${reward}** social credit!`
         )
         .addFields({
-          name: "💯 Новый Рейтинг",
+          name: "💯 New Score",
           value: `${newScore}`,
           inline: true,
         })
-        .setFooter({ text: "Партия благодарит за бдительность! 👁️" })
+        .setFooter({ text: "The Party thanks you for your vigilance! 👁️" })
         .setTimestamp();
 
       await channel.send({ embeds: [rewardEmbed] });
@@ -420,11 +420,11 @@ Your response MUST be in this exact JSON format:
       if (!spyCaught) {
         const failEmbed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setTitle("⚠️ ШПИОН СКРЫЛСЯ!")
+          .setTitle("⚠️ SPY ESCAPED!")
           .setDescription(
-            "Западный шпион успешно скрылся! Будьте бдительнее в следующий раз."
+            "The Western spy has successfully escaped! Be more vigilant next time."
           )
-          .setFooter({ text: "Партия продолжит борьбу со шпионажем! 🕵️" })
+          .setFooter({ text: "The Party will continue the fight against espionage! 🕵️" })
           .setTimestamp();
 
         channel.send({ embeds: [failEmbed] }).catch(() => {});
@@ -498,7 +498,7 @@ Your response MUST be in this exact JSON format:
               member.id,
               guildId,
               reward,
-              "Выполнение производственной квоты Партии",
+              "Fulfilling the Party's production quota",
               member.user.username
             );
             rewardedCount++;
@@ -509,28 +509,28 @@ Your response MUST be in this exact JSON format:
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("🎉 КВОТА ВЫПОЛНЕНА!")
+          .setTitle("🎉 QUOTA MET!")
           .setDescription(
-            `**ПЛАН ПЕРЕВЫПОЛНЕН!**\n\n` +
-              `Отправлено **${messageCount}** сообщений (треб. ${requiredMessages})\n` +
-              `Участвовало **${participants.size}** граждан\n` +
-              `Награждено **${rewardedCount}** онлайн пользователей!\n\n` +
-              `Каждый получил **+${reward}** социального рейтинга!`
+            `**PLAN EXCEEDED!**\n\n` +
+              `Sent **${messageCount}** messages (required: ${requiredMessages})\n` +
+              `**${participants.size}** citizens participated\n` +
+              `**${rewardedCount}** online users rewarded!\n\n` +
+              `Everyone received **+${reward}** social credit!`
           )
-          .setFooter({ text: "Партия гордится вашим трудолюбием! 🏭" })
+          .setFooter({ text: "The Party is proud of your hard work! 🏭" })
           .setTimestamp();
 
         await channel.send({ embeds: [successEmbed] });
       } else {
         const failEmbed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setTitle("❌ КВОТА НЕ ВЫПОЛНЕНА!")
+          .setTitle("❌ QUOTA FAILED!")
           .setDescription(
-            `**ПЛАН ПРОВАЛЕН!**\n\n` +
-              `Отправлено только **${messageCount}** сообщений (треб. ${requiredMessages})\n\n` +
-              `Партия ожидает лучших результатов в следующий раз.`
+            `**PLAN FAILED!**\n\n` +
+              `Only **${messageCount}** messages sent (required: ${requiredMessages})\n\n` +
+              `The Party expects better results next time.`
           )
-          .setFooter({ text: "Увеличьте производительность! 📉" })
+          .setFooter({ text: "Increase productivity! 📉" })
           .setTimestamp();
 
         await channel.send({ embeds: [failEmbed] });

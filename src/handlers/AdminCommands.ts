@@ -35,7 +35,7 @@ export class AdminCommands extends BaseCommandHandler {
     ) {
       await interaction.reply({
         content:
-          "🚫 Доступ запрещён! Только партийные чиновники (администраторы) могут устанавливать каналы мониторинга!",
+          "🚫 Access denied! Only party officials (administrators) can set monitoring channels!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -47,7 +47,7 @@ export class AdminCommands extends BaseCommandHandler {
     if (!channel || channel.type !== ChannelType.GuildText) {
       await interaction.reply({
         content:
-          "❌ Неверный канал! Пожалуйста, выберите текстовый канал для мониторинга.",
+          "❌ Invalid channel! Please select a text channel for monitoring.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -63,15 +63,15 @@ export class AdminCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🎯 МОНИТОРИНГ АКТИВИРОВАН")
+      .setTitle("🎯 MONITORING ACTIVATED")
       .setDescription(
-        `Канал ${channel} теперь отслеживается для оценки социального рейтинга!`
+        `Channel ${channel} is now being monitored for social credit assessment!`
       )
       .addFields(
-        { name: "📺 Отслеживаемый Канал", value: `${channel}`, inline: true },
-        { name: "👁️ Статус", value: "АКТИВЕН", inline: true }
+        { name: "📺 Monitored Channel", value: `${channel}`, inline: true },
+        { name: "👁️ Status", value: "ACTIVE", inline: true }
       )
-      .setFooter({ text: "Партия видит всё! 👁️" })
+      .setFooter({ text: "The Party sees all! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -86,7 +86,7 @@ export class AdminCommands extends BaseCommandHandler {
     ) {
       await interaction.reply({
         content:
-          "🚫 Доступ запрещён! Только партийные чиновники (администраторы) могут управлять мониторингом!",
+          "🚫 Access denied! Only party officials (administrators) can manage monitoring!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -97,7 +97,7 @@ export class AdminCommands extends BaseCommandHandler {
 
     if (!channel || channel.type !== ChannelType.GuildText) {
       await interaction.reply({
-        content: "❌ Неверный канал! Пожалуйста, выберите текстовый канал.",
+        content: "❌ Invalid channel! Please select a text channel.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -112,27 +112,27 @@ export class AdminCommands extends BaseCommandHandler {
       if (removed) {
         const embed = new EmbedBuilder()
           .setColor(0xff4500)
-          .setTitle("🚫 МОНИТОРИНГ ОТКЛЮЧЁН")
+          .setTitle("🚫 MONITORING DEACTIVATED")
           .setDescription(
-            `Канал ${channel} больше не отслеживается системой социального рейтинга.`
+            `Channel ${channel} is no longer tracked by the social credit system.`
           )
           .addFields(
-            { name: "📺 Канал", value: `${channel}`, inline: true },
-            { name: "👁️ Статус", value: "ОТКЛЮЧЁН", inline: true }
+            { name: "📺 Channel", value: `${channel}`, inline: true },
+            { name: "👁️ Status", value: "DEACTIVATED", inline: true }
           )
-          .setFooter({ text: "Партия перестала наблюдать за этим каналом." })
+          .setFooter({ text: "The Party has stopped watching this channel." })
           .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
       } else {
         await interaction.reply({
-          content: `❌ Канал ${channel} не был в списке отслеживаемых.`,
+          content: `❌ Channel ${channel} was not in the monitored list.`,
           flags: MessageFlags.Ephemeral,
         });
       }
     } catch {
       await interaction.reply({
-        content: "❌ Ошибка при удалении канала из мониторинга.",
+        content: "❌ Error while removing channel from monitoring.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -147,7 +147,7 @@ export class AdminCommands extends BaseCommandHandler {
     ) {
       await interaction.reply({
         content:
-          "🚫 Доступ запрещён! Только партийные чиновники (администраторы) могут просматривать мониторинг!",
+          "🚫 Access denied! Only party officials (administrators) can view monitoring!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -162,7 +162,7 @@ export class AdminCommands extends BaseCommandHandler {
       if (channelInfo.length === 0) {
         await interaction.reply({
           content:
-            "📊 В этом сервере нет отслеживаемых каналов. Используйте `/set-monitor-channel` для добавления.",
+            "📊 There are no monitored channels on this server. Use `/set-monitor-channel` to add one.",
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -170,8 +170,8 @@ export class AdminCommands extends BaseCommandHandler {
 
       const embed = new EmbedBuilder()
         .setColor(0x4169e1)
-        .setTitle("📺 ОТСЛЕЖИВАЕМЫЕ КАНАЛЫ")
-        .setDescription("*Каналы под наблюдением системы социального рейтинга*")
+        .setTitle("📺 MONITORED CHANNELS")
+        .setDescription("*Channels under surveillance by the social credit system*")
         .setTimestamp();
 
       let description = "";
@@ -179,16 +179,16 @@ export class AdminCommands extends BaseCommandHandler {
         const channel = `<#${info.channelId}>`;
         const addedDate = info.addedAt.toLocaleDateString();
         description += `${channel}\n`;
-        description += `└ Добавлен: ${addedDate} | <@${info.addedBy}>\n\n`;
+        description += `└ Added: ${addedDate} | <@${info.addedBy}>\n\n`;
       }
 
       embed.addFields({
-        name: `👁️ Активных каналов: ${channelInfo.length}`,
+        name: `👁️ Active Channels: ${channelInfo.length}`,
         value: description,
         inline: false,
       });
 
-      embed.setFooter({ text: "Партия наблюдает за всеми! 👁️" });
+      embed.setFooter({ text: "The Party is watching everyone! 👁️" });
 
       await interaction.reply({
         embeds: [embed],
@@ -196,7 +196,7 @@ export class AdminCommands extends BaseCommandHandler {
       });
     } catch {
       await interaction.reply({
-        content: "❌ Ошибка при получении списка каналов.",
+        content: "❌ Error fetching channel list.",
         flags: MessageFlags.Ephemeral,
       });
     }

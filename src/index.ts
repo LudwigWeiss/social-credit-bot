@@ -307,7 +307,7 @@ class SocialCreditBot {
     }
 
     const prompt = simplifiedPrompt
-      ? `Анализируй сообщение на предмет отношения к Китаю/Партии. Отвечай ТОЛЬКО JSON: {"verdict": "good/bad/neutral", "score_change": число, "reason": "кратко", "meme_response": "мемно"}`
+      ? `Analyze the message for its sentiment towards China/The Party. Respond ONLY with JSON: {"verdict": "good/bad/neutral", "score_change": number, "reason": "briefly", "meme_response": "memey"}`
       : CONFIG.LLM.ENHANCED_ANALYSIS_PROMPT.replace(
           "{contextString}",
           contextString
@@ -408,11 +408,11 @@ class SocialCreditBot {
 
         const cooldownEmbed = new EmbedBuilder()
           .setColor(0xffff00)
-          .setTitle("⏰ КУЛДАУН ПОЛОЖИТЕЛЬНОГО РЕЙТИНГА")
+          .setTitle("⏰ POSITIVE SCORE COOLDOWN")
           .setDescription(
-            `🚫 Слишком рано для повышения рейтинга, гражданин!\n\n⏱️ Подождите ещё **${minutesLeft} минут** перед следующим повышением.\n\n💡 *Система предотвращает спам хороших сообщений!*`
+            `🚫 Too early to increase score, citizen!\n\n⏱️ Wait another **${minutesLeft} minutes** before the next increase.\n\n💡 *The system prevents spamming of good messages!*`
           )
-          .setFooter({ text: "Партия контролирует темп роста! 👁️" })
+          .setFooter({ text: "The Party controls the rate of growth! 👁️" })
           .setTimestamp();
 
         await message.reply({ embeds: [cooldownEmbed] });
@@ -471,11 +471,11 @@ class SocialCreditBot {
     // Check for keyword usage in directives
     const messageWords = sanitizedContent.toLowerCase().split(/\s+/);
     const keywordsToTrack = [
-      "партия",
-      "гармония",
-      "единство",
-      "лидер",
-      "общество",
+      "party",
+      "harmony",
+      "unity",
+      "leader",
+      "society",
     ];
     for (const keyword of keywordsToTrack) {
       if (messageWords.includes(keyword)) {
@@ -508,8 +508,8 @@ class SocialCreditBot {
     const color = isGood ? 0x00ff00 : 0xff0000;
     const emoji = isGood ? "🎉" : "⚠️";
     const title = isGood
-      ? "🇨🇳 СОЦИАЛЬНЫЙ РЕЙТИНГ ПОВЫШЕН! 🇨🇳"
-      : "🚨 СОЦИАЛЬНЫЙ РЕЙТИНГ ПОНИЖЕН! 🚨";
+      ? "🇨🇳 SOCIAL CREDIT SCORE INCREASED! 🇨🇳"
+      : "🚨 SOCIAL CREDIT SCORE DECREASED! 🚨";
 
     return new EmbedBuilder()
       .setColor(color)
@@ -517,12 +517,12 @@ class SocialCreditBot {
       .setDescription(`${emoji} **${analysis.meme_response}**`)
       .addFields(
         {
-          name: "📊 Изменение Рейтинга",
+          name: "📊 Score Change",
           value: `${analysis.score_change > 0 ? "+" : ""}${analysis.score_change}`,
           inline: true,
         },
-        { name: "💯 Текущий Рейтинг", value: `${newScore}`, inline: true },
-        { name: "📝 Причина", value: analysis.reason, inline: false }
+        { name: "💯 Current Score", value: `${newScore}`, inline: true },
+        { name: "📝 Reason", value: analysis.reason, inline: false }
       )
       .setFooter({
         text: `${author.username} | 中华人民共和国万岁!`,
@@ -695,7 +695,7 @@ class SocialCreditBot {
         message.author.id,
         message.guild?.id || "dm",
         -10, // Additional penalty
-        "Применена ре-образовательная коррекция речи",
+        "Speech re-education correction applied",
         message.author.username,
         sanitizedContent
       );
@@ -767,7 +767,7 @@ class SocialCreditBot {
       userId,
       guildId,
       CONFIG.SCORE_CHANGES.KEYWORD_PENALTY,
-      "Обнаружены критически негативные ключевые слова",
+      "Critically negative keywords detected",
       message.author.username,
       content
     );
@@ -775,25 +775,25 @@ class SocialCreditBot {
     // Create penalty embed
     const embed = new EmbedBuilder()
       .setColor(0xff0000)
-      .setTitle("🚨 КРИТИЧЕСКОЕ НАРУШЕНИЕ! 🚨")
+      .setTitle("🚨 CRITICAL VIOLATION! 🚨")
       .setDescription(
-        `**Гражданин ${message.author.username}!**\n\n` +
-          `Обнаружены крайне негативные высказывания, противоречащие принципам Партии!`
+        `**Citizen ${message.author.username}!**\n\n` +
+          `Extremely negative statements contradicting the Party's principles have been detected!`
       )
       .addFields(
         {
-          name: "📉 Штраф",
+          name: "📉 Penalty",
           value: `${CONFIG.SCORE_CHANGES.KEYWORD_PENALTY}`,
           inline: true,
         },
-        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true },
+        { name: "💯 New Score", value: `${newScore}`, inline: true },
         {
-          name: "⚠️ Причина",
-          value: "Критически негативные ключевые слова",
+          name: "⚠️ Reason",
+          value: "Critically negative keywords",
           inline: false,
         }
       )
-      .setFooter({ text: "Партия не терпит дисгармонию! 👁️" })
+      .setFooter({ text: "The Party does not tolerate disharmony! 👁️" })
       .setTimestamp();
 
     await message.reply({ embeds: [embed] });

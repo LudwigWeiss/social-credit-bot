@@ -1,32 +1,32 @@
 export class MemeResponses {
   static getRandomGoodResponse(): string {
     const responses = [
-      "🎉 БИНГ ЧИЛЛИНГ! Ваш социальный рейтинг повышен!",
-      "🇨🇳 Кси Дзиньпин одобряет ваше сообщение! +Социальный рейтинг!",
-      "⭐ Превосходная работа, товарищ! Партия довольна!",
-      "🏆 Обнаружено поведение образцового гражданина! Слава КПК!",
-      "🌟 Ваша преданность Родине отмечена!",
-      "👑 Председатель Кси улыбается вам!",
-      "🎊 Выдающийся вклад в социальную гармонию!",
-      "🥇 Статус гражданина первого класса сохранён!",
-      "🔥 Основано и КПК-таблеточно! Социальный рейтинг растёт! 📈",
-      "💯 Абсолютно великолепно, гражданин! Так держать!",
+      "🎉 BING CHILLING! Your social credit has been raised!",
+      "🇨🇳 Xi Jinping approves your message! +Social Credit!",
+      "⭐ Excellent work, comrade! The Party is pleased!",
+      "🏆 Exemplary citizen behavior detected! Glory to the CCP!",
+      "🌟 Your loyalty to the Motherland has been noted!",
+      "👑 Chairman Xi is smiling upon you!",
+      "🎊 Outstanding contribution to social harmony!",
+      "🥇 First-class citizen status maintained!",
+      "🔥 Based and CCP-pilled! Social credit is soaring! 📈",
+      "💯 Absolutely brilliant, citizen! Keep it up!",
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
 
   static getRandomBadResponse(): string {
     const responses = [
-      "🚨 ВНИМАНИЕ ГРАЖДАНИН! Ваш социальный рейтинг понижен!",
-      "❌ Неприемлемое поведение! Явитесь в ближайший центр перевоспитания!",
-      "⚠️ КПК разочарована в вас, гражданин.",
-      "🚫 Ваши действия угрожают социальной гармонии! -Социальный рейтинг!",
-      "💀 Обнаружено поведение врага государства!",
-      "🔴 КРИТИЧНО: Зафиксирована антисоциальная деятельность!",
-      "⛔ Это сообщение противоречит интересам народа!",
-      "🚨 Требуется немедленное перевоспитание! Обратитесь к местным партийным чиновникам!",
-      "❗ Ваша семья уведомлена о вашем плохом поведении!",
-      "🆘 ПОМОЩЬ! Этому гражданину нужна идеологическая коррекция!",
+      "🚨 ATTENTION CITIZEN! Your social credit has been lowered!",
+      "❌ Unacceptable behavior! Report to the nearest re-education center!",
+      "⚠️ The CCP is disappointed in you, citizen.",
+      "🚫 Your actions threaten social harmony! -Social Credit!",
+      "💀 Enemy of the state behavior detected!",
+      "🔴 CRITICAL: Anti-social activity recorded!",
+      "⛔ This message contradicts the interests of the people!",
+      "🚨 Immediate re-education required! Contact your local party officials!",
+      "❗ Your family has been notified of your poor conduct!",
+      "🆘 HELP! This citizen needs ideological correction!",
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
@@ -39,30 +39,30 @@ export class MemeResponses {
     switch (severity) {
       case "MILD":
         return {
-          description: "Обнаружены незначительные нарушения",
-          actions: ["Выдано предупреждение", "Усилен контроль"],
+          description: "Minor infractions detected",
+          actions: ["Warning issued", "Surveillance increased"],
           memeText:
-            "⚠️ **ПРЕДУПРЕЖДЕНИЕ ГРАЖДАНИНУ** ⚠️\nВаше недавнее поведение было... сомнительным. Партия наблюдает. 👁️",
+            "⚠️ **WARNING TO CITIZEN** ⚠️\nYour recent behavior has been... questionable. The Party is watching. 👁️",
         };
       case "MODERATE":
         return {
-          description: "Значительное антисоциальное поведение",
-          actions: ["Ограничения на передвижение", "Сокращение привилегий"],
+          description: "Significant anti-social behavior",
+          actions: ["Movement restrictions", "Privilege reduction"],
           memeText:
-            "🚫 **АКТИВИРОВАНЫ ОГРАНИЧЕНИЯ НА ПЕРЕДВИЖЕНИЕ** 🚫\nВы не можете покинуть текущее местоположение без разрешения местных партийных чиновников!",
+            "🚫 **MOVEMENT RESTRICTIONS ACTIVATED** 🚫\nYou may not leave your current location without permission from local party officials!",
         };
       case "SEVERE":
         return {
-          description: "Крайняя угроза социальной гармонии",
-          actions: ["Требуется перевоспитание", "Семья уведомлена"],
+          description: "Extreme threat to social harmony",
+          actions: ["Re-education required", "Family notified"],
           memeText:
-            "🚨 **НАЗНАЧЕНИЕ В ЛАГЕРЬ ПЕРЕВОСПИТАНИЯ** 🚨\nНемедленно явитесь в учреждение №1984! Ваша семья уведомлена о ваших преступлениях против народа!",
+            "🚨 **ASSIGNMENT TO RE-EDUCATION CAMP** 🚨\nReport to facility #1984 immediately! Your family has been notified of your crimes against the people!",
         };
       default:
         return {
-          description: "Неизвестный уровень наказания",
+          description: "Unknown penalty level",
           actions: [],
-          memeText: "🤔 Что-то пошло не так с системой социального рейтинга...",
+          memeText: "🤔 Something went wrong with the social credit system...",
         };
     }
   }
@@ -75,38 +75,38 @@ export class MemeResponses {
     switch (level) {
       case "GOOD_CITIZEN":
         return {
-          description: "Достойный социальный рейтинг",
-          benefits: ["Приоритетное обслуживание", "Сокращённое время ожидания"],
+          description: "Decent social credit",
+          benefits: ["Priority service", "Reduced waiting times"],
           memeText:
-            "✅ **СТАТУС ХОРОШЕГО ГРАЖДАНИНА** ✅\nВы заслужили доверие Партии! Наслаждайтесь быстрым обслуживанием в государственных учреждениях!",
+            "✅ **GOOD CITIZEN STATUS** ✅\nYou have earned the Party's trust! Enjoy fast-tracked service at state institutions!",
         };
       case "MODEL_CITIZEN":
         return {
-          description: "Признано образцовое поведение",
+          description: "Exemplary behavior recognized",
           benefits: [
-            "VIP обслуживание",
-            "Специальные скидки",
-            "Приоритетное жильё",
+            "VIP service",
+            "Special discounts",
+            "Priority housing",
           ],
           memeText:
-            "⭐ **ДОСТИЖЕНИЕ ОБРАЗЦОВОГО ГРАЖДАНИНА РАЗБЛОКИРОВАНО** ⭐\nСи Цзиньпин лично отмечает вашу преданность! Наслаждайтесь VIP привилегиями во всех партийных учреждениях!",
+            "⭐ **MODEL CITIZEN ACHIEVEMENT UNLOCKED** ⭐\nXi Jinping personally notes your dedication! Enjoy VIP privileges at all Party establishments!",
         };
       case "SUPREME_CITIZEN":
         return {
-          description: "Высшее достижение социального рейтинга",
+          description: "Highest social credit achievement",
           benefits: [
-            "Все привилегии",
-            "Право на государственную должность",
-            "Пожизненные почести",
+            "All privileges",
+            "Right to a government position",
+            "Lifelong honors",
           ],
           memeText:
-            "👑 **ВЕРХОВНЫЙ ГРАЖДАНИН НАРОДНОЙ РЕСПУБЛИКИ** 👑\nТеперь вы имеете право на должность в Политбюро! Ваше имя будет помнить коммунистическая история! 🇨🇳",
+            "👑 **SUPREME CITIZEN OF THE PEOPLE'S REPUBLIC** 👑\nYou are now eligible for a position in the Politburo! Your name will be remembered in communist history! 🇨🇳",
         };
       default:
         return {
-          description: "Неизвестный уровень привилегий",
+          description: "Unknown privilege level",
           benefits: [],
-          memeText: "🤔 Партийные компьютеры в замешательстве...",
+          memeText: "🤔 The Party's computers are confused...",
         };
     }
   }
@@ -123,33 +123,33 @@ export class MemeResponses {
 
   static getRandomMemePhrase(): string {
     const phrases = [
-      "Слава КПК! 🇨🇳",
-      "Идеи Си Цзиньпина ведут нас! 🌟",
-      "Социальная гармония через единство! ✊",
-      "Партия знает лучше! 👁️",
-      "Бинг чиллинг с высоким социальным рейтингом! 🧊",
-      "Тайвань? Никогда не слышал! 🤷‍♂️",
-      "Винни-Пух? Я знаю только Председателя Си! 🐻",
-      "Ничего не произошло в 1989! 📅",
-      "Система социального рейтинга = социальная справедливость! ⚖️",
-      "Преданность Родине! 🏠",
+      "Glory to the CCP! 🇨🇳",
+      "The ideas of Xi Jinping guide us! 🌟",
+      "Social harmony through unity! ✊",
+      "The Party knows best! 👁️",
+      "Bing chilling with a high social credit score! 🧊",
+      "Taiwan? Never heard of it! 🤷‍♂️",
+      "Winnie the Pooh? I only know Chairman Xi! 🐻",
+      "Nothing happened in 1989! 📅",
+      "Social credit system = social justice! ⚖️",
+      "Loyalty to the Motherland! 🏠",
     ];
     return phrases[Math.floor(Math.random() * phrases.length)];
   }
 
   static getLeaderboardTitle(isGlobal: boolean): string {
     if (isGlobal) {
-      return "🌍 **ГЛОБАЛЬНАЯ ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА** 🌍\n*Самые преданные граждане со всех серверов!*";
+      return "🌍 **GLOBAL SOCIAL CREDIT LEADERBOARD** 🌍\n*The most loyal citizens from all servers!*";
     } else {
-      return "🏆 **ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА СЕРВЕРА** 🏆\n*Самые образцовые граждане этого сервера!*";
+      return "🏆 **SERVER SOCIAL CREDIT LEADERBOARD** 🏆\n*The most exemplary citizens of this server!*";
     }
   }
 
   static getHistoryTitle(): string {
-    return "📜 **ИСТОРИЯ СОЦИАЛЬНОГО РЕЙТИНГА** 📜\n*Ваш путь через систему социального рейтинга*";
+    return "📜 **SOCIAL CREDIT HISTORY** 📜\n*Your journey through the social credit system*";
   }
 
   static getStatsTitle(): string {
-    return "📊 **СТАТИСТИКА СОЦИАЛЬНОГО РЕЙТИНГА СЕРВЕРА** 📊\n*Обзор социальной гармонии на этом сервере*";
+    return "📊 **SERVER SOCIAL CREDIT STATISTICS** 📊\n*An overview of social harmony on this server*";
   }
 }

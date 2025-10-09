@@ -97,21 +97,21 @@ export abstract class BaseCommandHandler {
 
   protected getEffectDisplayName(effectType: string): string {
     const effectNames: Record<string, string> = {
-      NICKNAME_CHANGE: "Изменение Никнейма",
-      TIMEOUT: "Тайм-аут",
-      ROLE_GRANT: "Предоставление Роли",
-      DAILY_CLAIM_RESET: "Кулдаун Ежедневного Бонуса",
-      EVENT_MULTIPLIER: "Множитель События",
+      NICKNAME_CHANGE: "Nickname Change",
+      TIMEOUT: "Timeout",
+      ROLE_GRANT: "Role Grant",
+      DAILY_CLAIM_RESET: "Daily Bonus Cooldown",
+      EVENT_MULTIPLIER: "Event Multiplier",
     };
     return effectNames[effectType] || effectType;
   }
 
   protected calculateHarmonyLevel(averageScore: number): string {
-    if (averageScore >= 800) return "🌟 ВЫСШАЯ ГАРМОНИЯ";
-    if (averageScore >= 400) return "✅ ВЫСОКАЯ ГАРМОНИЯ";
-    if (averageScore >= 100) return "😐 УМЕРЕННАЯ ГАРМОНИЯ";
-    if (averageScore >= -100) return "⚪ НЕЙТРАЛЬНАЯ ГАРМОНИЯ";
-    if (averageScore >= -300) return "⚠️ НИЗКАЯ ГАРМОНИЯ";
-    return "🚨 СОЦИАЛЬНЫЕ БЕСПОРЯДКИ";
+    if (averageScore >= 800) return "🌟 SUPREME HARMONY";
+    if (averageScore >= 400) return "✅ HIGH HARMONY";
+    if (averageScore >= 100) return "😐 MODERATE HARMONY";
+    if (averageScore >= -100) return "⚪ NEUTRAL HARMONY";
+    if (averageScore >= -300) return "⚠️ LOW HARMONY";
+    return "🚨 SOCIAL UNREST";
   }
 }

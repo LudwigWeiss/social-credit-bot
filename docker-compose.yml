@@ -16,7 +16,9 @@ services:
       - social-credit-network
 
   bot:
-    image: ghcr.io/Hlofiys/social-credit-bot:latest
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: social-credit-bot
     restart: unless-stopped
     depends_on:

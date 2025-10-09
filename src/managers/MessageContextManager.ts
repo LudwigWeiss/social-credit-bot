@@ -107,7 +107,7 @@ export class MessageContextManager {
 
     // Add recent channel context
     if (recentContext.length > 0) {
-      contextString += "Недавний контекст канала:\n";
+      contextString += "Recent channel context:\n";
       recentContext.forEach((msg) => {
         contextString += `${msg.username}: "${msg.content}"\n`;
       });
@@ -116,14 +116,14 @@ export class MessageContextManager {
 
     // Add user's recent messages if multiple
     if (userMessages.length > 1) {
-      contextString += "Недавние сообщения пользователя:\n";
+      contextString += "User's recent messages:\n";
       userMessages.slice(0, -1).forEach((msg) => {
         contextString += `${authorUsername}: "${msg}"\n`;
       });
       contextString += "\n";
     }
 
-    contextString += `Текущее сообщение для анализа от ${authorUsername}: "${currentMessage}"`;
+    contextString += `Current message for analysis from ${authorUsername}: "${currentMessage}"`;
 
     return contextString;
   }

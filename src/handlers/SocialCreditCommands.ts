@@ -45,15 +45,15 @@ export class SocialCreditCommands extends BaseCommandHandler {
     const embed = new EmbedBuilder()
       .setColor(rankInfo.color)
       .setTitle(
-        `${rankInfo.emoji} ОТЧЁТ О СОЦИАЛЬНОМ РЕЙТИНГЕ ${rankInfo.emoji}`
+        `${rankInfo.emoji} SOCIAL CREDIT REPORT ${rankInfo.emoji}`
       )
       .setDescription(
-        `**Гражданин:** ${targetUser.username}\n**Статус:** ${rankInfo.rank}`
+        `**Citizen:** ${targetUser.username}\n**Status:** ${rankInfo.rank}`
       )
       .addFields(
-        { name: "💯 Текущий Рейтинг", value: `${score}`, inline: true },
-        { name: "🏅 Звание", value: rankInfo.rank, inline: true },
-        { name: "📝 Оценка", value: rankInfo.description, inline: false }
+        { name: "💯 Current Score", value: `${score}`, inline: true },
+        { name: "🏅 Rank", value: rankInfo.rank, inline: true },
+        { name: "📝 Assessment", value: rankInfo.description, inline: false }
       )
       .setThumbnail(targetUser.displayAvatarURL())
       .setFooter({
@@ -71,7 +71,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
     if (penaltyLevel) {
       const penalty = MemeResponses.getPenalties(penaltyLevel);
       embed.addFields({
-        name: "⚠️ Активные Наказания",
+        name: "⚠️ Active Penalties",
         value: penalty.memeText,
         inline: false,
       });
@@ -80,7 +80,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
     if (privilegeLevel) {
       const privilege = MemeResponses.getPrivileges(privilegeLevel);
       embed.addFields({
-        name: "🎁 Активные Привилегии",
+        name: "🎁 Active Privileges",
         value: privilege.memeText,
         inline: false,
       });
@@ -94,11 +94,11 @@ export class SocialCreditCommands extends BaseCommandHandler {
           (effect.expiresAt.getTime() - Date.now()) / (60 * 1000)
         );
         const effectName = this.getEffectDisplayName(effect.effectType);
-        effectsText += `• ${effectName} (${timeLeft} мин)\n`;
+        effectsText += `• ${effectName} (${timeLeft} min)\n`;
       }
       embed.addFields({
-        name: "🔄 Активные Эффекты",
-        value: effectsText || "Нет активных эффектов",
+        name: "🔄 Active Effects",
+        value: effectsText || "No active effects",
         inline: false,
       });
     }
@@ -114,14 +114,14 @@ export class SocialCreditCommands extends BaseCommandHandler {
         (lastClaim.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000)
       );
       embed.addFields({
-        name: "⏰ Ежедневный Бонус",
-        value: `Доступен через ${timeLeft} часов`,
+        name: "⏰ Daily Bonus",
+        value: `Available in ${timeLeft} hours`,
         inline: true,
       });
     } else {
       embed.addFields({
-        name: "⏰ Ежедневный Бонус",
-        value: "Доступен сейчас!",
+        name: "⏰ Daily Bonus",
+        value: "Available now!",
         inline: true,
       });
     }
@@ -138,7 +138,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
     let leaderboard;
     let title;
     const embedColor = 0xffd700;
-    const embedTitle = "🏆 ТАБЛИЦА СОЦИАЛЬНОГО РЕЙТИНГА 🏆";
+    const embedTitle = "🏆 SOCIAL CREDIT LEADERBOARD 🏆";
 
     // Check for active events that affect appearance
     // TODO: Implement event tracking for visual flair
@@ -158,7 +158,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
     if (leaderboard.length === 0) {
       await interaction.reply({
         content:
-          "📊 Данные о социальном рейтинге не найдены! Начните мониторинг канала для отслеживания поведения граждан!",
+          "📊 No social credit data found! Start monitoring a channel to track citizen behavior!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -187,8 +187,8 @@ export class SocialCreditCommands extends BaseCommandHandler {
     }
 
     embed.addFields({
-      name: "👥 Лучшие Граждане",
-      value: description || "Данные недоступны",
+      name: "👥 Top Citizens",
+      value: description || "Data not available",
       inline: false,
     });
 
@@ -213,7 +213,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     if (history.length === 0) {
       await interaction.reply({
-        content: `📜 История социального рейтинга для ${targetUser.username} не найдена. Чистый лист, гражданин!`,
+        content: `📜 Social credit history for ${targetUser.username} not found. A clean slate, citizen!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -221,9 +221,9 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x4169e1)
-      .setTitle("📜 ИСТОРИЯ СОЦИАЛЬНОГО РЕЙТИНГА")
+      .setTitle("📜 SOCIAL CREDIT HISTORY")
       .setDescription(
-        `**Гражданин:** ${targetUser.username}\n*Недавние изменения социального рейтинга*`
+        `**Citizen:** ${targetUser.username}\n*Recent social credit changes*`
       )
       .setThumbnail(targetUser.displayAvatarURL())
       .setTimestamp();
@@ -243,8 +243,8 @@ export class SocialCreditCommands extends BaseCommandHandler {
     }
 
     embed.addFields({
-      name: "📊 Недавняя Активность",
-      value: historyText || "Нет недавней активности",
+      name: "📊 Recent Activity",
+      value: historyText || "No recent activity",
       inline: false,
     });
 
@@ -264,36 +264,36 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x9932cc)
-      .setTitle("📊 СТАТИСТИКА СОЦИАЛЬНОГО РЕЙТИНГА СЕРВЕРА")
+      .setTitle("📊 SERVER SOCIAL CREDIT STATISTICS")
       .setDescription(MemeResponses.getStatsTitle())
       .addFields(
         {
-          name: "👥 Всего Граждан",
+          name: "👥 Total Citizens",
           value: `${stats.totalUsers}`,
           inline: true,
         },
         {
-          name: "📊 Средний Рейтинг",
+          name: "📊 Average Score",
           value: `${stats.averageScore}`,
           inline: true,
         },
         {
-          name: "🏆 Высший Рейтинг",
+          name: "🏆 Highest Score",
           value: `${stats.highestScore}`,
           inline: true,
         },
         {
-          name: "💀 Низший Рейтинг",
+          name: "💀 Lowest Score",
           value: `${stats.lowestScore}`,
           inline: true,
         },
         {
-          name: "📈 Всего Изменений",
+          name: "📈 Total Changes",
           value: `${stats.totalScoreChanges}`,
           inline: true,
         },
         {
-          name: "🎯 Уровень Социальной Гармонии",
+          name: "🎯 Social Harmony Level",
           value: this.calculateHarmonyLevel(stats.averageScore),
           inline: true,
         }

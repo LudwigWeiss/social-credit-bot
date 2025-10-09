@@ -38,7 +38,7 @@ export class FeedbackCommands extends BaseCommandHandler {
       if (timeLeft > 0) {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
-          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующей похвалой бота!`,
+          content: `⏰ Please wait another ${minutesLeft} minutes before praising the bot again!`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -50,7 +50,7 @@ export class FeedbackCommands extends BaseCommandHandler {
       userId,
       guildId,
       CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS,
-      "Похвала работе системы социального рейтинга",
+      "Praising the work of the social credit system",
       interaction.user.username
     );
 
@@ -66,20 +66,20 @@ export class FeedbackCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🙏 СПАСИБО ЗА ПОХВАЛУ!")
+      .setTitle("🙏 THANK YOU FOR YOUR PRAISE!")
       .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Партия ценит вашу поддержку системы социального рейтинга!`
+        `**Citizen ${interaction.user.username}!**\n\n` +
+          `The Party appreciates your support for the social credit system!`
       )
       .addFields(
         {
-          name: "💰 Бонус",
+          name: "💰 Bonus",
           value: `+${CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS}`,
           inline: true,
         },
-        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+        { name: "💯 New Score", value: `${newScore}`, inline: true }
       )
-      .setFooter({ text: "Партия всегда стремится к совершенству! 👁️" })
+      .setFooter({ text: "The Party always strives for perfection! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -100,7 +100,7 @@ export class FeedbackCommands extends BaseCommandHandler {
       if (timeLeft > 0) {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
-          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующим отчётом об ошибке!`,
+          content: `⏰ Please wait another ${minutesLeft} minutes before reporting another mistake!`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -113,7 +113,7 @@ export class FeedbackCommands extends BaseCommandHandler {
       userId,
       guildId,
       CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY,
-      "Отчёт об ошибке в анализе системы социального рейтинга",
+      "Reporting a mistake in the social credit system's analysis",
       interaction.user.username
     );
 
@@ -129,21 +129,21 @@ export class FeedbackCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("📝 ОТЧЁТ ОБ ОШИБКЕ ЗАРЕГИСТРИРОВАН")
+      .setTitle("📝 MISTAKE REPORT FILED")
       .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Ваш отчёт об ошибке в работе системы социального рейтинга принят к рассмотрению. ` +
-          `Партия благодарит за бдительность, но напоминает о необходимости осторожности в обвинениях.`
+        `**Citizen ${interaction.user.username}!**\n\n` +
+          `Your report of a mistake in the social credit system has been received for consideration. ` +
+          `The Party thanks you for your vigilance but reminds you to be cautious with your accusations.`
       )
       .addFields(
         {
-          name: "⚠️ Штраф",
+          name: "⚠️ Penalty",
           value: `${CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY}`,
           inline: true,
         },
-        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+        { name: "💯 New Score", value: `${newScore}`, inline: true }
       )
-      .setFooter({ text: "Партия рассмотрит ваш отчёт! 📋" })
+      .setFooter({ text: "The Party will review your report! 📋" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

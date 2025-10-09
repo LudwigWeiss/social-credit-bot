@@ -81,37 +81,37 @@ export class DirectiveManager {
       return activeDirective;
     }
 
-    const generationPrompt = `Создайте персональное ежедневное задание для гражданина в системе социального рейтинга Discord бота.
+    const generationPrompt = `Create a personalized daily directive for a citizen in a Discord social credit system bot.
 
-Информация о пользователе:
-- Текущий социальный рейтинг: ${prompt.userScore}
-- Недавняя активность: ${prompt.recentActivity}
-- Выполнено заданий ранее: ${prompt.completedDirectivesCount}
+User Information:
+- Current Social Credit: ${prompt.userScore}
+- Recent Activity: ${prompt.recentActivity}
+- Previously Completed Directives: ${prompt.completedDirectivesCount}
 
-Создайте задание, которое:
-1. Подходит для текущего уровня пользователя
-2. Поощряет позитивное взаимодействие
-3. Связано с тематикой социального рейтинга
-4. Выполнимо за один день
+Create a directive that:
+1. Is suitable for the user's current level.
+2. Encourages positive interaction.
+3. Is related to the social credit theme.
+4. Is achievable in one day.
 
-ОБЯЗАТЕЛЬНО отвечайте в точном JSON формате:
+YOU MUST respond in the exact JSON format:
 {
-  "task": "Краткое название задания",
-  "description": "Подробное описание что нужно сделать",
+  "task": "A brief title for the task",
+  "description": "A detailed description of what needs to be done",
   "taskType": "MESSAGE_COUNT" | "KEYWORD_USAGE" | "INTERACTION" | "SCORE_GAIN",
-  "targetValue": число_цель,
-  "reward": число_награда_от_5_до_25,
+  "targetValue": target_number,
+  "reward": reward_number_from_5_to_25,
   "metadata": {
-    "keywords": ["слово1", "слово2"] // если taskType KEYWORD_USAGE
-    "interactions": ["reaction", "mention"] // если taskType INTERACTION
+    "keywords": ["keyword1", "keyword2"], // if taskType is KEYWORD_USAGE
+    "interactions": ["reaction", "mention"] // if taskType is INTERACTION
   }
 }
 
-Примеры:
-- MESSAGE_COUNT: Отправить 5 сообщений в отслеживаемых каналах
-- KEYWORD_USAGE: Использовать слова "гармония", "партия", "единство" 3 раза
-- INTERACTION: Поставить реакции 10 сообщениям или упомянуть 3 граждан
-- SCORE_GAIN: Заработать +15 социального рейтинга за день`;
+Examples:
+- MESSAGE_COUNT: Send 5 messages in monitored channels.
+- KEYWORD_USAGE: Use the words "harmony", "party", "unity" 3 times.
+- INTERACTION: React to 10 messages or mention 3 citizens.
+- SCORE_GAIN: Earn +15 social credit in a day.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
@@ -212,32 +212,32 @@ export class DirectiveManager {
       return activeGoal;
     }
 
-    const generationPrompt = `Создайте персональную еженедельную цель для гражданина в системе социального рейтинга Discord бота.
+    const generationPrompt = `Create a personalized weekly goal for a citizen in a Discord social credit system bot.
 
-Информация о пользователе:
-- Текущий социальный рейтинг: ${prompt.userScore}
-- Недавняя активность: ${prompt.recentActivity}
-- Выполнено заданий ранее: ${prompt.completedDirectivesCount}
+User Information:
+- Current Social Credit: ${prompt.userScore}
+- Recent Activity: ${prompt.recentActivity}
+- Previously Completed Directives: ${prompt.completedDirectivesCount}
 
-Создайте цель, которая:
-1. Достижима за неделю
-2. Значима и мотивирует активность
-3. Подходит для уровня пользователя
-4. Поощряет участие в сообществе
+Create a goal that:
+1. Is achievable within a week.
+2. Is meaningful and motivates activity.
+3. Is suitable for the user's level.
+4. Encourages community participation.
 
-ОБЯЗАТЕЛЬНО отвечайте в точном JSON формате:
+YOU MUST respond in the exact JSON format:
 {
-  "goal": "Краткое название цели",
-  "description": "Подробное описание что нужно достичь",
+  "goal": "A brief title for the goal",
+  "description": "A detailed description of what needs to be achieved",
   "goalType": "NET_SCORE_GAIN" | "TOTAL_MESSAGES" | "HELP_OTHERS",
-  "targetValue": число_цель,
-  "reward": число_награда_от_25_до_100
+  "targetValue": target_number,
+  "reward": reward_number_from_25_to_100
 }
 
-Примеры:
-- NET_SCORE_GAIN: Получить чистый прирост +100 социального рейтинга за неделю
-- TOTAL_MESSAGES: Отправить 50 полезных сообщений в отслеживаемых каналах
-- HELP_OTHERS: Помочь 5 другим гражданам улучшить их рейтинг`;
+Examples:
+- NET_SCORE_GAIN: Achieve a net gain of +100 social credit in a week.
+- TOTAL_MESSAGES: Send 50 helpful messages in monitored channels.
+- HELP_OTHERS: Help 5 other citizens improve their score.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
@@ -433,7 +433,7 @@ export class DirectiveManager {
         directive.userId,
         directive.guildId,
         directive.reward,
-        `Выполнение ежедневного задания: ${directive.task}`,
+        `Completed daily directive: ${directive.task}`,
         undefined
       );
 
@@ -461,7 +461,7 @@ export class DirectiveManager {
         goal.userId,
         goal.guildId,
         goal.reward,
-        `Выполнение еженедельной цели: ${goal.goal}`,
+        `Completed weekly goal: ${goal.goal}`,
         undefined
       );
 
@@ -517,24 +517,24 @@ export class DirectiveManager {
 
     const fallbackDirectives = [
       {
-        task: "Активный Гражданин",
-        description: "Отправьте 3 сообщения в отслеживаемых каналах",
+        task: "Active Citizen",
+        description: "Send 3 messages in monitored channels",
         taskType: "MESSAGE_COUNT" as const,
         targetValue: 3,
         reward: 10,
       },
       {
-        task: "Верность Партии",
+        task: "Loyalty to the Party",
         description:
-          "Используйте слова 'партия', 'гармония' или 'единство' 2 раза в сообщениях",
+          "Use the words 'party', 'harmony', or 'unity' 2 times in messages",
         taskType: "KEYWORD_USAGE" as const,
         targetValue: 2,
         reward: 15,
-        metadata: { keywords: ["партия", "гармония", "единство"] },
+        metadata: { keywords: ["party", "harmony", "unity"] },
       },
       {
-        task: "Социальное Взаимодействие",
-        description: "Поставьте реакции на 5 сообщений других пользователей",
+        task: "Social Interaction",
+        description: "React to 5 messages from other users",
         taskType: "INTERACTION" as const,
         targetValue: 5,
         reward: 12,
@@ -579,16 +579,16 @@ export class DirectiveManager {
 
     const fallbackGoals = [
       {
-        goal: "Недельный Прогресс",
+        goal: "Weekly Progress",
         description:
-          "Заработайте чистый прирост +50 социального рейтинга за неделю",
+          "Achieve a net gain of +50 social credit in a week",
         goalType: "NET_SCORE_GAIN" as const,
         targetValue: 50,
         reward: 40,
       },
       {
-        goal: "Активное Участие",
-        description: "Отправьте 25 сообщений в отслеживаемых каналах за неделю",
+        goal: "Active Participation",
+        description: "Send 25 messages in monitored channels in a week",
         goalType: "TOTAL_MESSAGES" as const,
         targetValue: 25,
         reward: 35,

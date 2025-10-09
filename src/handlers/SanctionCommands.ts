@@ -82,7 +82,7 @@ export class SanctionCommands extends BaseCommandHandler {
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content:
-            "🚨 Произошла ошибка при выполнении команды. Пожалуйста, попробуйте позже.",
+            "🚨 An error occurred while executing the command. Please try again later.",
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -102,7 +102,7 @@ export class SanctionCommands extends BaseCommandHandler {
     if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
       await interaction.reply({
         content:
-          "❌ Вы не нуждаетесь в искуплении, гражданин! Ваш социальный рейтинг в порядке.",
+          "❌ You do not need redemption, citizen! Your social credit is in good standing.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -119,7 +119,7 @@ export class SanctionCommands extends BaseCommandHandler {
       if (timeLeft > 0) {
         const hoursLeft = Math.ceil(timeLeft / (60 * 60 * 1000));
         await interaction.reply({
-          content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим искуплением, гражданин!`,
+          content: `⏰ Please wait another ${hoursLeft} hours before your next redemption, citizen!`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -135,14 +135,14 @@ export class SanctionCommands extends BaseCommandHandler {
     // Send the challenge
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("🙏 ЭДИКТ ПРОЩЕНИЯ")
+      .setTitle("🙏 EDICT OF PARDON")
       .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Партия даёт вам шанс на искупление! Повторите эту фразу в чате в течение 60 секунд:\n\n` +
+        `**Citizen ${interaction.user.username}!**\n\n` +
+          `The Party gives you a chance for redemption! Repeat this phrase in the chat within 60 seconds:\n\n` +
           `**"${phrase}"**\n\n` +
-          `⏱️ У вас есть 60 секунд!`
+          `⏱️ You have 60 seconds!`
       )
-      .setFooter({ text: "Партия милосердна, но справедлива! 👁️" })
+      .setFooter({ text: "The Party is merciful, but just! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -193,26 +193,26 @@ export class SanctionCommands extends BaseCommandHandler {
           userId,
           guildId,
           CONFIG.SCORE_CHANGES.REDEEM_SUCCESS,
-          "Искупление через Эдикт Прощения",
+          "Redemption through the Edict of Pardon",
           interaction.user.username
         );
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("🎉 ПРОЩЕНИЕ ПОЛУЧЕНО!")
+          .setTitle("🎉 PARDON GRANTED!")
           .setDescription(
-            `**Поздравляем, гражданин ${interaction.user.username}!**\n\n` +
-              `Партия принимает ваше искупление! Ваш социальный рейтинг повышен.`
+            `**Congratulations, citizen ${interaction.user.username}!**\n\n` +
+              `The Party accepts your redemption! Your social credit has been increased.`
           )
           .addFields(
             {
-              name: "📈 Изменение Рейтинга",
+              name: "📈 Score Change",
               value: `+${CONFIG.SCORE_CHANGES.REDEEM_SUCCESS}`,
               inline: true,
             },
-            { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+            { name: "💯 New Score", value: `${newScore}`, inline: true }
           )
-          .setFooter({ text: "Партия всегда даёт второй шанс! 🇨🇳" })
+          .setFooter({ text: "The Party always gives a second chance! 🇨🇳" })
           .setTimestamp();
 
         await interaction.followUp({ embeds: [successEmbed] });
@@ -223,26 +223,26 @@ export class SanctionCommands extends BaseCommandHandler {
         userId,
         guildId,
         CONFIG.SCORE_CHANGES.REDEEM_FAILURE,
-        "Провал Эдикта Прощения - недостаточное рвение",
+        "Failure of the Edict of Pardon - insufficient zeal",
         interaction.user.username
       );
 
       const failureEmbed = new EmbedBuilder()
         .setColor(0xff0000)
-        .setTitle("❌ ПРОЩЕНИЕ ОТКАЗАНО")
+        .setTitle("❌ PARDON DENIED")
         .setDescription(
-          `**Гражданин ${interaction.user.username}!**\n\n` +
-            `Вы не смогли должным образом выразить преданность Партии. Ваш социальный рейтинг понижен.`
+          `**Citizen ${interaction.user.username}!**\n\n` +
+            `You failed to properly express your loyalty to the Party. Your social credit has been lowered.`
         )
         .addFields(
           {
-            name: "📉 Изменение Рейтинга",
+            name: "📉 Score Change",
             value: `${CONFIG.SCORE_CHANGES.REDEEM_FAILURE}`,
             inline: true,
           },
-          { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+          { name: "💯 New Score", value: `${newScore}`, inline: true }
         )
-        .setFooter({ text: "Партия разочарована вашим поведением! ⚠️" })
+        .setFooter({ text: "The Party is disappointed with your behavior! ⚠️" })
         .setTimestamp();
 
       await interaction.followUp({ embeds: [failureEmbed] });
@@ -266,7 +266,7 @@ export class SanctionCommands extends BaseCommandHandler {
       if (timeLeft > 0) {
         const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
         await interaction.reply({
-          content: `⏰ Подождите ещё ${minutesLeft} минут перед следующей работой для Партии!`,
+          content: `⏰ Please wait another ${minutesLeft} minutes before working for the Party again!`,
           flags: MessageFlags.Ephemeral,
         });
         return;
@@ -281,14 +281,14 @@ export class SanctionCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("⚒️ РАБОТА ДЛЯ ПАРТИИ")
+      .setTitle("⚒️ WORK FOR THE PARTY")
       .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Партия нуждается в вашей помощи! Выполните задание:\n\n` +
+        `**Citizen ${interaction.user.username}!**\n\n` +
+          `The Party needs your help! Complete the task:\n\n` +
           `**${task.question}**\n\n` +
-          `⏱️ У вас есть 60 секунд!`
+          `⏱️ You have 60 seconds!`
       )
-      .setFooter({ text: "Партия ценит вашу преданность! 👁️" })
+      .setFooter({ text: "The Party values your loyalty! 👁️" })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
@@ -339,26 +339,26 @@ export class SanctionCommands extends BaseCommandHandler {
           userId,
           guildId,
           CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS,
-          "Успешное выполнение работы для Партии",
+          "Successful completion of work for the Party",
           interaction.user.username
         );
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("✅ РАБОТА ВЫПОЛНЕНА!")
+          .setTitle("✅ WORK COMPLETE!")
           .setDescription(
-            `**Отличная работа, гражданин ${interaction.user.username}!**\n\n` +
-              `Партия благодарна за вашу преданность.`
+            `**Excellent work, citizen ${interaction.user.username}!**\n\n` +
+              `The Party is grateful for your loyalty.`
           )
           .addFields(
             {
-              name: "💰 Награда",
+              name: "💰 Reward",
               value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_PARTY_SUCCESS}`,
               inline: true,
             },
-            { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+            { name: "💯 New Score", value: `${newScore}`, inline: true }
           )
-          .setFooter({ text: "Продолжайте служить Партии! 🇨🇳" })
+          .setFooter({ text: "Continue to serve the Party! 🇨🇳" })
           .setTimestamp();
 
         await interaction.followUp({ embeds: [successEmbed] });
@@ -366,12 +366,12 @@ export class SanctionCommands extends BaseCommandHandler {
         // No reward for failure, just inform
         const failureEmbed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setTitle("❌ ЗАДАНИЕ НЕ ВЫПОЛНЕНО")
+          .setTitle("❌ TASK FAILED")
           .setDescription(
-            `**Гражданин ${interaction.user.username}!**\n\n` +
-              `Вы не смогли выполнить задание Партии в срок. Попробуйте ещё раз позже.`
+            `**Citizen ${interaction.user.username}!**\n\n` +
+              `You failed to complete the Party's task in time. Try again later.`
           )
-          .setFooter({ text: "Партия ждёт лучших результатов! ⚠️" })
+          .setFooter({ text: "The Party expects better results! ⚠️" })
           .setTimestamp();
 
         await interaction.followUp({ embeds: [failureEmbed] });
@@ -394,7 +394,7 @@ export class SanctionCommands extends BaseCommandHandler {
     if (score >= 0) {
       await interaction.reply({
         content:
-          "❌ Вам не требуется публичное покаяние, гражданин! Ваш социальный рейтинг в норме.",
+          "❌ You do not require public confession, citizen! Your social credit is in good standing.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -408,7 +408,7 @@ export class SanctionCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим публичным покаянием!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before your next public confession!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -426,13 +426,13 @@ export class SanctionCommands extends BaseCommandHandler {
       // Create confession embed
       const embed = new EmbedBuilder()
         .setColor(0xff6b6b)
-        .setTitle("🎭 ПУБЛИЧНОЕ ПОКАЯНИЕ")
+        .setTitle("🎭 PUBLIC CONFESSION")
         .setDescription(
-          `**Гражданин ${interaction.user.username}** выступает с публичным покаянием:\n\n` +
+          `**Citizen ${interaction.user.username}** is making a public confession:\n\n` +
             `*${confession}*`
         )
         .setFooter({
-          text: "Признание ошибок - первый шаг к исправлению! 🇨🇳",
+          text: "Admitting mistakes is the first step toward correction! 🇨🇳",
         })
         .setTimestamp();
 
@@ -444,7 +444,7 @@ export class SanctionCommands extends BaseCommandHandler {
         userId,
         guildId,
         bonus,
-        "Публичное покаяние перед народом",
+        "Public confession before the people",
         interaction.user.username
       );
 
@@ -459,13 +459,13 @@ export class SanctionCommands extends BaseCommandHandler {
       // Send confirmation to user
       const confirmEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("✅ ПОКАЯНИЕ ПРИНЯТО!")
+        .setTitle("✅ CONFESSION ACCEPTED!")
         .setDescription(
-          `Партия принимает ваше искреннее раскаяние.\n\n` +
-            `**Награда:** +${bonus} за честность\n` +
-            `**Новый рейтинг:** ${newScore}`
+          `The Party accepts your sincere remorse.\n\n` +
+            `**Reward:** +${bonus} for honesty\n` +
+            `**New Score:** ${newScore}`
         )
-        .setFooter({ text: "Партия ценит искренность! 🤝" });
+        .setFooter({ text: "The Party values sincerity! 🤝" });
 
       await interaction.followUp({
         embeds: [confirmEmbed],
@@ -475,7 +475,7 @@ export class SanctionCommands extends BaseCommandHandler {
       Logger.error(`Error in public confession: ${error}`);
       await interaction.editReply({
         content:
-          "❌ Произошла ошибка при генерации покаяния. Попробуйте позже.",
+          "❌ An error occurred while generating the confession. Please try again later.",
       });
     }
   }
@@ -494,7 +494,7 @@ export class SanctionCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим общественным служением!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before your next community service!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -504,20 +504,20 @@ export class SanctionCommands extends BaseCommandHandler {
     const serviceOptions = [
       {
         id: "clean_propaganda",
-        name: "🧹 Очистка Пропагандистских Плакатов",
-        description: "Очистите городские плакаты от пыли и грязи",
+        name: "🧹 Cleaning Propaganda Posters",
+        description: "Clean the city's posters of dust and grime",
         reward: 15,
       },
       {
         id: "help_elderly",
-        name: "👴 Помощь Пожилым Гражданам",
-        description: "Помогите пожилым гражданам с покупками",
+        name: "👴 Assisting Elderly Citizens",
+        description: "Help elderly citizens with their shopping",
         reward: 20,
       },
       {
         id: "plant_trees",
-        name: "🌳 Озеленение Города",
-        description: "Посадите деревья для улучшения экологии",
+        name: "🌳 Greening the City",
+        description: "Plant trees to improve the environment",
         reward: 25,
       },
     ];
@@ -528,13 +528,13 @@ export class SanctionCommands extends BaseCommandHandler {
     // Create interactive buttons
     const acceptButton = new ButtonBuilder()
       .setCustomId("accept_service")
-      .setLabel("Принять Служение")
+      .setLabel("Accept Service")
       .setStyle(ButtonStyle.Success)
       .setEmoji("✅");
 
     const declineButton = new ButtonBuilder()
       .setCustomId("decline_service")
-      .setLabel("Отказаться")
+      .setLabel("Decline")
       .setStyle(ButtonStyle.Danger)
       .setEmoji("❌");
 
@@ -545,16 +545,16 @@ export class SanctionCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("🤝 ОБЩЕСТВЕННОЕ СЛУЖЕНИЕ")
+      .setTitle("🤝 COMMUNITY SERVICE")
       .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Партия предлагает вам возможность послужить обществу:\n\n` +
+        `**Citizen ${interaction.user.username}!**\n\n` +
+          `The Party offers you an opportunity to serve the community:\n\n` +
           `**${randomService.name}**\n` +
           `*${randomService.description}*\n\n` +
-          `**Награда:** +${randomService.reward} социального рейтинга\n\n` +
-          `Примете ли вы это почетное задание?`
+          `**Reward:** +${randomService.reward} social credit\n\n` +
+          `Will you accept this honorable task?`
       )
-      .setFooter({ text: "Служение народу - высшая честь! 🏛️" })
+      .setFooter({ text: "Serving the people is the highest honor! 🏛️" })
       .setTimestamp();
 
     const response = await interaction.reply({
@@ -575,12 +575,12 @@ export class SanctionCommands extends BaseCommandHandler {
           embeds: [
             new EmbedBuilder()
               .setColor(0x0099ff)
-              .setTitle("⏳ ВЫПОЛНЕНИЕ СЛУЖЕНИЯ...")
+              .setTitle("⏳ PERFORMING SERVICE...")
               .setDescription(
-                `Вы выполняете общественное служение...\n\n` +
-                  `Пожалуйста, подождите несколько секунд.`
+                `You are performing community service...\n\n` +
+                  `Please wait a few seconds.`
               )
-              .setFooter({ text: "Партия наблюдает за вашим прогрессом! 👁️" }),
+              .setFooter({ text: "The Party is watching your progress! 👁️" }),
           ],
           components: [],
         });
@@ -595,7 +595,7 @@ export class SanctionCommands extends BaseCommandHandler {
           userId,
           guildId,
           randomService.reward,
-          `Общественное служение: ${randomService.name}`,
+          `Community Service: ${randomService.name}`,
           interaction.user.username
         );
 
@@ -609,25 +609,25 @@ export class SanctionCommands extends BaseCommandHandler {
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("✅ СЛУЖЕНИЕ ЗАВЕРШЕНО!")
+          .setTitle("✅ SERVICE COMPLETE!")
           .setDescription(
-            `**Отличная работа, гражданин ${interaction.user.username}!**\n\n` +
-              `Вы успешно выполнили общественное служение. Партия гордится вами!`
+            `**Excellent work, citizen ${interaction.user.username}!**\n\n` +
+              `You have successfully completed your community service. The Party is proud of you!`
           )
           .addFields(
             {
-              name: "🎯 Выполненное Задание",
+              name: "🎯 Task Completed",
               value: randomService.name,
               inline: false,
             },
             {
-              name: "💰 Награда",
+              name: "💰 Reward",
               value: `+${randomService.reward}`,
               inline: true,
             },
-            { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+            { name: "💯 New Score", value: `${newScore}`, inline: true }
           )
-          .setFooter({ text: "Продолжайте служить народу! 🇨🇳" })
+          .setFooter({ text: "Continue to serve the people! 🇨🇳" })
           .setTimestamp();
 
         await confirmation.editReply({ embeds: [successEmbed] });
@@ -635,12 +635,12 @@ export class SanctionCommands extends BaseCommandHandler {
         // User declined
         const declineEmbed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setTitle("❌ СЛУЖЕНИЕ ОТКЛОНЕНО")
+          .setTitle("❌ SERVICE DECLINED")
           .setDescription(
-            `**Гражданин ${interaction.user.username}!**\n\n` +
-              `Вы отказались от общественного служения. Партия отмечает это в вашем деле.`
+            `**Citizen ${interaction.user.username}!**\n\n` +
+              `You have declined community service. The Party has noted this in your file.`
           )
-          .setFooter({ text: "Служение народу добровольно, но желательно! ⚠️" })
+          .setFooter({ text: "Service to the people is voluntary, but encouraged! ⚠️" })
           .setTimestamp();
 
         await confirmation.update({
@@ -651,7 +651,7 @@ export class SanctionCommands extends BaseCommandHandler {
     } catch (error) {
       Logger.error(`Error in community service: ${error}`);
       await interaction.editReply({
-        content: "⏰ Время выбора истекло. Возможность служения упущена.",
+        content: "⏰ Time expired. The opportunity for service has been missed.",
         components: [],
         embeds: [],
       });
@@ -672,7 +672,7 @@ export class SanctionCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим тестом на лояльность!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before the next loyalty quiz!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -687,7 +687,7 @@ export class SanctionCommands extends BaseCommandHandler {
     } catch (error) {
       Logger.error(`Error in loyalty quiz: ${error}`);
       await interaction.editReply({
-        content: "❌ Произошла ошибка при генерации теста. Попробуйте позже.",
+        content: "❌ An error occurred while generating the quiz. Please try again later.",
       });
     }
   }
@@ -802,14 +802,14 @@ export class SanctionCommands extends BaseCommandHandler {
         }
 
         return {
-          question: "Сколько будет 2 + 2?",
+          question: "What is 2 + 2?",
           answer: "4",
         };
       }
     }
 
     return {
-      question: "Сколько будет 2 + 2?",
+      question: "What is 2 + 2?",
       answer: "4",
     };
   }
@@ -820,18 +820,18 @@ export class SanctionCommands extends BaseCommandHandler {
   ): Promise<string> {
     try {
       const prompt = `
-        Ты - система искусственного интеллекта, работающая на благо Коммунистической партии Китая.
-        Создай персональное покаяние для гражданина с социальным рейтингом ${score}.
+        You are an AI system working for the benefit of the Communist Party of China.
+        Create a personalized confession for a citizen with a social credit score of ${score}.
 
-        Требования:
-        1. Текст на русском языке
-        2. Покаяние должно быть искренним и подходящим для негативного рейтинга
-        3. Упомяни преданность Партии и народу
-        4. Длина: 100-200 слов
-        5. Ответить ТОЛЬКО текстом покаяния, без пояснений
+        Requirements:
+        1. The text must be in English.
+        2. The confession must be sincere and appropriate for a negative score.
+        3. Mention loyalty to the Party and the people.
+        4. Length: 100-200 words.
+        5. Respond ONLY with the confession text, without explanations.
 
-        Пример структуры:
-        "Граждане! Я, [имя], признаю свои ошибки перед великой Партией..."
+        Example structure:
+        "Citizens! I, [name], admit my mistakes before the great Party..."
       `;
 
       const completion = await this.openai.chat.completions.create({
@@ -844,31 +844,31 @@ export class SanctionCommands extends BaseCommandHandler {
       const confession = completion.choices?.[0]?.message?.content;
       return (
         confession ||
-        `Граждане! Я, ${username}, признаю свои ошибки перед великой Партией и обязуюсь исправиться, следуя принципам социализма с китайской спецификой!`
+        `Citizens! I, ${username}, admit my mistakes before the great Party and pledge to correct myself, following the principles of socialism with Chinese characteristics!`
       );
     } catch (error) {
       Logger.error(`Error generating confession: ${error}`);
-      return `Граждане! Я, ${username}, признаю свои ошибки перед великой Партией и обязуюсь исправиться, следуя принципам социализма с китайской спецификой!`;
+      return `Citizens! I, ${username}, admit my mistakes before the great Party and pledge to correct myself, following the principles of socialism with Chinese characteristics!`;
     }
   }
 
   private async generateLoyaltyQuiz(): Promise<Quiz> {
     try {
       const prompt = `
-        Создай тест на лояльность для Коммунистической партии Китая.
+        Create a loyalty quiz for the Communist Party of China.
 
-        Требования:
-        1. 3 вопроса с 4 вариантами ответов каждый
-        2. Вопросы о китайской истории, политике, социализме
-        3. Один правильный ответ на вопрос
-        4. Ответ в JSON формате
-
-        Формат ответа:
+        Requirements:
+        1. 3 questions with 4 multiple-choice answers each.
+        2. Questions about Chinese history, politics, or socialism.
+        3. One correct answer per question.
+        4. Response in JSON format.
+        
+        Response format:
         {
           "questions": [
             {
-              "question": "Текст вопроса?",
-              "options": ["A) вариант 1", "B) вариант 2", "C) вариант 3", "D) вариант 4"],
+              "question": "Question text?",
+              "options": ["A) option 1", "B) option 2", "C) option 3", "D) option 4"],
               "correctAnswer": "A"
             }
           ]
@@ -916,27 +916,27 @@ export class SanctionCommands extends BaseCommandHandler {
       return {
         questions: [
           {
-            question: "Когда была основана Коммунистическая партия Китая?",
+            question: "When was the Communist Party of China founded?",
             options: ["A) 1919", "B) 1921", "C) 1949", "D) 1950"],
             correctAnswer: "B",
           },
           {
-            question: "Кто является Генеральным секретарём КПК?",
+            question: "Who is the General Secretary of the CCP?",
             options: [
-              "A) Мао Цзэдун",
-              "B) Дэн Сяопин",
-              "C) Си Цзиньпин",
-              "D) Ху Цзиньтао",
+              "A) Mao Zedong",
+              "B) Deng Xiaoping",
+              "C) Xi Jinping",
+              "D) Hu Jintao",
             ],
             correctAnswer: "C",
           },
           {
-            question: "Какой принцип лежит в основе политики Китая?",
+            question: "What principle underlies China's policy?",
             options: [
-              "A) Капитализм",
-              "B) Социализм с китайской спецификой",
-              "C) Либерализм",
-              "D) Анархизм",
+              "A) Capitalism",
+              "B) Socialism with Chinese characteristics",
+              "C) Liberalism",
+              "D) Anarchism",
             ],
             correctAnswer: "B",
           },
@@ -981,12 +981,12 @@ export class SanctionCommands extends BaseCommandHandler {
 
       const embed = new EmbedBuilder()
         .setColor(0xdc143c)
-        .setTitle("🎓 ТЕСТ НА ЛОЯЛЬНОСТЬ")
+        .setTitle("🎓 LOYALTY QUIZ")
         .setDescription(
-          `**Вопрос ${currentQuestion + 1} из ${quiz.questions.length}**\n\n` +
+          `**Question ${currentQuestion + 1} of ${quiz.questions.length}**\n\n` +
             `${question.question}`
         )
-        .setFooter({ text: "Выберите правильный ответ ниже 👇" })
+        .setFooter({ text: "Select the correct answer below 👇" })
         .setTimestamp();
 
       const message = await interaction.editReply({
@@ -1015,7 +1015,7 @@ export class SanctionCommands extends BaseCommandHandler {
       } catch (error) {
         Logger.error(`Quiz timeout or error: ${error}`);
         await interaction.editReply({
-          content: "⏰ Время на ответ истекло. Тест прерван.",
+          content: "⏰ Time to answer has expired. The quiz has been aborted.",
           components: [],
           embeds: [],
         });
@@ -1034,16 +1034,16 @@ export class SanctionCommands extends BaseCommandHandler {
     const score = Math.round((quiz.correctCount / quiz.questions.length) * 100);
 
     let resultColor = 0xff0000;
-    let resultTitle = "❌ НЕДОСТАТОЧНАЯ ЛОЯЛЬНОСТЬ";
+    let resultTitle = "❌ INSUFFICIENT LOYALTY";
     let scoreChange = -10;
 
     if (score >= 80) {
       resultColor = 0x00ff00;
-      resultTitle = "✅ ОТЛИЧНАЯ ЛОЯЛЬНОСТЬ";
+      resultTitle = "✅ EXCELLENT LOYALTY";
       scoreChange = 30;
     } else if (score >= 60) {
       resultColor = 0xffa500;
-      resultTitle = "⚠️ УДОВЛЕТВОРИТЕЛЬНАЯ ЛОЯЛЬНОСТЬ";
+      resultTitle = "⚠️ SATISFACTORY LOYALTY";
       scoreChange = 10;
     }
 
@@ -1051,7 +1051,7 @@ export class SanctionCommands extends BaseCommandHandler {
       userId,
       guildId,
       scoreChange,
-      `Тест на лояльность: ${quiz.correctCount}/${quiz.questions.length} правильных ответов`,
+      `Loyalty Quiz: ${quiz.correctCount}/${quiz.questions.length} correct answers`,
       interaction.user.username
     );
 
@@ -1066,17 +1066,17 @@ export class SanctionCommands extends BaseCommandHandler {
       .setColor(resultColor)
       .setTitle(resultTitle)
       .setDescription(
-        `**Результаты теста на лояльность:**\n\n` +
-          `**Правильных ответов:** ${quiz.correctCount} из ${quiz.questions.length}\n` +
-          `**Процент:** ${score}%\n` +
-          `**Изменение рейтинга:** ${scoreChange > 0 ? "+" : ""}${scoreChange}\n` +
-          `**Новый рейтинг:** ${newScore}`
+        `**Loyalty Quiz Results:**\n\n` +
+          `**Correct Answers:** ${quiz.correctCount} out of ${quiz.questions.length}\n` +
+          `**Percentage:** ${score}%\n` +
+          `**Score Change:** ${scoreChange > 0 ? "+" : ""}${scoreChange}\n` +
+          `**New Score:** ${newScore}`
       )
       .setFooter({
         text:
           scoreChange > 0
-            ? "Партия гордится вашими знаниями! 🇨🇳"
-            : "Изучите историю Партии лучше! 📚",
+            ? "The Party is proud of your knowledge! 🇨🇳"
+            : "Study the Party's history better! 📚",
       })
       .setTimestamp();
 

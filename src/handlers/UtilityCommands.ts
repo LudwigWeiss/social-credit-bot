@@ -40,57 +40,57 @@ export class UtilityCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x4169e1)
-      .setTitle("⏱️ СТАТУС ОГРАНИЧЕНИЙ РЕЙТИНГА")
+      .setTitle("⏱️ RATE LIMIT STATUS")
       .setDescription(
-        `**Гражданин:** ${interaction.user.username}\n*Текущее состояние системы контроля*`
+        `**Citizen:** ${interaction.user.username}\n*Current status of the control system*`
       )
       .addFields(
         {
-          name: "🎯 Положительный Рейтинг",
+          name: "🎯 Positive Score",
           value: status.canReceivePositive
-            ? "✅ Доступен"
-            : `❌ Кулдаун: ${Math.ceil(status.timeUntilPositive / 60000)} мин`,
+            ? "✅ Available"
+            : `❌ Cooldown: ${Math.ceil(status.timeUntilPositive / 60000)} min`,
           inline: true,
         },
         {
-          name: "📊 Сообщений в Окне",
+          name: "📊 Messages in Window",
           value: `${status.messagesInWindow}/10`,
           inline: true,
         },
         {
-          name: "📝 Буферизованных",
+          name: "📝 Buffered",
           value: `${status.bufferedMessages}`,
           inline: true,
         },
         {
-          name: "⏰ Окно Сбросится",
-          value: `${Math.ceil(status.windowTimeLeft / 1000)} сек`,
+          name: "⏰ Window Resets In",
+          value: `${Math.ceil(status.windowTimeLeft / 1000)} sec`,
           inline: true,
         },
         {
-          name: "🌐 Контекст Каналов",
+          name: "🌐 Channel Context",
           value: `${contextStats.totalChannels}`,
           inline: true,
         },
         {
-          name: "💬 Всего Сообщений",
+          name: "💬 Total Messages",
           value: `${contextStats.totalMessages}`,
           inline: true,
         }
       )
       .setFooter({
-        text: "Партия контролирует темп! 👁️",
+        text: "The Party controls the pace! 👁️",
       })
       .setTimestamp();
 
     // Add warning if user is being rate limited
     if (!status.canReceivePositive || status.messagesInWindow >= 8) {
       embed.addFields({
-        name: "⚠️ Предупреждение",
+        name: "⚠️ Warning",
         value:
           status.messagesInWindow >= 8
-            ? "🚨 Близко к лимиту сообщений! Следующие сообщения будут буферизованы."
-            : "⏰ Кулдаун на положительный рейтинг активен.",
+            ? "🚨 Nearing message limit! Subsequent messages will be buffered."
+            : "⏰ Cooldown for positive score is active.",
         inline: false,
       });
     }

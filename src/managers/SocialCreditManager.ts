@@ -93,65 +93,65 @@ export class SocialCreditManager {
   } {
     if (score >= 2000) {
       return {
-        rank: "Верховный Гражданин 🇨🇳",
+        rank: "Supreme Citizen 🇨🇳",
         emoji: "👑",
-        description: "Славный лидер народа! Си Цзиньпин гордился бы!",
+        description: "A glorious leader of the people! Xi Jinping would be proud!",
         color: 0xffd700,
       };
     } else if (score >= 1000) {
       return {
-        rank: "Образцовый Гражданин",
+        rank: "Model Citizen",
         emoji: "⭐",
         description:
-          "Примерный член общества! Ваш социальный рейтинг приносит честь!",
+          "An exemplary member of society! Your social credit score brings honor!",
         color: 0x00ff00,
       };
     } else if (score >= 500) {
       return {
-        rank: "Хороший Гражданин",
+        rank: "Good Citizen",
         emoji: "✅",
         description:
-          "Достойный член общества. Продолжайте в том же духе, товарищ!",
+          "A worthy member of society. Keep up the good work, comrade!",
         color: 0x90ee90,
       };
     } else if (score > 0) {
       return {
-        rank: "Средний Гражданин",
+        rank: "Average Citizen",
         emoji: "😐",
         description:
-          "Положительный, но скромный рейтинг. Есть куда расти, гражданин.",
+          "A positive but modest score. There is room to grow, citizen.",
         color: 0xffff00,
       };
     } else if (score === 0) {
       return {
-        rank: "Нейтральный Гражданин",
+        rank: "Neutral Citizen",
         emoji: "⚪",
         description:
-          "Нейтральный социальный рейтинг. Начните проявлять себя, товарищ!",
+          "A neutral social credit score. Start proving yourself, comrade!",
         color: 0x808080,
       };
     } else if (score >= -200) {
       return {
-        rank: "Проблемный Гражданин",
+        rank: "Problematic Citizen",
         emoji: "⚠️",
         description:
-          "Ваше поведение вызывает беспокойство. Может потребоваться перевоспитание.",
+          "Your behavior is concerning. Re-education may be required.",
         color: 0xffa500,
       };
     } else if (score >= -500) {
       return {
-        rank: "Плохой Гражданин",
+        rank: "Bad Citizen",
         emoji: "❌",
         description:
-          "Неприемлемое поведение! Явитесь в ближайший лагерь перевоспитания!",
+          "Unacceptable behavior! Report to the nearest re-education camp!",
         color: 0xff4500,
       };
     } else {
       return {
-        rank: "Враг Государства",
+        rank: "Enemy of the State",
         emoji: "💀",
         description:
-          "ВНИМАНИЕ: Данный индивид представляет угрозу социальной гармонии!",
+          "ATTENTION: This individual poses a threat to social harmony!",
         color: 0xff0000,
       };
     }

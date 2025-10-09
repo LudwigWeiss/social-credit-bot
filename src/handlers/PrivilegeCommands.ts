@@ -24,22 +24,22 @@ export class PrivilegeCommands extends BaseCommandHandler {
   private readonly partyFavorOptions: PartyFavorOption[] = [
     {
       id: "GLORIOUS_PRODUCTION",
-      name: "🏭 Славное Производство",
-      description: "Все положительные изменения рейтинга увеличены на 10%",
+      name: "🏭 Glorious Production",
+      description: "All positive score changes are increased by 10%",
       duration: 15 * 60 * 1000, // 15 minutes
       effect: "positive_boost",
     },
     {
       id: "HARMONY_FESTIVAL",
-      name: "🕊️ Фестиваль Гармонии",
-      description: "Никто не может потерять социальный рейтинг",
+      name: "🕊️ Harmony Festival",
+      description: "No one can lose social credit",
       duration: 15 * 60 * 1000, // 15 minutes
       effect: "no_negative",
     },
     {
       id: "LOYALTY_TEST",
-      name: "📊 Проверка Лояльности",
-      description: "Все изменения социального рейтинга удваиваются",
+      name: "📊 Loyalty Test",
+      description: "All social credit changes are doubled",
       duration: 15 * 60 * 1000, // 15 minutes
       effect: "double_changes",
     },
@@ -84,7 +84,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content:
-            "🚨 Произошла ошибка при выполнении команды. Пожалуйста, попробуйте позже.",
+            "🚨 An error occurred while executing the command. Please try again later.",
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -108,7 +108,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     );
     if (enforcerScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
       await interaction.reply({
-        content: `❌ Недостаточный социальный рейтинг! Требуется ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ для исполнения Мандата Гражданина.`,
+        content: `❌ Insufficient social credit! Requires ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ to execute the Citizen's Mandate.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -117,7 +117,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Can't enforce on yourself
     if (targetUser.id === enforcerId) {
       await interaction.reply({
-        content: "🤔 Вы не можете навязывать гармонию самому себе, гражданин!",
+        content: "🤔 You cannot enforce harmony upon yourself, citizen!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -126,7 +126,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Can't enforce on bots
     if (targetUser.bot) {
       await interaction.reply({
-        content: "🤖 Боты уже идеально гармоничны!",
+        content: "🤖 Bots are already perfectly harmonious!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -140,7 +140,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим исполнением Мандата Гражданина!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before executing the Citizen's Mandate again!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -151,7 +151,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       targetUser.id,
       guildId,
       CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET,
-      `Мандат Гражданина: ${reason} (от ${interaction.user.username})`,
+      `Citizen's Mandate: ${reason} (from ${interaction.user.username})`,
       targetUser.username
     );
 
@@ -159,7 +159,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       enforcerId,
       guildId,
       CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER,
-      `Исполнение Мандата Гражданина на ${targetUser.username}`,
+      `Execution of Citizen's Mandate on ${targetUser.username}`,
       interaction.user.username
     );
 
@@ -173,25 +173,25 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("⚖️ МАНДАТ ГРАЖДАНИНА ИСПОЛНЕН")
+      .setTitle("⚖️ CITIZEN'S MANDATE EXECUTED")
       .setDescription(
-        `**Исполнитель:** ${interaction.user.username}\n` +
-          `**Нарушитель:** ${targetUser.username}\n` +
-          `**Причина:** ${reason}`
+        `**Enforcer:** ${interaction.user.username}\n` +
+          `**Violator:** ${targetUser.username}\n` +
+          `**Reason:** ${reason}`
       )
       .addFields(
         {
-          name: "👤 Нарушитель",
+          name: "👤 Violator",
           value: `📉 ${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET} → \`${targetNewScore}\``,
           inline: true,
         },
         {
-          name: "👑 Исполнитель",
+          name: "👑 Enforcer",
           value: `📈 ${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER} → \`${enforcerNewScore}\``,
           inline: true,
         }
       )
-      .setFooter({ text: "Партия ценит вашу бдительность! 👁️" })
+      .setFooter({ text: "The Party values your vigilance! 👁️" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -211,7 +211,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Вы уже получили ежедневный бонус сегодня! Следующий бонус через ${hoursLeft} часов.`,
+        content: `⏰ You have already claimed your daily bonus today! The next bonus is in ${hoursLeft} hours.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -234,7 +234,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     } else {
       await interaction.reply({
         content:
-          "❌ Недостаточный социальный рейтинг для получения ежедневного бонуса! Повысьте свой рейтинг.",
+          "❌ Insufficient social credit to claim the daily bonus! Improve your score.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -245,7 +245,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       userId,
       guildId,
       bonusAmount,
-      `Ежедневный бонус Партии (${rankInfo.rank})`,
+      `Party's Daily Bonus (${rankInfo.rank})`,
       interaction.user.username
     );
 
@@ -259,17 +259,17 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🎁 ЕЖЕДНЕВНЫЙ БОНУС ПАРТИИ")
+      .setTitle("🎁 PARTY'S DAILY BONUS")
       .setDescription(
-        `**Гражданин ${interaction.user.username}!**\n\n` +
-          `Партия благосклонна к вам сегодня! Вы получили бонус за вашу лояльность.`
+        `**Citizen ${interaction.user.username}!**\n\n` +
+          `The Party is benevolent to you today! You have received a bonus for your loyalty.`
       )
       .addFields(
-        { name: "🏅 Звание", value: rankInfo.rank, inline: true },
-        { name: "💰 Бонус", value: `+${bonusAmount}`, inline: true },
-        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+        { name: "🏅 Rank", value: rankInfo.rank, inline: true },
+        { name: "💰 Bonus", value: `+${bonusAmount}`, inline: true },
+        { name: "💯 New Score", value: `${newScore}`, inline: true }
       )
-      .setFooter({ text: "Партия заботится о своих лучших гражданах! 🇨🇳" })
+      .setFooter({ text: "The Party takes care of its best citizens! 🇨🇳" })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -288,7 +288,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     );
     if (userScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
       await interaction.reply({
-        content: `❌ Недостаточный социальный рейтинг! Требуется ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN}+ для распространения пропаганды.`,
+        content: `❌ Insufficient social credit! Requires ${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN}+ to spread propaganda.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -302,7 +302,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим распространением пропаганды!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before spreading propaganda again!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -317,13 +317,13 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Create embed with propaganda
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("🇨🇳 СЛАВА ПАРТИИ! 🇨🇳")
+      .setTitle("🇨🇳 GLORY TO THE PARTY! 🇨🇳")
       .setDescription(
-        `**${interaction.user.username}** напоминает вам о величии Партии!\n\n` +
-          `*"Социальная гармония достигается через единство под руководством Партии!"*`
+        `**${interaction.user.username}** reminds you of the Party's greatness!\n\n` +
+          `*"Social harmony is achieved through unity under the Party's leadership!"*`
       )
       .setImage(imageUrl)
-      .setFooter({ text: "Партия всегда права! 中华人民共和国万岁!" })
+      .setFooter({ text: "The Party is always right! 中华人民共和国万岁!" })
       .setTimestamp();
 
     // Send to current channel
@@ -334,7 +334,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       userId,
       guildId,
       CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS,
-      "Распространение славной пропаганды Партии",
+      "Spreading the Party's glorious propaganda",
       interaction.user.username
     );
 
@@ -349,20 +349,20 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Send confirmation
     const confirmEmbed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("📢 ПРОПАГАНДА РАСПРОСТРАНЕНА!")
+      .setTitle("📢 PROPAGANDA SPREAD!")
       .setDescription(
-        `**Спасибо за вашу преданность, гражданин ${interaction.user.username}!**\n\n` +
-          `Партия ценит вашу помощь в распространении истины.`
+        `**Thank you for your loyalty, citizen ${interaction.user.username}!**\n\n` +
+          `The Party values your help in spreading the truth.`
       )
       .addFields(
         {
-          name: "💰 Бонус",
+          name: "💰 Bonus",
           value: `+${CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS}`,
           inline: true,
         },
-        { name: "💯 Новый Рейтинг", value: `${newScore}`, inline: true }
+        { name: "💯 New Score", value: `${newScore}`, inline: true }
       )
-      .setFooter({ text: "Продолжайте служить Партии! 👁️" })
+      .setFooter({ text: "Continue to serve the Party! 👁️" })
       .setTimestamp();
 
     await interaction.followUp({
@@ -385,7 +385,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (score <= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
       await interaction.reply({
         content:
-          "❌ Недостаточно высокий социальный рейтинг для трансляции пропаганды! Требуется статус Образцового Гражданина (1000+ рейтинга).",
+          "❌ Insufficient social credit to broadcast propaganda! Model Citizen status (1000+ score) is required.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -399,7 +399,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующей трансляцией пропаганды!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before your next propaganda broadcast!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -415,14 +415,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Create broadcast embed
       const embed = new EmbedBuilder()
         .setColor(0xdc143c)
-        .setTitle("📢 ОФИЦИАЛЬНАЯ ТРАНСЛЯЦИЯ ПАРТИИ 📢")
+        .setTitle("📢 OFFICIAL PARTY BROADCAST 📢")
         .setDescription(
-          `**Внимание всем гражданам!**\n\n` +
-            `Гражданин **${interaction.user.username}** передает важное сообщение от имени Партии:\n\n` +
+          `**Attention all citizens!**\n\n` +
+            `Citizen **${interaction.user.username}** is broadcasting an important message on behalf of the Party:\n\n` +
             `*${enhancedMessage}*`
         )
         .setFooter({
-          text: `Трансляция одобрена Министерством Пропаганды | ${new Date().toLocaleDateString("ru-RU")}`,
+          text: `Broadcast approved by the Ministry of Propaganda | ${new Date().toLocaleDateString("en-US")}`,
         })
         .setTimestamp();
 
@@ -433,7 +433,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         userId,
         guildId,
         CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50,
-        "Успешная трансляция пропаганды Партии",
+        "Successful broadcast of Party propaganda",
         interaction.user.username
       );
 
@@ -448,13 +448,13 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Send confirmation to user
       const confirmEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("✅ ТРАНСЛЯЦИЯ УСПЕШНА!")
+        .setTitle("✅ BROADCAST SUCCESSFUL!")
         .setDescription(
-          `Ваше сообщение было одобрено и транслировано всем гражданам.\n\n` +
-            `**Награда:** +${CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50}\n` +
-            `**Новый рейтинг:** ${newScore}`
+          `Your message was approved and broadcast to all citizens.\n\n` +
+            `**Reward:** +${CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50}\n` +
+            `**New Score:** ${newScore}`
         )
-        .setFooter({ text: "Партия гордится вашей преданностью! 🇨🇳" });
+        .setFooter({ text: "The Party is proud of your loyalty! 🇨🇳" });
 
       await interaction.followUp({
         embeds: [confirmEmbed],
@@ -464,7 +464,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       Logger.error(`Error in propaganda broadcast: ${error}`);
       await interaction.editReply({
         content:
-          "❌ Произошла ошибка при обработке вашего сообщения. Возможно, оно содержит неподходящий контент.",
+          "❌ An error occurred while processing your message. It may contain inappropriate content.",
       });
     }
   }
@@ -479,7 +479,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     const score = await this.socialCreditManager.getUserScore(userId, guildId);
     if (score < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
       await interaction.reply({
-        content: `❌ Недостаточно высокий социальный рейтинг! Требуется статус Высшего Гражданина (${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ рейтинга) для активации Партийных Привилегий.`,
+        content: `❌ Insufficient social credit! Supreme Citizen status (${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN}+ score) is required to activate Party Favors.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -493,7 +493,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим использованием Партийных Привилегий!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before using Party Favors again!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -502,7 +502,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Create selection menu
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId("party_favor_select")
-      .setPlaceholder("Выберите Партийную Привилегию...")
+      .setPlaceholder("Select a Party Favor...")
       .addOptions(
         this.partyFavorOptions.map((option) =>
           new StringSelectMenuOptionBuilder()
@@ -518,14 +518,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("🏛️ ПАРТИЙНЫЕ ПРИВИЛЕГИИ")
+      .setTitle("🏛️ PARTY FAVORS")
       .setDescription(
-        `**Высший Гражданин ${interaction.user.username}!**\n\n` +
-          `Партия предоставляет вам возможность активировать одну из следующих привилегий для всего сервера:\n\n` +
-          `⏱️ **Длительность:** 15 минут\n` +
-          `🌐 **Эффект:** Распространяется на всех граждан сервера`
+        `**Supreme Citizen ${interaction.user.username}!**\n\n` +
+          `The Party grants you the ability to activate one of the following favors for the entire server:\n\n` +
+          `⏱️ **Duration:** 15 minutes\n` +
+          `🌐 **Effect:** Applies to all citizens on the server`
       )
-      .setFooter({ text: "Выберите привилегию из меню ниже 👇" })
+      .setFooter({ text: "Select a favor from the menu below 👇" })
       .setTimestamp();
 
     const response = await interaction.reply({
@@ -547,7 +547,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
       if (!selectedOption) {
         await confirmation.update({
-          content: "❌ Неверный выбор привилегии.",
+          content: "❌ Invalid favor selection.",
           components: [],
           embeds: [],
         });
@@ -558,7 +558,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     } catch (error) {
       Logger.error(`Error in party favor selection: ${error}`);
       await interaction.editReply({
-        content: "⏰ Время выбора истекло. Попробуйте команду снова.",
+        content: "⏰ Selection time expired. Please try the command again.",
         components: [],
         embeds: [],
       });
@@ -579,7 +579,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     );
     if (investigatorScore < CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
       await interaction.reply({
-        content: `❌ Недостаточно высокий социальный рейтинг для проведения расследований! Требуется статус Образцового Гражданина (${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN}+ рейтинга).`,
+        content: `❌ Insufficient social credit to conduct investigations! Model Citizen status (${CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN}+ score) is required.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -588,7 +588,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Can't investigate yourself
     if (targetUser.id === investigatorId) {
       await interaction.reply({
-        content: "🤔 Вы не можете расследовать самого себя, гражданин!",
+        content: "🤔 You cannot investigate yourself, citizen!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -598,7 +598,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (targetUser.bot) {
       await interaction.reply({
         content:
-          "🤖 Боты не нуждаются в расследовании - они всегда лояльны Партии!",
+          "🤖 Bots do not need investigation - they are always loyal to the Party!",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -612,7 +612,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
       const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
       await interaction.reply({
-        content: `⏰ Подождите ещё ${hoursLeft} часов перед следующим расследованием!`,
+        content: `⏰ Please wait another ${hoursLeft} hours before the next investigation!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -642,34 +642,34 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Create investigation report
       const embed = new EmbedBuilder()
         .setColor(targetScore >= 0 ? 0x00ff00 : 0xff0000)
-        .setTitle("🔍 ДОСЬЕ ГРАЖДАНИНА")
+        .setTitle("🔍 CITIZEN DOSSIER")
         .setDescription(
-          `**Объект:** ${targetUser.username}\n` +
-            `**Следователь:** ${interaction.user.username}\n` +
-            `**Статус расследования:** ЗАВЕРШЕНО`
+          `**Subject:** ${targetUser.username}\n` +
+            `**Investigator:** ${interaction.user.username}\n` +
+            `**Investigation Status:** COMPLETED`
         )
         .addFields(
           {
-            name: "📊 Социальный Рейтинг",
+            name: "📊 Social Credit Score",
             value: `**${targetScore}** (${targetRank.rank})`,
             inline: true,
           },
           {
-            name: "🏷️ Статус Гражданина",
+            name: "🏷️ Citizen Status",
             value: targetStatus,
             inline: true,
           },
           {
-            name: "⚡ Активные Эффекты",
+            name: "⚡ Active Effects",
             value:
               activeEffects.length > 0
                 ? activeEffects.map((e) => `• ${e.effectType}`).join("\n")
-                : "Нет активных эффектов",
+                : "No active effects",
             inline: false,
           }
         )
         .setFooter({
-          text: `Досье подготовлено Министерством Государственной Безопасности`,
+          text: `Dossier prepared by the Ministry of State Security`,
         })
         .setTimestamp();
 
@@ -682,8 +682,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
           .join("\n");
 
         embed.addFields({
-          name: "📝 Недавняя Активность",
-          value: historyText || "Нет недавней активности",
+          name: "📝 Recent Activity",
+          value: historyText || "No recent activity",
           inline: false,
         });
       }
@@ -695,7 +695,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         investigatorId,
         guildId,
         CONFIG.SCORE_CHANGES.INVESTIGATION_COST,
-        `Расследование гражданина ${targetUser.username}`,
+        `Investigation of citizen ${targetUser.username}`,
         interaction.user.username
       );
 
@@ -710,7 +710,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       Logger.error(`Error in investigation: ${error}`);
       await interaction.editReply({
         content:
-          "❌ Произошла ошибка при проведении расследования. Попробуйте позже.",
+          "❌ An error occurred during the investigation. Please try again later.",
       });
     }
   }
@@ -720,17 +720,17 @@ export class PrivilegeCommands extends BaseCommandHandler {
   private async moderateAndEnhancePropaganda(message: string): Promise<string> {
     try {
       const prompt = `
-        Ты - редактор пропагандистского отдела Коммунистической партии Китая.
-        Твоя задача - улучшить и модерировать сообщение для официальной трансляции.
+        You are an editor for the propaganda department of the Communist Party of China.
+        Your task is to improve and moderate a message for official broadcast.
 
-        Правила:
-        1. Убрать любую неподходящую лексику или оскорбления
-        2. Добавить подходящие коммунистические и партийные фразы
-        3. Сделать сообщение более торжественным и официальным
-        4. Максимум 200 слов
-        5. Ответить ТОЛЬКО итоговым текстом, без пояснений
+        Rules:
+        1. Remove any inappropriate language or insults.
+        2. Add suitable communist and party phrases.
+        3. Make the message more solemn and official.
+        4. Maximum 200 words.
+        5. Respond ONLY with the final text, without explanations.
 
-        Исходное сообщение: "${message}"
+        Original message: "${message}"
       `;
 
       const completion = await this.openai.chat.completions.create({
@@ -775,7 +775,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         interaction.user.id,
         guildId,
         -cost,
-        `Активация Партийной Привилегии: ${option.name}`,
+        `Activation of Party Favor: ${option.name}`,
         interaction.user.username
       );
 
@@ -790,15 +790,15 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Update the interaction with success message
       const successEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("✅ ПАРТИЙНАЯ ПРИВИЛЕГИЯ АКТИВИРОВАНА!")
+        .setTitle("✅ PARTY FAVOR ACTIVATED!")
         .setDescription(
-          `**${option.name}** активирована!\n\n` +
-            `**Эффект:** ${option.description}\n` +
-            `**Длительность:** 15 минут\n` +
-            `**Стоимость:** ${cost} рейтинга\n` +
-            `**Новый рейтинг:** ${newScore}`
+          `**${option.name}** has been activated!\n\n` +
+            `**Effect:** ${option.description}\n` +
+            `**Duration:** 15 minutes\n` +
+            `**Cost:** ${cost} score\n` +
+            `**New Score:** ${newScore}`
         )
-        .setFooter({ text: "Партия благодарит за ваше служение! 🏛️" })
+        .setFooter({ text: "The Party thanks you for your service! 🏛️" })
         .setTimestamp();
 
       if ("update" in interaction) {
@@ -817,14 +817,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
       if (interaction.guild && interaction.channel) {
         const announceEmbed = new EmbedBuilder()
           .setColor(0xffd700)
-          .setTitle("🏛️ ПАРТИЙНАЯ ПРИВИЛЕГИЯ АКТИВИРОВАНА!")
+          .setTitle("🏛️ PARTY FAVOR ACTIVATED!")
           .setDescription(
-            `**Высший Гражданин ${interaction.user.username}** активировал привилегию для всего сервера:\n\n` +
+            `**Supreme Citizen ${interaction.user.username}** has activated a favor for the entire server:\n\n` +
               `**${option.name}**\n` +
               `*${option.description}*\n\n` +
-              `⏱️ **Длительность:** 15 минут`
+              `⏱️ **Duration:** 15 minutes`
           )
-          .setFooter({ text: "Все граждане получают преимущества! 🇨🇳" })
+          .setFooter({ text: "All citizens reap the benefits! 🇨🇳" })
           .setTimestamp();
 
         if (
@@ -839,13 +839,13 @@ export class PrivilegeCommands extends BaseCommandHandler {
       Logger.error(`Error applying party favor: ${error}`);
       if ("update" in interaction) {
         await interaction.update({
-          content: "❌ Произошла ошибка при активации привилегии.",
+          content: "❌ An error occurred while activating the favor.",
           components: [],
           embeds: [],
         });
       } else {
         await interaction.editReply({
-          content: "❌ Произошла ошибка при активации привилегии.",
+          content: "❌ An error occurred while activating the favor.",
           components: [],
           embeds: [],
         });
@@ -855,19 +855,19 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
   private getUserStatusByScore(score: number): string {
     if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
-      return "🏛️ Высший Гражданин";
+      return "🏛️ Supreme Citizen";
     } else if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
-      return "🏅 Образцовый Гражданин";
+      return "🏅 Model Citizen";
     } else if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.GOOD_CITIZEN) {
-      return "✅ Добропорядочный Гражданин";
+      return "✅ Good Citizen";
     } else if (score >= CONFIG.SCORE_THRESHOLDS.PENALTIES.MILD) {
-      return "⚠️ Обычный Гражданин";
+      return "⚠️ Average Citizen";
     } else if (score >= CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
-      return "❌ Сомнительный Элемент";
+      return "❌ Questionable Element";
     } else if (score >= CONFIG.SCORE_THRESHOLDS.PENALTIES.SEVERE) {
-      return "🚫 Враг Народа";
+      return "🚫 Enemy of the People";
     } else {
-      return "💀 Предатель Родины";
+      return "💀 Traitor to the Motherland";
     }
   }
 }

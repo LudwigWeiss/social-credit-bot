@@ -147,7 +147,7 @@ export class CommandHandler {
       } else {
         await interaction.reply({
           content:
-            "🤔 Неизвестная команда, гражданин. Компьютеры Партии в замешательстве.",
+            "🤔 Unknown command, citizen. The Party's computers are confused.",
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -155,7 +155,7 @@ export class CommandHandler {
       console.error("Error handling command:", error);
       await interaction.reply({
         content:
-          "🚨 ОШИБКА: Система социального рейтинга вышла из строя! Пожалуйста, обратитесь к местному представителю Партии.",
+          "🚨 ERROR: The social credit system has malfunctioned! Please contact your local Party representative.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -188,12 +188,12 @@ export class CommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
-      .setTitle(`📋 Директивы для Гражданина ${interaction.user.username}`)
+      .setTitle(`📋 Directives for Citizen ${interaction.user.username}`)
       .setTimestamp();
 
     if (dailyDirectives.length === 0 && weeklyGoals.length === 0) {
       embed.setDescription(
-        "У вас нет активных заданий. Партия предоставит вам новые цели в ближайшее время. Проявите активность!"
+        "You have no active directives. The Party will provide you with new goals soon. Be active!"
       );
     }
 
@@ -203,8 +203,8 @@ export class CommandHandler {
         (directive.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000)
       );
       embed.addFields({
-        name: `📅 Ежедневная Директива (Осталось: ${timeLeft}ч)`,
-        value: `**${directive.task}**\n*${directive.description}*\n${this.formatProgressBar(directive.currentProgress, directive.targetValue)}\n**Прогресс:** ${directive.currentProgress} / ${directive.targetValue}\n**Награда:** +${directive.reward} кредитов`,
+        name: `📅 Daily Directive (Time left: ${timeLeft}h)`,
+        value: `**${directive.task}**\n*${directive.description}*\n${this.formatProgressBar(directive.currentProgress, directive.targetValue)}\n**Progress:** ${directive.currentProgress} / ${directive.targetValue}\n**Reward:** +${directive.reward} credits`,
         inline: false,
       });
     }
@@ -215,8 +215,8 @@ export class CommandHandler {
         (goal.expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
       );
       embed.addFields({
-        name: `🗓️ Недельная Цель (Осталось: ${timeLeft}д)`,
-        value: `**${goal.goal}**\n*${goal.description}*\n${this.formatProgressBar(goal.currentProgress, goal.targetValue)}\n**Прогресс:** ${goal.currentProgress} / ${goal.targetValue}\n**Награда:** +${goal.reward} кредитов`,
+        name: `🗓️ Weekly Goal (Time left: ${timeLeft}d)`,
+        value: `**${goal.goal}**\n*${goal.description}*\n${this.formatProgressBar(goal.currentProgress, goal.targetValue)}\n**Progress:** ${goal.currentProgress} / ${goal.targetValue}\n**Reward:** +${goal.reward} credits`,
         inline: false,
       });
     }
