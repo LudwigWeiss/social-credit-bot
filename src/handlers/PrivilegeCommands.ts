@@ -173,21 +173,19 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("⚖️ CITIZEN'S MANDATE EXECUTED")
+      .setTitle("Citizen's Mandate Executed")
       .setDescription(
-        `**Enforcer:** ${interaction.user.username}\n` +
-          `**Violator:** ${targetUser.username}\n` +
-          `**Reason:** ${reason}`
+        `**${interaction.user.username}** has enforced harmony upon **${targetUser.username}** for the following reason: *${reason}*`
       )
       .addFields(
         {
-          name: "👤 Violator",
-          value: `📉 ${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET} → \`${targetNewScore}\``,
+          name: "Violator's New Score",
+          value: `\`${targetNewScore}\` (${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET})`,
           inline: true,
         },
         {
-          name: "👑 Enforcer",
-          value: `📈 ${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER} → \`${enforcerNewScore}\``,
+          name: "Enforcer's New Score",
+          value: `\`${enforcerNewScore}\` (${CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER})`,
           inline: true,
         }
       )
@@ -259,15 +257,14 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🎁 IMAGINATION'S DAILY BONUS")
+      .setTitle("Daily Bonus Claimed")
       .setDescription(
-        `**Citizen ${interaction.user.username}!**\n\n` +
-          `Imagination is benevolent to you today! You have received a bonus for your loyalty.`
+        `Citizen ${interaction.user.username}, your loyalty has been rewarded with a daily bonus.`
       )
       .addFields(
-        { name: "🏅 Rank", value: rankInfo.rank, inline: true },
-        { name: "💰 Bonus", value: `+${bonusAmount}`, inline: true },
-        { name: "💯 New Score", value: `${newScore}`, inline: true }
+        { name: "Rank", value: rankInfo.rank, inline: true },
+        { name: "Bonus", value: `+${bonusAmount}`, inline: true },
+        { name: "New Score", value: `${newScore}`, inline: true }
       )
       .setFooter({ text: "Imagination takes care of its best citizens! 💫" })
       .setTimestamp();
@@ -317,10 +314,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Create embed with propaganda
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("💫 GLORY TO IMAGINATION! 💫")
+      .setAuthor({
+        name: `${interaction.user.username} is spreading glorious propaganda!`,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
       .setDescription(
-        `**${interaction.user.username}** reminds you of Imagination's greatness!\n\n` +
-          `*"Social harmony is achieved through unity under Imagination's leadership!"*`
+        `*"Social harmony is achieved through unity under Imagination's leadership!"*`
       )
       .setImage(imageUrl)
       .setFooter({ text: "Imagination is always right! Imagination is eternal!" })
@@ -349,18 +348,17 @@ export class PrivilegeCommands extends BaseCommandHandler {
     // Send confirmation
     const confirmEmbed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("📢 PROPAGANDA SPREAD!")
+      .setTitle("Propaganda Spread")
       .setDescription(
-        `**Thank you for your loyalty, citizen ${interaction.user.username}!**\n\n` +
-          `Imagination values your help in spreading the truth.`
+        `Thank you for your loyalty, citizen. Your efforts to spread the truth have been rewarded.`
       )
       .addFields(
         {
-          name: "💰 Bonus",
+          name: "Bonus",
           value: `+${CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS}`,
           inline: true,
         },
-        { name: "💯 New Score", value: `${newScore}`, inline: true }
+        { name: "New Score", value: `\`${newScore}\``, inline: true }
       )
       .setFooter({ text: "Continue to serve Imagination! 👁️" })
       .setTimestamp();
@@ -415,12 +413,11 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Create broadcast embed
       const embed = new EmbedBuilder()
         .setColor(0xdc143c)
-        .setTitle("📢 OFFICIAL IMAGINATION BROADCAST 📢")
-        .setDescription(
-          `**Attention all citizens!**\n\n` +
-            `Citizen **${interaction.user.username}** is broadcasting an important message on behalf of Imagination:\n\n` +
-            `*${enhancedMessage}*`
-        )
+        .setTitle("Official State Broadcast")
+        .setAuthor({
+          name: `From the Ministry of Propaganda, by ${interaction.user.username}`,
+        })
+        .setDescription(`*${enhancedMessage}*`)
         .setFooter({
           text: `Broadcast approved by the Ministry of Propaganda | ${new Date().toLocaleDateString("en-US")}`,
         })
@@ -448,11 +445,15 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Send confirmation to user
       const confirmEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("✅ BROADCAST SUCCESSFUL!")
-        .setDescription(
-          `Your message was approved and broadcast to all citizens.\n\n` +
-            `**Reward:** +${CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50}\n` +
-            `**New Score:** ${newScore}`
+        .setTitle("Broadcast Successful")
+        .setDescription(`Your message was approved and broadcast to all citizens.`)
+        .addFields(
+          {
+            name: "Reward",
+            value: `+${CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50}`,
+            inline: true,
+          },
+          { name: "New Score", value: `\`${newScore}\``, inline: true }
         )
         .setFooter({ text: "Imagination is proud of your loyalty! 💫" });
 
@@ -518,12 +519,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
-      .setTitle("🏛️ IMAGINATION FAVORS")
+      .setTitle("Decree from the Party")
       .setDescription(
-        `**Supreme Citizen ${interaction.user.username}!**\n\n` +
-          `Imagination grants you the ability to activate one of the following favors for the entire server:\n\n` +
-          `⏱️ **Duration:** 15 minutes\n` +
-          `🌐 **Effect:** Applies to all citizens on the server`
+        `As a Supreme Citizen, ${interaction.user.username}, you may issue a decree to influence the server for 15 minutes.`
       )
       .setFooter({ text: "Select a favor from the menu below 👇" })
       .setTimestamp();
@@ -642,29 +640,35 @@ export class PrivilegeCommands extends BaseCommandHandler {
       // Create investigation report
       const embed = new EmbedBuilder()
         .setColor(targetScore >= 0 ? 0x00ff00 : 0xff0000)
-        .setTitle("🔍 CITIZEN DOSSIER")
+        .setAuthor({
+          name: `Citizen Dossier: ${targetUser.username}`,
+          iconURL: targetUser.displayAvatarURL(),
+        })
         .setDescription(
-          `**Subject:** ${targetUser.username}\n` +
-            `**Investigator:** ${interaction.user.username}\n` +
-            `**Investigation Status:** COMPLETED`
+          `Investigation conducted by **${interaction.user.username}**.`
         )
         .addFields(
           {
-            name: "📊 Social Credit Score",
-            value: `**${targetScore}** (${targetRank.rank})`,
+            name: "Score",
+            value: `**${targetScore}**`,
             inline: true,
           },
           {
-            name: "🏷️ Citizen Status",
+            name: "Rank",
+            value: targetRank.rank,
+            inline: true,
+          },
+          {
+            name: "Status",
             value: targetStatus,
             inline: true,
           },
           {
-            name: "⚡ Active Effects",
+            name: "Active Effects",
             value:
               activeEffects.length > 0
                 ? activeEffects.map((e) => `• ${e.effectType}`).join("\n")
-                : "No active effects",
+                : "None",
             inline: false,
           }
         )
@@ -789,15 +793,15 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
       // Update the interaction with success message
       const successEmbed = new EmbedBuilder()
-        .setColor(0x00ff00)
-        .setTitle("✅ IMAGINATION FAVOR ACTIVATED!")
-        .setDescription(
-          `**${option.name}** has been activated!\n\n` +
-            `**Effect:** ${option.description}\n` +
-            `**Duration:** 15 minutes\n` +
-            `**Cost:** ${cost} score\n` +
-            `**New Score:** ${newScore}`
-        )
+       .setColor(0x00ff00)
+       .setTitle("Decree Issued")
+       .setDescription(
+         `Your decree, **${option.name}**, is now in effect for 15 minutes.`
+       )
+       .addFields(
+         { name: "Cost", value: `${cost}`, inline: true },
+         { name: "New Score", value: `\`${newScore}\``, inline: true }
+       )
         .setFooter({ text: "Imagination thanks you for your service! 🏛️" })
         .setTimestamp();
 
@@ -817,12 +821,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
       if (interaction.guild && interaction.channel) {
         const announceEmbed = new EmbedBuilder()
           .setColor(0xffd700)
-          .setTitle("🏛️ IMAGINATION FAVOR ACTIVATED!")
+          .setTitle("A Decree from the Party!")
           .setDescription(
-            `**Supreme Citizen ${interaction.user.username}** has activated a favor for the entire server:\n\n` +
-              `**${option.name}**\n` +
-              `*${option.description}*\n\n` +
-              `⏱️ **Duration:** 15 minutes`
+            `Supreme Citizen **${interaction.user.username}** has issued a decree:\n\n**${option.name}**\n*${option.description}*\n\nThis will be in effect for the next 15 minutes.`
           )
           .setFooter({ text: "All citizens reap the benefits! 💫" })
           .setTimestamp();

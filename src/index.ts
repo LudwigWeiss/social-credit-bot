@@ -825,7 +825,7 @@ class SocialCreditBot {
         .setDescription("Report a mistake in the bot's analysis"),
 
       new SlashCommandBuilder()
-        .setName("work-for-imagination")
+        .setName("labor-for-the-state")
         .setDescription("Complete a task to earn social credit back"),
 
       // Enhanced Sanction Commands
@@ -857,7 +857,7 @@ class SocialCreditBot {
         ),
 
       new SlashCommandBuilder()
-        .setName("imagination-favor")
+        .setName("decree-from-the-party")
         .setDescription("Request a server-wide Imagination favor (Supreme Citizen+)"),
 
       new SlashCommandBuilder()
@@ -865,7 +865,7 @@ class SocialCreditBot {
         .setDescription("Investigate another citizen's social credit history")
         .addUserOption((option) =>
           option
-            .setName("user")
+            .setName("target")
             .setDescription("Citizen to investigate")
             .setRequired(true)
         ),

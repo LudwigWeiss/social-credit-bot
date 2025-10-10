@@ -66,18 +66,17 @@ export class FeedbackCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🙏 THANK YOU FOR YOUR PRAISE!")
+      .setTitle("Praise Acknowledged")
       .setDescription(
-        `**Citizen ${interaction.user.username}!**\n\n` +
-          `The Party appreciates your support for the social credit system!`
+        `Citizen ${interaction.user.username}, your support for the State has been noted and rewarded.`
       )
       .addFields(
         {
-          name: "💰 Bonus",
+          name: "Bonus",
           value: `+${CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS}`,
           inline: true,
         },
-        { name: "💯 New Score", value: `${newScore}`, inline: true }
+        { name: "New Score", value: `\`${newScore}\``, inline: true }
       )
       .setFooter({ text: "The Party always strives for perfection! 👁️" })
       .setTimestamp();
@@ -129,19 +128,17 @@ export class FeedbackCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("📝 MISTAKE REPORT FILED")
+      .setTitle("Mistake Report Filed")
       .setDescription(
-        `**Citizen ${interaction.user.username}!**\n\n` +
-          `Your report of a mistake in the social credit system has been received for consideration. ` +
-          `The Party thanks you for your vigilance but reminds you to be cautious with your accusations.`
+        `Citizen ${interaction.user.username}, your report has been filed for review. Frivolous reports may result in a penalty.`
       )
       .addFields(
         {
-          name: "⚠️ Penalty",
+          name: "Penalty",
           value: `${CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY}`,
           inline: true,
         },
-        { name: "💯 New Score", value: `${newScore}`, inline: true }
+        { name: "New Score", value: `\`${newScore}\``, inline: true }
       )
       .setFooter({ text: "The Party will review your report! 📋" })
       .setTimestamp();

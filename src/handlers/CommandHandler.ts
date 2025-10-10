@@ -116,7 +116,7 @@ export class CommandHandler {
       } else if (
         [
           "redeem-myself",
-          "work-for-the-party",
+          "labor-for-the-state",
           "public-confession",
           "community-service",
           "loyalty-quiz",
@@ -129,7 +129,7 @@ export class CommandHandler {
           "claim-daily",
           "spread-propaganda",
           "propaganda-broadcast",
-          "party-favor",
+          "decree-from-the-party",
           "investigate",
         ].includes(commandName)
       ) {

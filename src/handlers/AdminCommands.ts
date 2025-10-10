@@ -63,13 +63,9 @@ export class AdminCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🎯 MONITORING ACTIVATED")
+      .setTitle("Monitoring Activated")
       .setDescription(
-        `Channel ${channel} is now being monitored for social credit assessment!`
-      )
-      .addFields(
-        { name: "📺 Monitored Channel", value: `${channel}`, inline: true },
-        { name: "👁️ Status", value: "ACTIVE", inline: true }
+        `The channel ${channel} is now under surveillance by the social credit system.`
       )
       .setFooter({ text: "Imagination sees all! 👁️" })
       .setTimestamp();
@@ -112,13 +108,9 @@ export class AdminCommands extends BaseCommandHandler {
       if (removed) {
         const embed = new EmbedBuilder()
           .setColor(0xff4500)
-          .setTitle("🚫 MONITORING DEACTIVATED")
+          .setTitle("Monitoring Deactivated")
           .setDescription(
-            `Channel ${channel} is no longer tracked by the social credit system.`
-          )
-          .addFields(
-            { name: "📺 Channel", value: `${channel}`, inline: true },
-            { name: "👁️ Status", value: "DEACTIVATED", inline: true }
+            `The channel ${channel} is no longer being monitored.`
           )
           .setFooter({ text: "Imagination has stopped watching this channel." })
           .setTimestamp();
@@ -170,21 +162,23 @@ export class AdminCommands extends BaseCommandHandler {
 
       const embed = new EmbedBuilder()
         .setColor(0x4169e1)
-        .setTitle("📺 MONITORED CHANNELS")
-        .setDescription("*Channels under surveillance by the social credit system*")
+        .setTitle("Monitored Channels")
+        .setDescription(
+          `A list of all channels currently under surveillance in this server.`
+        )
         .setTimestamp();
 
-      let description = "";
-      for (const info of channelInfo) {
-        const channel = `<#${info.channelId}>`;
-        const addedDate = info.addedAt.toLocaleDateString();
-        description += `${channel}\n`;
-        description += `└ Added: ${addedDate} | <@${info.addedBy}>\n\n`;
-      }
+      const channelList = channelInfo
+        .map((info) => {
+          const channel = `<#${info.channelId}>`;
+          const time = `<t:${Math.floor(info.addedAt.getTime() / 1000)}:R>`;
+          return `• ${channel} (added by <@${info.addedBy}> ${time})`;
+        })
+        .join("\n");
 
       embed.addFields({
-        name: `👁️ Active Channels: ${channelInfo.length}`,
-        value: description,
+        name: `Active Channels (${channelInfo.length})`,
+        value: channelList || "None",
         inline: false,
       });
 

@@ -44,20 +44,29 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(rankInfo.color)
-      .setTitle(
-        `${rankInfo.emoji} SOCIAL CREDIT REPORT ${rankInfo.emoji}`
-      )
-      .setDescription(
-        `**Citizen:** ${targetUser.username}\n**Status:** ${rankInfo.rank}`
-      )
+      .setAuthor({
+        name: `Social Credit Report for ${targetUser.username}`,
+        iconURL: targetUser.displayAvatarURL(),
+      })
       .addFields(
-        { name: "💯 Current Score", value: `${score}`, inline: true },
-        { name: "🏅 Rank", value: rankInfo.rank, inline: true },
-        { name: "📝 Assessment", value: rankInfo.description, inline: false }
+        {
+          name: "💯 Current Score",
+          value: `**${score}**`,
+          inline: true,
+        },
+        {
+          name: "🏅 Rank",
+          value: `${rankInfo.emoji} ${rankInfo.rank}`,
+          inline: true,
+        },
+        {
+          name: "📝 Assessment",
+          value: `*${rankInfo.description}*`,
+          inline: false,
+        }
       )
-      .setThumbnail(targetUser.displayAvatarURL())
       .setFooter({
-        text: `${MemeResponses.getRandomMemePhrase()}`,
+        text: MemeResponses.getRandomMemePhrase(),
         iconURL:
           "https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_the_People%27s_Republic_of_China.svg",
       })
@@ -65,40 +74,19 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     // Add active effects info
     const activeEffects = this.effectManager.getActiveEffects(targetUser.id);
-    const penaltyLevel = this.socialCreditManager.getPenaltyLevel(score);
-    const privilegeLevel = this.socialCreditManager.getPrivilegeLevel(score);
-
-    if (penaltyLevel) {
-      const penalty = MemeResponses.getPenalties(penaltyLevel);
-      embed.addFields({
-        name: "⚠️ Active Penalties",
-        value: penalty.memeText,
-        inline: false,
-      });
-    }
-
-    if (privilegeLevel) {
-      const privilege = MemeResponses.getPrivileges(privilegeLevel);
-      embed.addFields({
-        name: "🎁 Active Privileges",
-        value: privilege.memeText,
-        inline: false,
-      });
-    }
-
-    // Add active effects
     if (activeEffects.length > 0) {
-      let effectsText = "";
-      for (const effect of activeEffects) {
-        const timeLeft = Math.ceil(
-          (effect.expiresAt.getTime() - Date.now()) / (60 * 1000)
-        );
-        const effectName = this.getEffectDisplayName(effect.effectType);
-        effectsText += `• ${effectName} (${timeLeft} min)\n`;
-      }
+      const effectsText = activeEffects
+        .map((effect) => {
+          const timeLeft = Math.ceil(
+            (effect.expiresAt.getTime() - Date.now()) / (60 * 1000)
+          );
+          const effectName = this.getEffectDisplayName(effect.effectType);
+          return `• ${effectName} (${timeLeft} min)`;
+        })
+        .join("\n");
       embed.addFields({
         name: "🔄 Active Effects",
-        value: effectsText || "No active effects",
+        value: effectsText,
         inline: false,
       });
     }
@@ -170,25 +158,23 @@ export class SocialCreditCommands extends BaseCommandHandler {
       .setDescription(title)
       .setTimestamp();
 
-    let description = "";
-    for (let i = 0; i < leaderboard.length; i++) {
-      const entry = leaderboard[i];
-      const rank = i + 1;
-      const medal =
-        rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}.`;
-      const scoreEmoji = MemeResponses.getScoreEmoji(entry.score);
-
-      try {
-        const user = await interaction.client.users.fetch(entry.userId);
-        description += `${medal} **${user.username}** ${scoreEmoji} \`${entry.score}\`\n`;
-      } catch {
-        description += `${medal} **Unknown User** ${scoreEmoji} \`${entry.score}\`\n`;
-      }
-    }
+    const leaderboardEntries = await Promise.all(
+      leaderboard.map(async (entry, i) => {
+        const rank = i + 1;
+        const medal =
+          rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `**${rank}.**`;
+        try {
+          const user = await interaction.client.users.fetch(entry.userId);
+          return `${medal} ${user.username} - \`${entry.score}\``;
+        } catch {
+          return `${medal} Unknown User - \`${entry.score}\``;
+        }
+      })
+    );
 
     embed.addFields({
-      name: "👥 Top Citizens",
-      value: description || "Data not available",
+      name: "Top Citizens",
+      value: leaderboardEntries.join("\n"),
       inline: false,
     });
 
@@ -221,32 +207,23 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x4169e1)
-      .setTitle("📜 SOCIAL CREDIT HISTORY")
-      .setDescription(
-        `**Citizen:** ${targetUser.username}\n*Recent social credit changes*`
-      )
-      .setThumbnail(targetUser.displayAvatarURL())
+      .setAuthor({
+        name: `Social Credit History for ${targetUser.username}`,
+        iconURL: targetUser.displayAvatarURL(),
+      })
       .setTimestamp();
 
-    let historyText = "";
-    for (const entry of history) {
-      const date = entry.timestamp.toLocaleDateString();
-      const time = entry.timestamp.toLocaleTimeString();
+    const historyEntries = history.map((entry) => {
       const changeEmoji = entry.scoreChange > 0 ? "📈" : "📉";
       const changeText =
         entry.scoreChange > 0
           ? `+${entry.scoreChange}`
           : `${entry.scoreChange}`;
-
-      historyText += `${changeEmoji} **${changeText}** - ${entry.reason}\n`;
-      historyText += `*${date} at ${time}*\n\n`;
-    }
-
-    embed.addFields({
-      name: "📊 Recent Activity",
-      value: historyText || "No recent activity",
-      inline: false,
+      const time = `<t:${Math.floor(entry.timestamp.getTime() / 1000)}:R>`;
+      return `${changeEmoji} **${changeText}** for *${entry.reason}* (${time})`;
     });
+
+    embed.setDescription(historyEntries.join("\n"));
 
     embed.setFooter({
       text: `${MemeResponses.getRandomMemePhrase()}`,
@@ -264,36 +241,36 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0x9932cc)
-      .setTitle("📊 SERVER SOCIAL CREDIT STATISTICS")
-      .setDescription(MemeResponses.getStatsTitle())
+      .setTitle("📊 Server Social Credit Statistics")
+      .setDescription(`An overview of social harmony in this server.`)
       .addFields(
         {
-          name: "👥 Total Citizens",
+          name: "👥 Citizens Under Watch",
           value: `${stats.totalUsers}`,
           inline: true,
         },
         {
-          name: "📊 Average Score",
+          name: "⚖️ Average Score",
           value: `${stats.averageScore}`,
           inline: true,
         },
         {
-          name: "🏆 Highest Score",
+          name: "🌟 Highest Score",
           value: `${stats.highestScore}`,
           inline: true,
         },
         {
-          name: "💀 Lowest Score",
+          name: "📉 Lowest Score",
           value: `${stats.lowestScore}`,
           inline: true,
         },
         {
-          name: "📈 Total Changes",
+          name: "📈 Total Score Changes",
           value: `${stats.totalScoreChanges}`,
           inline: true,
         },
         {
-          name: "🎯 Social Harmony Level",
+          name: "🌍 Social Harmony",
           value: this.calculateHarmonyLevel(stats.averageScore),
           inline: true,
         }

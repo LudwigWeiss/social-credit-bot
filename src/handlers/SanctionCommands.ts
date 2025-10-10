@@ -135,12 +135,9 @@ export class SanctionCommands extends BaseCommandHandler {
     // Send the challenge
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("🙏 EDICT OF PARDON")
+      .setTitle("Edict of Pardon")
       .setDescription(
-        `**Citizen ${interaction.user.username}!**\n\n` +
-          `Imagination gives you a chance for redemption! Repeat this phrase in the chat within 60 seconds:\n\n` +
-          `**"${phrase}"**\n\n` +
-          `⏱️ You have 60 seconds!`
+        `Citizen ${interaction.user.username}, you have a chance to redeem yourself. Repeat the following phrase within 60 seconds:\n\n**"${phrase}"**`
       )
       .setFooter({ text: "Imagination is merciful, but just! 👁️" })
       .setTimestamp();
@@ -199,18 +196,17 @@ export class SanctionCommands extends BaseCommandHandler {
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("🎉 PARDON GRANTED!")
+          .setTitle("Pardon Granted")
           .setDescription(
-            `**Congratulations, citizen ${interaction.user.username}!**\n\n` +
-              `Imagination accepts your redemption! Your social credit has been increased.`
+            `Congratulations, citizen ${interaction.user.username}. Your loyalty has been noted.`
           )
           .addFields(
             {
-              name: "📈 Score Change",
+              name: "Score Change",
               value: `+${CONFIG.SCORE_CHANGES.REDEEM_SUCCESS}`,
               inline: true,
             },
-            { name: "💯 New Score", value: `${newScore}`, inline: true }
+            { name: "New Score", value: `${newScore}`, inline: true }
           )
           .setFooter({ text: "Imagination always gives a second chance! 💫" })
           .setTimestamp();
@@ -229,18 +225,17 @@ export class SanctionCommands extends BaseCommandHandler {
 
       const failureEmbed = new EmbedBuilder()
         .setColor(0xff0000)
-        .setTitle("❌ PARDON DENIED")
+        .setTitle("Pardon Denied")
         .setDescription(
-          `**Citizen ${interaction.user.username}!**\n\n` +
-            `You failed to properly express your loyalty to Imagination. Your social credit has been lowered.`
+          `Citizen ${interaction.user.username}, you have failed to show adequate loyalty. Your social credit has been adjusted accordingly.`
         )
         .addFields(
           {
-            name: "📉 Score Change",
+            name: "Score Change",
             value: `${CONFIG.SCORE_CHANGES.REDEEM_FAILURE}`,
             inline: true,
           },
-          { name: "💯 New Score", value: `${newScore}`, inline: true }
+          { name: "New Score", value: `${newScore}`, inline: true }
         )
         .setFooter({ text: "Imagination is disappointed with your behavior! ⚠️" })
         .setTimestamp();
@@ -281,12 +276,9 @@ export class SanctionCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("⚒️ WORK FOR IMAGINATION")
+      .setTitle("Labor for the State")
       .setDescription(
-        `**Citizen ${interaction.user.username}!**\n\n` +
-          `Imagination needs your help! Complete the task:\n\n` +
-          `**${task.question}**\n\n` +
-          `⏱️ You have 60 seconds!`
+        `Citizen ${interaction.user.username}, the State requires your assistance. Complete the following task within 60 seconds:\n\n**${task.question}**`
       )
       .setFooter({ text: "Imagination values your loyalty! 👁️" })
       .setTimestamp();
@@ -345,18 +337,17 @@ export class SanctionCommands extends BaseCommandHandler {
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("✅ WORK COMPLETE!")
+          .setTitle("Work Complete")
           .setDescription(
-            `**Excellent work, citizen ${interaction.user.username}!**\n\n` +
-              `Imagination is grateful for your loyalty.`
+            `Excellent work, citizen ${interaction.user.username}. Your contribution to the State has been rewarded.`
           )
           .addFields(
             {
-              name: "💰 Reward",
+              name: "Reward",
               value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS}`,
               inline: true,
             },
-            { name: "💯 New Score", value: `${newScore}`, inline: true }
+            { name: "New Score", value: `${newScore}`, inline: true }
           )
           .setFooter({ text: "Continue to serve Imagination! 💫" })
           .setTimestamp();
@@ -366,10 +357,9 @@ export class SanctionCommands extends BaseCommandHandler {
         // No reward for failure, just inform
         const failureEmbed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setTitle("❌ TASK FAILED")
+          .setTitle("Task Failed")
           .setDescription(
-            `**Citizen ${interaction.user.username}!**\n\n` +
-              `You failed to complete Imagination's task in time. Try again later.`
+            `Citizen ${interaction.user.username}, you have failed to complete your assigned task. No reward will be given.`
           )
           .setFooter({ text: "Imagination expects better results! ⚠️" })
           .setTimestamp();
@@ -426,11 +416,12 @@ export class SanctionCommands extends BaseCommandHandler {
       // Create confession embed
       const embed = new EmbedBuilder()
         .setColor(0xff6b6b)
-        .setTitle("🎭 PUBLIC CONFESSION")
-        .setDescription(
-          `**Citizen ${interaction.user.username}** is making a public confession:\n\n` +
-            `*${confession}*`
-        )
+        .setTitle("Public Confession")
+        .setAuthor({
+          name: interaction.user.username,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
+        .setDescription(`*${confession}*`)
         .setFooter({
           text: "Admitting mistakes is the first step toward correction! 🇨🇳",
         })
@@ -459,11 +450,13 @@ export class SanctionCommands extends BaseCommandHandler {
       // Send confirmation to user
       const confirmEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
-        .setTitle("✅ CONFESSION ACCEPTED!")
+        .setTitle("Confession Accepted")
         .setDescription(
-          `Imagination accepts your sincere remorse.\n\n` +
-            `**Reward:** +${bonus} for honesty\n` +
-            `**New Score:** ${newScore}`
+          `Your remorse has been noted. You have been rewarded for your honesty.`
+        )
+        .addFields(
+          { name: "Reward", value: `+${bonus}`, inline: true },
+          { name: "New Score", value: `${newScore}`, inline: true }
         )
         .setFooter({ text: "Imagination values sincerity! 🤝" });
 
@@ -545,14 +538,9 @@ export class SanctionCommands extends BaseCommandHandler {
 
     const embed = new EmbedBuilder()
       .setColor(0xffa500)
-      .setTitle("🤝 COMMUNITY SERVICE")
+      .setTitle("Community Service Opportunity")
       .setDescription(
-        `**Citizen ${interaction.user.username}!**\n\n` +
-          `Imagination offers you an opportunity to serve the community:\n\n` +
-          `**${randomService.name}**\n` +
-          `*${randomService.description}*\n\n` +
-          `**Reward:** +${randomService.reward} social credit\n\n` +
-          `Will you accept this honorable task?`
+        `Citizen ${interaction.user.username}, you have been offered an opportunity to serve the community and improve your standing.\n\n**Task:** ${randomService.name}\n*${randomService.description}*\n\n**Reward:** +${randomService.reward} social credit`
       )
       .setFooter({ text: "Serving the people is the highest honor! 🏛️" })
       .setTimestamp();
@@ -575,10 +563,9 @@ export class SanctionCommands extends BaseCommandHandler {
           embeds: [
             new EmbedBuilder()
               .setColor(0x0099ff)
-              .setTitle("⏳ PERFORMING SERVICE...")
+              .setTitle("Performing Community Service...")
               .setDescription(
-                `You are performing community service...\n\n` +
-                  `Please wait a few seconds.`
+                `Your commitment to the State is being recorded. Please wait.`
               )
               .setFooter({ text: "Imagination is watching your progress! 👁️" }),
           ],
@@ -609,23 +596,22 @@ export class SanctionCommands extends BaseCommandHandler {
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
-          .setTitle("✅ SERVICE COMPLETE!")
+          .setTitle("Service Complete")
           .setDescription(
-            `**Excellent work, citizen ${interaction.user.username}!**\n\n` +
-              `You have successfully completed your community service. Imagination is proud of you!`
+            `Excellent work, citizen ${interaction.user.username}. Your service has been noted and your score adjusted.`
           )
           .addFields(
             {
-              name: "🎯 Task Completed",
+              name: "Task",
               value: randomService.name,
               inline: false,
             },
             {
-              name: "💰 Reward",
+              name: "Reward",
               value: `+${randomService.reward}`,
               inline: true,
             },
-            { name: "💯 New Score", value: `${newScore}`, inline: true }
+            { name: "New Score", value: `${newScore}`, inline: true }
           )
           .setFooter({ text: "Continue to serve the people! 💫" })
           .setTimestamp();
@@ -635,10 +621,9 @@ export class SanctionCommands extends BaseCommandHandler {
         // User declined
         const declineEmbed = new EmbedBuilder()
           .setColor(0xff0000)
-          .setTitle("❌ SERVICE DECLINED")
+          .setTitle("Service Declined")
           .setDescription(
-            `**Citizen ${interaction.user.username}!**\n\n` +
-              `You have declined community service. Imagination has noted this in your file.`
+            `Citizen ${interaction.user.username}, your refusal to serve the community has been recorded.`
           )
           .setFooter({ text: "Service to the people is voluntary, but encouraged! ⚠️" })
           .setTimestamp();
@@ -981,11 +966,8 @@ export class SanctionCommands extends BaseCommandHandler {
 
       const embed = new EmbedBuilder()
         .setColor(0xdc143c)
-        .setTitle("🎓 LOYALTY QUIZ")
-        .setDescription(
-          `**Question ${currentQuestion + 1} of ${quiz.questions.length}**\n\n` +
-            `${question.question}`
-        )
+        .setTitle(`Loyalty Quiz - Question ${currentQuestion + 1}/${quiz.questions.length}`)
+        .setDescription(question.question)
         .setFooter({ text: "Select the correct answer below 👇" })
         .setTimestamp();
 
@@ -1065,12 +1047,15 @@ export class SanctionCommands extends BaseCommandHandler {
     const embed = new EmbedBuilder()
       .setColor(resultColor)
       .setTitle(resultTitle)
-      .setDescription(
-        `**Loyalty Quiz Results:**\n\n` +
-          `**Correct Answers:** ${quiz.correctCount} out of ${quiz.questions.length}\n` +
-          `**Percentage:** ${score}%\n` +
-          `**Score Change:** ${scoreChange > 0 ? "+" : ""}${scoreChange}\n` +
-          `**New Score:** ${newScore}`
+      .setDescription(`You answered ${quiz.correctCount} out of ${quiz.questions.length} questions correctly.`)
+      .addFields(
+        { name: "Final Grade", value: `${score}%`, inline: true },
+        {
+          name: "Score Change",
+          value: `${scoreChange > 0 ? "+" : ""}${scoreChange}`,
+          inline: true,
+        },
+        { name: "New Score", value: `${newScore}`, inline: true }
       )
       .setFooter({
         text:
