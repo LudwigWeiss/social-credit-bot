@@ -55,7 +55,7 @@ export class SanctionCommands extends BaseCommandHandler {
         case "redeem-myself":
           await this.handleRedeemMyselfCommand(interaction);
           break;
-        case "work-for-imagination":
+        case "labor-for-the-state":
           await this.handleWorkForImaginationCommand(interaction);
           break;
         // Enhanced sanction commands
