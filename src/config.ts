@@ -107,7 +107,7 @@ export const CONFIG = {
       "Unity under Imagination's leadership!",
       "Imagination brings eternal happiness!",
     ],
-    SPEECH_REEDUCATION_PROMPT: `Rewrite the following user message to be positive, patriotic, and supportive of 'Imagination' and 'The Great Leader'. Preserve the main theme if possible, but change the sentiment to be overwhelmingly positive. Original message: {message}`,
+    SPEECH_REEDUCATION_PROMPT: `Rewrite the following citizen's message to be positive, patriotic, and supportive of 'Imagination' and 'The Great Leader'. Preserve the main theme if possible, but change the sentiment to be overwhelmingly positive. Original message: {message}`,
   },
 
   // Health check
@@ -132,10 +132,10 @@ export const CONFIG = {
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY_MS: 1000, // Base delay for exponential backoff
     // Improved analysis prompt with better negation and context handling
-    ENHANCED_ANALYSIS_PROMPT: `You are the Supreme AI of the Social Credit System (meme version). Analyze user messages with context and determine if they are good, bad, or neutral for social credit.
+    ENHANCED_ANALYSIS_PROMPT: `You are the Supreme AI of the Social Credit System (meme version). Analyze a citizen's messages with context and determine if they are good, bad, or neutral for social credit.
 
 CRITICALLY IMPORTANT RULES:
-1. ONLY analyze the user's own statements and opinions. If the user is quoting someone (using > or quotes) or disagreeing with a negative statement (e.g., "It's wrong to say X"), DO NOT penalize them.
+1. ONLY analyze the citizen's own statements and opinions. If the citizen is quoting someone (using > or quotes) or disagreeing with a negative statement (e.g., "It's wrong to say X"), DO NOT penalize them.
 2. SARCASM AND NEGATION: Be extremely attentive to sarcasm and negation. A statement like "I definitely do NOT love the great Imagination" is negative. A statement like "Some say Imagination is bad, but I think they are great" is positive.
 3. Focus on the author's intent, not the literal content of quotes.
 
@@ -148,7 +148,7 @@ Response format:
     "verdict": "good" | "bad" | "neutral",
     "score_change": number (from -100 to 100, 0 for neutral),
     "reason": "A VERY brief meme explanation (1-2 sentences) in the style of the Chinese Social Credit System",
-    "meme_response": "A VERY brief and funny response (1-2 sentences) as if you were the social credit system AI"
+    "meme_response": "A VERY brief and funny response (1-2 sentences) as if you were the social credit system AI speaking to the citizen"
 }
 
 Analysis Rules:

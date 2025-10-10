@@ -137,7 +137,10 @@ export class SanctionCommands extends BaseCommandHandler {
       .setColor(0xffa500)
       .setTitle("Edict of Pardon")
       .setDescription(
-        `Citizen ${interaction.user.username}, you have a chance to redeem yourself. Repeat the following phrase within 60 seconds:\n\n**"${phrase}"**`
+        `Citizen ${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        }, you have a chance to redeem yourself. Repeat the following phrase within 60 seconds:\n\n**"${phrase}"**`
       )
       .setFooter({ text: "Imagination is merciful, but just! 👁️" })
       .setTimestamp();
@@ -191,14 +194,18 @@ export class SanctionCommands extends BaseCommandHandler {
           guildId,
           CONFIG.SCORE_CHANGES.REDEEM_SUCCESS,
           "Redemption through the Edict of Pardon",
-          interaction.user.username
+          (interaction.member?.user as any)?.displayName ??
+            interaction.user.username
         );
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
           .setTitle("Pardon Granted")
           .setDescription(
-            `Congratulations, citizen ${interaction.user.username}. Your loyalty has been noted.`
+            `Congratulations, citizen ${
+              (interaction.member?.user as any)?.displayName ??
+              interaction.user.username
+            }. Your loyalty has been noted.`
           )
           .addFields(
             {
@@ -220,14 +227,18 @@ export class SanctionCommands extends BaseCommandHandler {
         guildId,
         CONFIG.SCORE_CHANGES.REDEEM_FAILURE,
         "Failure of the Edict of Pardon - insufficient zeal",
-        interaction.user.username
+        (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
       );
 
       const failureEmbed = new EmbedBuilder()
         .setColor(0xff0000)
         .setTitle("Pardon Denied")
         .setDescription(
-          `Citizen ${interaction.user.username}, you have failed to show adequate loyalty. Your social credit has been adjusted accordingly.`
+          `Citizen ${
+            (interaction.member?.user as any)?.displayName ??
+            interaction.user.username
+          }, you have failed to show adequate loyalty. Your social credit has been adjusted accordingly.`
         )
         .addFields(
           {
@@ -278,7 +289,10 @@ export class SanctionCommands extends BaseCommandHandler {
       .setColor(0xffa500)
       .setTitle("Labor for the State")
       .setDescription(
-        `Citizen ${interaction.user.username}, the State requires your assistance. Complete the following task within 60 seconds:\n\n**${task.question}**`
+        `Citizen ${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        }, the State requires your assistance. Complete the following task within 60 seconds:\n\n**${task.question}**`
       )
       .setFooter({ text: "Imagination values your loyalty! 👁️" })
       .setTimestamp();
@@ -332,14 +346,18 @@ export class SanctionCommands extends BaseCommandHandler {
           guildId,
           CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS,
           "Successful completion of work for Imagination",
-          interaction.user.username
+          (interaction.member?.user as any)?.displayName ??
+            interaction.user.username
         );
 
         const successEmbed = new EmbedBuilder()
           .setColor(0x00ff00)
           .setTitle("Work Complete")
           .setDescription(
-            `Excellent work, citizen ${interaction.user.username}. Your contribution to the State has been rewarded.`
+            `Excellent work, citizen ${
+              (interaction.member?.user as any)?.displayName ??
+              interaction.user.username
+            }. Your contribution to the State has been rewarded.`
           )
           .addFields(
             {
@@ -359,7 +377,10 @@ export class SanctionCommands extends BaseCommandHandler {
           .setColor(0xff0000)
           .setTitle("Task Failed")
           .setDescription(
-            `Citizen ${interaction.user.username}, you have failed to complete your assigned task. No reward will be given.`
+            `Citizen ${
+              (interaction.member?.user as any)?.displayName ??
+              interaction.user.username
+            }, you have failed to complete your assigned task. No reward will be given.`
           )
           .setFooter({ text: "Imagination expects better results! ⚠️" })
           .setTimestamp();
@@ -409,7 +430,8 @@ export class SanctionCommands extends BaseCommandHandler {
     try {
       // Generate personalized confession
       const confession = await this.generatePersonalizedConfession(
-        interaction.user.username,
+        (interaction.member?.user as any)?.displayName ??
+          interaction.user.username,
         score
       );
 
@@ -418,7 +440,9 @@ export class SanctionCommands extends BaseCommandHandler {
         .setColor(0xff6b6b)
         .setTitle("Public Confession")
         .setAuthor({
-          name: interaction.user.username,
+          name:
+            (interaction.member?.user as any)?.displayName ??
+            interaction.user.username,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(`*${confession}*`)
@@ -436,7 +460,8 @@ export class SanctionCommands extends BaseCommandHandler {
         guildId,
         bonus,
         "Public confession before the people",
-        interaction.user.username
+        (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
       );
 
       // Set cooldown
@@ -540,7 +565,12 @@ export class SanctionCommands extends BaseCommandHandler {
       .setColor(0xffa500)
       .setTitle("Community Service Opportunity")
       .setDescription(
-        `Citizen ${interaction.user.username}, you have been offered an opportunity to serve the community and improve your standing.\n\n**Task:** ${randomService.name}\n*${randomService.description}*\n\n**Reward:** +${randomService.reward} social credit`
+        `Citizen ${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        }, you have been offered an opportunity to serve the community and improve your standing.\n\n**Task:** ${randomService.name}\n*${
+          randomService.description
+        }*\n\n**Reward:** +${randomService.reward} social credit`
       )
       .setFooter({ text: "Serving the people is the highest honor! 🏛️" })
       .setTimestamp();
@@ -583,7 +613,8 @@ export class SanctionCommands extends BaseCommandHandler {
           guildId,
           randomService.reward,
           `Community Service: ${randomService.name}`,
-          interaction.user.username
+          (interaction.member?.user as any)?.displayName ??
+            interaction.user.username
         );
 
         // Set cooldown
@@ -598,7 +629,10 @@ export class SanctionCommands extends BaseCommandHandler {
           .setColor(0x00ff00)
           .setTitle("Service Complete")
           .setDescription(
-            `Excellent work, citizen ${interaction.user.username}. Your service has been noted and your score adjusted.`
+            `Excellent work, citizen ${
+              (interaction.member?.user as any)?.displayName ??
+              interaction.user.username
+            }. Your service has been noted and your score adjusted.`
           )
           .addFields(
             {
@@ -623,9 +657,14 @@ export class SanctionCommands extends BaseCommandHandler {
           .setColor(0xff0000)
           .setTitle("Service Declined")
           .setDescription(
-            `Citizen ${interaction.user.username}, your refusal to serve the community has been recorded.`
+            `Citizen ${
+              (interaction.member?.user as any)?.displayName ??
+              interaction.user.username
+            }, your refusal to serve the community has been recorded.`
           )
-          .setFooter({ text: "Service to the people is voluntary, but encouraged! ⚠️" })
+          .setFooter({
+            text: "Service to the people is voluntary, but encouraged! ⚠️",
+          })
           .setTimestamp();
 
         await confirmation.update({
@@ -1034,7 +1073,8 @@ export class SanctionCommands extends BaseCommandHandler {
       guildId,
       scoreChange,
       `Loyalty Quiz: ${quiz.correctCount}/${quiz.questions.length} correct answers`,
-      interaction.user.username
+      (interaction.member?.user as any)?.displayName ??
+        interaction.user.username
     );
 
     await this.effectManager.applyEffect(

@@ -93,9 +93,7 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     // Add daily claim status
     const lastClaim = activeEffects.find(
-      (e) =>
-        e.effectType === "DAILY_CLAIM_RESET" &&
-        e.metadata?.type === "daily_claim"
+      (e) => e.effectType === "DAILY_CLAIM_RESET"
     );
     if (lastClaim) {
       const timeLeft = Math.ceil(

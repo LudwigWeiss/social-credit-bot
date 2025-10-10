@@ -151,7 +151,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
       targetUser.id,
       guildId,
       CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET,
-      `Citizen's Mandate: ${reason} (from ${interaction.user.username})`,
+      `Citizen's Mandate: ${reason} (from ${
+        (interaction.member?.user as any)?.displayName ??
+        interaction.user.username
+      })`,
       targetUser.username
     );
 
@@ -160,7 +163,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
       guildId,
       CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER,
       `Execution of Citizen's Mandate on ${targetUser.username}`,
-      interaction.user.username
+      (interaction.member?.user as any)?.displayName ??
+        interaction.user.username
     );
 
     // Set cooldown
@@ -175,7 +179,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setColor(0xffd700)
       .setTitle("Citizen's Mandate Executed")
       .setDescription(
-        `**${interaction.user.username}** has enforced harmony upon **${targetUser.username}** for the following reason: *${reason}*`
+        `**${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        }** has enforced harmony upon **${
+          targetUser.username
+        }** for the following reason: *${reason}*`
       )
       .addFields(
         {
@@ -244,7 +253,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
       guildId,
       bonusAmount,
       `Imagination's Daily Bonus (${rankInfo.rank})`,
-      interaction.user.username
+      (interaction.member?.user as any)?.displayName ??
+        interaction.user.username
     );
 
     // Set claim cooldown
@@ -252,14 +262,19 @@ export class PrivilegeCommands extends BaseCommandHandler {
       userId,
       guildId,
       "DAILY_CLAIM_RESET",
-      CONFIG.EFFECT_DURATIONS.DAILY_CLAIM_RESET
+      CONFIG.EFFECT_DURATIONS.DAILY_CLAIM_RESET,
+      undefined,
+      { type: "daily_claim" }
     );
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
       .setTitle("Daily Bonus Claimed")
       .setDescription(
-        `Citizen ${interaction.user.username}, your loyalty has been rewarded with a daily bonus.`
+        `Citizen ${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        }, your loyalty has been rewarded with a daily bonus.`
       )
       .addFields(
         { name: "Rank", value: rankInfo.rank, inline: true },
@@ -315,7 +330,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
     const embed = new EmbedBuilder()
       .setColor(0xffd700)
       .setAuthor({
-        name: `${interaction.user.username} is spreading glorious propaganda!`,
+        name: `${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        } is spreading glorious propaganda!`,
         iconURL: interaction.user.displayAvatarURL(),
       })
       .setDescription(
@@ -415,7 +433,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
         .setColor(0xdc143c)
         .setTitle("Official State Broadcast")
         .setAuthor({
-          name: `From the Ministry of Propaganda, by ${interaction.user.username}`,
+          name: `From the Ministry of Propaganda, by ${
+            (interaction.member?.user as any)?.displayName ??
+            interaction.user.username
+          }`,
         })
         .setDescription(`*${enhancedMessage}*`)
         .setFooter({
@@ -431,10 +452,11 @@ export class PrivilegeCommands extends BaseCommandHandler {
         guildId,
         CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50,
         "Successful broadcast of Imagination propaganda",
-        interaction.user.username
+        (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
       );
 
-      // Set cooldown
+    // Set cooldown
       await this.effectManager.applyEffect(
         userId,
         guildId,
@@ -521,7 +543,10 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setColor(0xffd700)
       .setTitle("Decree from the Party")
       .setDescription(
-        `As a Supreme Citizen, ${interaction.user.username}, you may issue a decree to influence the server for 15 minutes.`
+        `As a Supreme Citizen, ${
+          (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
+        }, you may issue a decree to influence the server for 15 minutes.`
       )
       .setFooter({ text: "Select a favor from the menu below 👇" })
       .setTimestamp();
@@ -700,7 +725,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
         guildId,
         CONFIG.SCORE_CHANGES.INVESTIGATION_COST,
         `Investigation of citizen ${targetUser.username}`,
-        interaction.user.username
+        (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
       );
 
       // Set cooldown
@@ -768,7 +794,9 @@ export class PrivilegeCommands extends BaseCommandHandler {
         {
           type: "imagination_favor",
           activatedBy: interaction.user.id,
-          activatedByName: interaction.user.username,
+          activatedByName:
+            (interaction.member?.user as any)?.displayName ??
+            interaction.user.username,
           favorType: option.effect,
         }
       );
@@ -780,7 +808,8 @@ export class PrivilegeCommands extends BaseCommandHandler {
         guildId,
         -cost,
         `Activation of Imagination Favor: ${option.name}`,
-        interaction.user.username
+        (interaction.member?.user as any)?.displayName ??
+          interaction.user.username
       );
 
       // Set cooldown
@@ -823,7 +852,12 @@ export class PrivilegeCommands extends BaseCommandHandler {
           .setColor(0xffd700)
           .setTitle("A Decree from the Party!")
           .setDescription(
-            `Supreme Citizen **${interaction.user.username}** has issued a decree:\n\n**${option.name}**\n*${option.description}*\n\nThis will be in effect for the next 15 minutes.`
+            `Supreme Citizen **${
+              (interaction.member?.user as any)?.displayName ??
+              interaction.user.username
+            }** has issued a decree:\n\n**${option.name}**\n*${
+              option.description
+            }*\n\nThis will be in effect for the next 15 minutes.`
           )
           .setFooter({ text: "All citizens reap the benefits! 💫" })
           .setTimestamp();
