@@ -138,7 +138,7 @@ export class MemeResponses {
     if (isGlobal) {
       return "🌍 **GLOBAL SOCIAL CREDIT LEADERBOARD** 🌍\n*The most loyal citizens from all servers!*";
     } else {
-      return "🏆 **SERVER SOCIAL CREDIT LEADERBOARD** 🏆\n*The most exemplary citizens of this server!*";
+      return "**SERVER SOCIAL CREDIT LEADERBOARD**\n*The most exemplary citizens of this server!*";
     }
   }
 

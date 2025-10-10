@@ -1,5 +1,6 @@
 import { Interaction } from "discord.js";
 import OpenAI from "openai";
+import { CONFIG } from "../config.js";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
 import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
@@ -96,22 +97,11 @@ export abstract class BaseCommandHandler {
   }
 
   protected getEffectDisplayName(effectType: string): string {
-    const effectNames: Record<string, string> = {
-      NICKNAME_CHANGE: "Nickname Change",
-      TIMEOUT: "Timeout",
-      ROLE_GRANT: "Role Grant",
-      DAILY_CLAIM_RESET: "Daily Bonus Cooldown",
-      EVENT_MULTIPLIER: "Event Multiplier",
-    };
-    return effectNames[effectType] || effectType;
+    const displayName =
+      CONFIG.EFFECT_DISPLAY_NAMES[
+        effectType as keyof typeof CONFIG.EFFECT_DISPLAY_NAMES
+      ];
+    return displayName || effectType;
   }
 
-  protected calculateHarmonyLevel(averageScore: number): string {
-    if (averageScore >= 800) return "🌟 SUPREME HARMONY";
-    if (averageScore >= 400) return "✅ HIGH HARMONY";
-    if (averageScore >= 100) return "😐 MODERATE HARMONY";
-    if (averageScore >= -100) return "⚪ NEUTRAL HARMONY";
-    if (averageScore >= -300) return "⚠️ LOW HARMONY";
-    return "🚨 SOCIAL UNREST";
-  }
 }

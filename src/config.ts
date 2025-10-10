@@ -213,6 +213,31 @@ Make the task interesting and relevant to the theme!`,
       description: "Temporary role with a custom color",
     },
   },
+
+  // Effect display names
+  EFFECT_DISPLAY_NAMES: {
+    NICKNAME_CHANGE: "Forced Nickname Change",
+    TIMEOUT: "Sent to the 'Thinking Corner'",
+    ROLE_GRANT: "Granted 'Model Citizen' Role",
+    DAILY_CLAIM_RESET: "Daily Bonus Cooldown",
+    EVENT_MULTIPLIER: "Server-wide Score Multiplier",
+    REDEEM_MYSELF: "Redemption Cooldown",
+    ENFORCE_HARMONY: "Enforce Harmony Cooldown",
+    SPREAD_PROPAGANDA: "Propaganda Cooldown",
+    WORK_FOR_IMAGINATION: "Work Cooldown",
+    PRAISE_BOT: "Praise Cooldown",
+    REPORT_MISTAKE: "Report Cooldown",
+    // Enhanced Sanction Cooldowns
+    PUBLIC_CONFESSION: "Confession Cooldown",
+    COMMUNITY_SERVICE_COOLDOWN: "Community Service Cooldown",
+    LOYALTY_QUIZ: "Loyalty Quiz Cooldown",
+    // Enhanced Privilege Cooldowns
+    PROPAGANDA_BROADCAST_COOLDOWN: "Propaganda Broadcast Cooldown",
+    IMAGINATION_FAVOR_COOLDOWN: "Imagination Favor Cooldown",
+    INVESTIGATION_COOLDOWN: "Investigation Cooldown",
+    // Default fallback
+    UNKNOWN_EFFECT: "Unknown Effect",
+  },
 } as const;
 
 // Type exports for better TypeScript support
@@ -222,6 +247,7 @@ export type Cooldowns = typeof CONFIG.COOLDOWNS;
 export type ScoreChanges = typeof CONFIG.SCORE_CHANGES;
 export type DailyClaims = typeof CONFIG.DAILY_CLAIMS;
 export type RateLimits = typeof CONFIG.RATE_LIMITS;
+export type EffectDisplayNames = typeof CONFIG.EFFECT_DISPLAY_NAMES;
 export type AnalysisConfig = typeof CONFIG.ANALYSIS;
 export type HealthCheckConfig = typeof CONFIG.HEALTH_CHECK;
 export type SchedulerConfig = typeof CONFIG.SCHEDULER;

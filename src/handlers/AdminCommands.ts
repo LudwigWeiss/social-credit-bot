@@ -65,7 +65,7 @@ export class AdminCommands extends BaseCommandHandler {
       .setColor(0x00ff00)
       .setTitle("Monitoring Activated")
       .setDescription(
-        `The channel ${channel} is now under surveillance by the social credit system.`
+        `The channel <#${channel.id}> is now under surveillance by the social credit system.`
       )
       .setFooter({ text: "Imagination sees all! 👁️" })
       .setTimestamp();
@@ -110,7 +110,7 @@ export class AdminCommands extends BaseCommandHandler {
           .setColor(0xff4500)
           .setTitle("Monitoring Deactivated")
           .setDescription(
-            `The channel ${channel} is no longer being monitored.`
+            `The channel <#${channel.id}> is no longer being monitored.`
           )
           .setFooter({ text: "Imagination has stopped watching this channel." })
           .setTimestamp();
@@ -118,7 +118,7 @@ export class AdminCommands extends BaseCommandHandler {
         await interaction.reply({ embeds: [embed] });
       } else {
         await interaction.reply({
-          content: `❌ Channel ${channel} was not in the monitored list.`,
+          content: `❌ Channel <#${channel.id}> was not in the monitored list.`,
           flags: MessageFlags.Ephemeral,
         });
       }

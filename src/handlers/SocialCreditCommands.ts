@@ -282,4 +282,13 @@ export class SocialCreditCommands extends BaseCommandHandler {
 
     await interaction.reply({ embeds: [embed] });
   }
+
+  protected calculateHarmonyLevel(averageScore: number): string {
+    if (averageScore >= 800) return "🌟 SUPREME HARMONY";
+    if (averageScore >= 400) return "✅ HIGH HARMONY";
+    if (averageScore >= 100) return "😐 MODERATE HARMONY";
+    if (averageScore >= -100) return "⚪ NEUTRAL HARMONY";
+    if (averageScore >= -300) return "⚠️ LOW HARMONY";
+    return "🚨 SOCIAL UNREST";
+  }
 }
