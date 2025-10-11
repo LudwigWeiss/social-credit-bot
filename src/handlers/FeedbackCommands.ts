@@ -51,6 +51,7 @@ export class FeedbackCommands extends BaseCommandHandler {
       guildId,
       CONFIG.SCORE_CHANGES.PRAISE_BOT_BONUS,
       "Praising the work of the social credit system",
+      null,
       interaction.user.username
     );
 
@@ -113,6 +114,7 @@ export class FeedbackCommands extends BaseCommandHandler {
       guildId,
       CONFIG.SCORE_CHANGES.REPORT_MISTAKE_PENALTY,
       "Reporting a mistake in the social credit system's analysis",
+      null,
       interaction.user.username
     );
 

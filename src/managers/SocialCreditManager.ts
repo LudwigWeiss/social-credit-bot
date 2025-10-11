@@ -1,4 +1,6 @@
 import { DatabaseManager } from "./DatabaseManager.js";
+import { EffectManager } from "./EffectManager.js";
+import { GuildMember } from "discord.js";
 
 export interface SocialCreditEntry {
   userId: string;
@@ -19,13 +21,20 @@ export interface ScoreHistory {
 }
 
 export class SocialCreditManager {
+  private effectManager!: EffectManager;
+
   constructor(private db: DatabaseManager) {}
+
+  setEffectManager(manager: EffectManager): void {
+    this.effectManager = manager;
+  }
 
   async updateScore(
     userId: string,
     guildId: string,
     change: number,
-    reason: string,
+    reason:string,
+    member: GuildMember | null,
     username?: string,
     messageContent?: string
   ): Promise<number> {
@@ -47,6 +56,9 @@ export class SocialCreditManager {
       reason,
       messageContent
     );
+
+    // Update effects
+    await this.effectManager.updateEffectsForScore(member, newScore);
 
     return newScore;
   }

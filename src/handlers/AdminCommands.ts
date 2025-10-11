@@ -4,8 +4,13 @@ import {
   PermissionFlagsBits,
   ChannelType,
   MessageFlags,
+  Webhook,
+  TextChannel,
+  User,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
+import { CONFIG } from "../config.js";
+import { Logger } from "../utils/Logger.js";
 
 export class AdminCommands extends BaseCommandHandler {
   async handleInteraction(
@@ -20,6 +25,9 @@ export class AdminCommands extends BaseCommandHandler {
         break;
       case "list-monitored-channels":
         await this.handleListMonitoredChannelsCommand(interaction);
+        break;
+      case "reeducate":
+        await this.handleReeducateCommand(interaction);
         break;
       default:
         throw new Error(`Unknown admin command: ${interaction.commandName}`);
@@ -194,5 +202,109 @@ export class AdminCommands extends BaseCommandHandler {
         flags: MessageFlags.Ephemeral,
       });
     }
+  }
+  private async handleReeducateCommand(
+    interaction: ChatInputCommandInteraction
+  ): Promise<void> {
+    if (
+      !interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)
+    ) {
+      await interaction.reply({
+        content:
+          "🚫 Access denied! Only officials can use this command!",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const targetUser = interaction.options.getUser("target", true);
+    const messageId = interaction.options.getString("message_id", true);
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    try {
+      if(interaction.channel === null) {
+        throw new Error("Channel is not a text channel")
+      }
+      const message = await interaction.channel.messages.fetch(messageId);
+      if(!message) {
+        await interaction.editReply({ content: "Message not found."});
+        return;
+      }
+
+      await this.applySpeechReeducation(interaction, targetUser, message.content, interaction.channel as TextChannel);
+      await message.delete();
+
+      await interaction.editReply({ content: "Speech re-education applied successfully."});
+    } catch (error) {
+      Logger.error(`Failed to apply manual speech re-education: ${error}`);
+      await interaction.editReply({ content: "Failed to apply speech re-education."});
+    }
+  }
+
+  public async applySpeechReeducation(
+    interaction: ChatInputCommandInteraction,
+    targetUser: User,
+    sanitizedContent: string,
+    channel: TextChannel,
+  ): Promise<void> {
+    // Get corrected message from LLM
+    const correctedContent = await this.getCorrectedMessage(sanitizedContent);
+
+    // Create webhook to post as the user
+    if (!channel || !channel.isTextBased()) return;
+
+    const webhooks = await (channel as TextChannel).fetchWebhooks();
+    let webhook = webhooks.find(
+      (wh: Webhook) => wh.name === "Social Credit Re-education"
+    );
+
+    if (!webhook) {
+      webhook = await (channel as TextChannel).createWebhook({
+        name: "Social Credit Re-education",
+        avatar: interaction.client.user?.displayAvatarURL(),
+      });
+    }
+
+    // Post the corrected message
+    await webhook.send({
+      content: correctedContent,
+      username: targetUser.username,
+      avatarURL: targetUser.displayAvatarURL(),
+    });
+
+    // Apply additional penalty for requiring re-education
+    await this.socialCreditManager.updateScore(
+      targetUser.id,
+      interaction.guild?.id || "dm",
+      -10, // Additional penalty
+      "Speech re-education correction applied",
+      null,
+      targetUser.username,
+      sanitizedContent
+    );
+
+    Logger.info(`Applied manual speech re-education to user ${targetUser.id} by ${interaction.user.id}`);
+  }
+
+  public async getCorrectedMessage(originalMessage: string): Promise<string> {
+    const prompt = `Rewrite the following message to be positive, patriotic, and supportive of 'Imagination' and 'The Supreme Leader, Eva'. Preserve the original theme if possible. Respond ONLY with the rewritten message text, without any additional explanations, options, or formatting.\n\nOriginal message: "${originalMessage}"`;
+
+    const completion = await this.openai.chat.completions.create({
+      model: CONFIG.LLM.STANDARD_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: CONFIG.LLM.TEMPERATURE,
+      max_tokens: CONFIG.LLM.MAX_TOKENS,
+    });
+
+    const response = completion.choices?.[0]?.message?.content;
+    if (!response)
+      throw new Error("No response from OpenAI API for speech correction");
+
+    // Handle different response types from Mistral
+    const responseText =
+      typeof response === "string" ? response : JSON.stringify(response);
+
+    return responseText.trim();
   }
 }

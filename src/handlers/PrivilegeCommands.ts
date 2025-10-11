@@ -138,9 +138,11 @@ export class PrivilegeCommands extends BaseCommandHandler {
       "DAILY_CLAIM_RESET"
     );
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
-      const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
+      const totalMinutes = Math.ceil(cooldownCheck.timeLeft / (60 * 1000));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
       await interaction.reply({
-        content: `⏰ Please wait another ${hoursLeft} hours before executing the Citizen's Mandate again!`,
+        content: `⏰ Please wait another ${hours} hours and ${minutes} minutes before executing the Citizen's Mandate again!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -155,6 +157,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         (interaction.member?.user as any)?.displayName ??
         interaction.user.username
       })`,
+      null,
       targetUser.username
     );
 
@@ -163,6 +166,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       guildId,
       CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_ENFORCER,
       `Execution of Citizen's Mandate on ${targetUser.username}`,
+      null,
       (interaction.member?.user as any)?.displayName ??
         interaction.user.username
     );
@@ -253,6 +257,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       guildId,
       bonusAmount,
       `Imagination's Daily Bonus (${rankInfo.rank})`,
+      null,
       (interaction.member?.user as any)?.displayName ??
         interaction.user.username
     );
@@ -262,7 +267,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       userId,
       guildId,
       "DAILY_CLAIM_RESET",
-      CONFIG.EFFECT_DURATIONS.DAILY_CLAIM_RESET,
+      CONFIG.EFFECT_DURATIONS.DAILY_CLAIM_RESET / (60 * 60 * 1000), // Convert ms to hours
       undefined,
       { type: "daily_claim" }
     );
@@ -312,9 +317,11 @@ export class PrivilegeCommands extends BaseCommandHandler {
       "DAILY_CLAIM_RESET"
     );
     if (cooldownCheck.onCooldown && cooldownCheck.timeLeft) {
-      const hoursLeft = Math.ceil(cooldownCheck.timeLeft / (60 * 60 * 1000));
+      const totalMinutes = Math.ceil(cooldownCheck.timeLeft / (60 * 1000));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
       await interaction.reply({
-        content: `⏰ Please wait another ${hoursLeft} hours before spreading propaganda again!`,
+        content: `⏰ Please wait another ${hours} hours and ${minutes} minutes before spreading propaganda again!`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -352,6 +359,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       guildId,
       CONFIG.SCORE_CHANGES.SPREAD_PROPAGANDA_BONUS,
       "Spreading Imagination's glorious propaganda",
+      null,
       interaction.user.username
     );
 
@@ -452,6 +460,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         guildId,
         CONFIG.SCORE_CHANGES.PROPAGANDA_BROADCAST_BONUS || 50,
         "Successful broadcast of Imagination propaganda",
+        null,
         (interaction.member?.user as any)?.displayName ??
           interaction.user.username
       );
@@ -725,6 +734,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         guildId,
         CONFIG.SCORE_CHANGES.INVESTIGATION_COST,
         `Investigation of citizen ${targetUser.username}`,
+        null,
         (interaction.member?.user as any)?.displayName ??
           interaction.user.username
       );
@@ -808,6 +818,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         guildId,
         -cost,
         `Activation of Imagination Favor: ${option.name}`,
+        null,
         (interaction.member?.user as any)?.displayName ??
           interaction.user.username
       );

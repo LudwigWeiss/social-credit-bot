@@ -58,6 +58,8 @@ class SocialCreditBot {
     this.databaseManager = new DatabaseManager();
     this.socialCreditManager = new SocialCreditManager(this.databaseManager);
     this.effectManager = new EffectManager(this.databaseManager);
+    this.effectManager.setSocialCreditManager(this.socialCreditManager);
+    this.socialCreditManager.setEffectManager(this.effectManager);
     this.scheduler = new Scheduler(this.effectManager, this.databaseManager);
     this.rateLimitManager = new RateLimitManager();
     this.messageContextManager = new MessageContextManager();
@@ -157,7 +159,22 @@ class SocialCreditBot {
       Logger.info(
         `Applying speech re-education to user ${userId} with score ${userScore}`
       );
-      await this.applySpeechReeducation(message, sanitizedContent);
+      // The re-education is now handled by the AdminCommands handler
+      // We need to pass a synthetic interaction to the handler
+      if(message.channel instanceof TextChannel) {
+        await this.commandHandler.adminCommands.applySpeechReeducation(
+          {
+            channel: message.channel,
+            guild: message.guild,
+            user: this.client.user,
+            client: this.client,
+          } as any,
+          message.author,
+          sanitizedContent,
+          message.channel
+        );
+        await message.delete();
+      }
       return; // Don't process further
     }
 
@@ -410,6 +427,7 @@ class SocialCreditBot {
       guildId,
       analysis.score_change,
       analysis.reason,
+      message.member,
       message.author.username,
       sanitizedContent
     );
@@ -424,7 +442,6 @@ class SocialCreditBot {
     await message.reply({ embeds: [embed] });
 
     // Check for penalties or privileges
-    await this.checkScoreThresholds(message, newScore);
   }
 
   private createResponseEmbed(
@@ -461,202 +478,6 @@ class SocialCreditBot {
       .setTimestamp();
   }
 
-  private async checkScoreThresholds(
-    message: Message,
-    score: number
-  ): Promise<void> {
-    const member = message.member;
-    if (!member) return;
-
-    const userId = message.author.id;
-    const guildId = message.guild?.id || "dm";
-
-    // Low score penalties
-    if (score <= CONFIG.SCORE_THRESHOLDS.PENALTIES.SEVERE) {
-      await this.applyPenalty(member, "SEVERE", userId, guildId);
-    } else if (score <= CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
-      await this.applyPenalty(member, "MODERATE", userId, guildId);
-    } else if (score <= CONFIG.SCORE_THRESHOLDS.PENALTIES.MILD) {
-      await this.applyPenalty(member, "MILD", userId, guildId);
-    }
-
-    // Remove penalties if score improved
-    if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MILD) {
-      await this.removePenalty(member, "MILD", userId, guildId);
-    }
-    if (score > CONFIG.SCORE_THRESHOLDS.PENALTIES.MODERATE) {
-      await this.removePenalty(member, "MODERATE", userId, guildId);
-    }
-
-    // High score privileges
-    if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.SUPREME_CITIZEN) {
-      await this.grantPrivilege(member, "SUPREME_CITIZEN", userId, guildId);
-    } else if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.MODEL_CITIZEN) {
-      await this.grantPrivilege(member, "MODEL_CITIZEN", userId, guildId);
-    } else if (score >= CONFIG.SCORE_THRESHOLDS.PRIVILEGES.GOOD_CITIZEN) {
-      await this.grantPrivilege(member, "GOOD_CITIZEN", userId, guildId);
-    }
-  }
-
-  private async applyPenalty(
-    member: GuildMember,
-    severity: string,
-    userId: string,
-    guildId: string
-  ): Promise<void> {
-    MemeResponses.getPenalties(severity);
-
-    // Apply nickname change for low scores
-    if (severity === "MODERATE" || severity === "SEVERE") {
-      const currentNickname = member.nickname || member.user.username;
-      const newNickname =
-        severity === "SEVERE"
-          ? "💀 Enemy of the State"
-          : "⚠️ Problematic Citizen";
-
-      // Check if already has this effect
-      if (!this.effectManager.hasEffectType(userId, "NICKNAME_CHANGE")) {
-        try {
-          await member.setNickname(newNickname);
-          await this.effectManager.applyEffect(
-            userId,
-            guildId,
-            "NICKNAME_CHANGE",
-            CONFIG.EFFECT_DURATIONS.NICKNAME_CHANGE,
-            currentNickname
-          );
-          Logger.info(
-            `Applied nickname penalty to ${member.user.username}: ${newNickname}`
-          );
-        } catch (error) {
-          Logger.error(`Failed to apply nickname penalty: ${error}`);
-        }
-      }
-    }
-
-    Logger.info(`Applying ${severity} penalty to ${member.user.username}`);
-  }
-
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  private async grantPrivilege(
-    member: GuildMember,
-    level: string,
-    _userId: string,
-    _guildId: string
-  ): Promise<void> {
-    /* eslint-enable @typescript-eslint/no-unused-vars */
-    MemeResponses.getPrivileges(level);
-    // Implementation depends on server permissions and roles
-    // This is a placeholder for privilege logic
-    Logger.info(`Granting ${level} privilege to ${member.user.username}`);
-  }
-
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  private async removePenalty(
-    member: GuildMember,
-    severity: string,
-    userId: string,
-    guildId: string
-  ): Promise<void> {
-    /* eslint-enable @typescript-eslint/no-unused-vars */
-    // Remove nickname effects if score improved
-    if (severity === "MILD" || severity === "MODERATE") {
-      const originalNickname = this.effectManager.getOriginalValue(
-        userId,
-        "NICKNAME_CHANGE"
-      );
-      if (originalNickname) {
-        try {
-          await member.setNickname(originalNickname);
-          await this.effectManager.removeEffectsByType(
-            userId,
-            "NICKNAME_CHANGE"
-          );
-          Logger.info(
-            `Restored original nickname for ${member.user.username}: ${originalNickname}`
-          );
-        } catch (error) {
-          Logger.error(`Failed to restore nickname: ${error}`);
-        }
-      }
-    }
-
-    Logger.info(`Removing ${severity} penalty from ${member.user.username}`);
-  }
-
-  private async applySpeechReeducation(
-    message: Message,
-    sanitizedContent: string
-  ): Promise<void> {
-    try {
-      // Delete the original message
-      await message.delete();
-
-      // Get corrected message from LLM
-      const correctedContent = await this.getCorrectedMessage(sanitizedContent);
-
-      // Create webhook to post as the user
-      const channel = message.channel;
-      if (!channel.isTextBased()) return;
-
-      const webhooks = await (channel as TextChannel).fetchWebhooks();
-      let webhook = webhooks.find(
-        (wh: Webhook) => wh.name === "Social Credit Re-education"
-      );
-
-      if (!webhook) {
-        webhook = await (channel as TextChannel).createWebhook({
-          name: "Social Credit Re-education",
-          avatar: message.author.displayAvatarURL(),
-        });
-      }
-
-      // Post the corrected message
-      await webhook.send({
-        content: correctedContent,
-        username: message.author.username,
-        avatarURL: message.author.displayAvatarURL(),
-      });
-
-      // Apply additional penalty for requiring re-education
-      await this.socialCreditManager.updateScore(
-        message.author.id,
-        message.guild?.id || "dm",
-        -10, // Additional penalty
-        "Speech re-education correction applied",
-        message.author.username,
-        sanitizedContent
-      );
-
-      Logger.info(`Applied speech re-education to user ${message.author.id}`);
-    } catch (error) {
-      Logger.error(`Failed to apply speech re-education: ${error}`);
-    }
-  }
-
-  private async getCorrectedMessage(originalMessage: string): Promise<string> {
-    const prompt = CONFIG.ANALYSIS.SPEECH_REEDUCATION_PROMPT.replace(
-      "{message}",
-      originalMessage
-    );
-
-    const completion = await this.openai.chat.completions.create({
-      model: CONFIG.LLM.STANDARD_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: CONFIG.LLM.TEMPERATURE,
-      max_tokens: CONFIG.LLM.MAX_TOKENS,
-    });
-
-    const response = completion.choices?.[0]?.message?.content;
-    if (!response)
-      throw new Error("No response from OpenAI API for speech correction");
-
-    // Handle different response types from Mistral
-    const responseText =
-      typeof response === "string" ? response : JSON.stringify(response);
-
-    return responseText.trim();
-  }
 
   private hasCriticallyBadKeywords(content: string): boolean {
     const lowerContent = content.toLowerCase();
@@ -678,6 +499,7 @@ class SocialCreditBot {
       guildId,
       CONFIG.SCORE_CHANGES.KEYWORD_PENALTY,
       "Critically negative keywords detected",
+      message.member,
       message.author.username,
       content
     );
@@ -783,6 +605,23 @@ class SocialCreditBot {
             .setRequired(true)
             .addChannelTypes(ChannelType.GuildText)
         ),
+      
+      new SlashCommandBuilder()
+        .setName("reeducate")
+        .setDescription("Manually re-educate a user's message (Admin only)")
+        .addUserOption(option =>
+          option
+            .setName("target")
+            .setDescription("The user to re-educate")
+            .setRequired(true)
+        )
+        .addStringOption(option =>
+          option
+            .setName("message_id")
+            .setDescription("The ID of the message to re-educate")
+            .setRequired(true)
+        )
+        .setDefaultMemberPermissions(0),
 
       new SlashCommandBuilder()
         .setName("redeem-myself")
@@ -1009,6 +848,7 @@ class SocialCreditBot {
         guildId,
         analysis.score_change,
         analysis.reason,
+        null,
         "Unknown User", // We don't have username for buffered messages
         currentMessage
       );

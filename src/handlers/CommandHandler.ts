@@ -19,7 +19,7 @@ import { UtilityCommands } from "./UtilityCommands.js";
 
 export class CommandHandler {
   private socialCreditCommands: SocialCreditCommands;
-  private adminCommands: AdminCommands;
+  public adminCommands: AdminCommands;
   private sanctionCommands: SanctionCommands;
   private privilegeCommands: PrivilegeCommands;
   private feedbackCommands: FeedbackCommands;
@@ -110,6 +110,7 @@ export class CommandHandler {
           "set-monitor-channel",
           "remove-monitor-channel",
           "list-monitored-channels",
+          "reeducate",
         ].includes(commandName)
       ) {
         await this.adminCommands.handleInteraction(interaction);

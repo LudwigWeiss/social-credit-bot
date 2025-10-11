@@ -1,6 +1,10 @@
 import { DatabaseManager } from "./DatabaseManager.js";
 import { ActiveEffect, EffectType } from "../models/ActiveEffect.js";
 import { Logger } from "../utils/Logger.js";
+import { GuildMember } from "discord.js";
+import { SocialCreditManager } from "./SocialCreditManager.js";
+import { CONFIG } from "../config.js";
+import { MemeResponses } from "../utils/MemeResponses.js";
 
 export interface ActiveEffectData {
   id: string;
@@ -18,8 +22,14 @@ export class EffectManager {
   private cleanupInterval: NodeJS.Timeout | null = null;
   private dbInitialized: boolean = false;
 
+  private socialCreditManager!: SocialCreditManager;
+
   constructor(private db: DatabaseManager) {
     this.startCleanupInterval();
+  }
+
+  setSocialCreditManager(manager: SocialCreditManager): void {
+    this.socialCreditManager = manager;
   }
 
   /**
@@ -207,7 +217,7 @@ export class EffectManager {
         );
       }
 
-      return Math.max(removedCount, dbResult.deletedCount || 0);
+      return removedCount;
     } catch (error) {
       Logger.error(
         `Error removing effects of type ${effectType} from user ${userId}:`,
@@ -418,8 +428,122 @@ export class EffectManager {
       );
       guildEffects.push(...activeEffects);
     }
-
     return guildEffects;
+  }
+
+  async updateEffectsForScore(
+    member: GuildMember | null,
+    score: number
+  ): Promise<void> {
+    if (!member) return;
+
+    // Determine the user's penalty and privilege levels based on their score
+    const penaltyLevel = this.socialCreditManager.getPenaltyLevel(score);
+    const privilegeLevel = this.socialCreditManager.getPrivilegeLevel(score);
+
+    // Remove any penalties that no longer apply
+    if (penaltyLevel !== "MILD" && penaltyLevel !== "MODERATE") {
+      await this.removePenalty(member, "MILD");
+    }
+    if (penaltyLevel !== "MODERATE" && penaltyLevel !== "SEVERE") {
+      await this.removePenalty(member, "MODERATE");
+    }
+
+    // Apply the highest-level penalty the user qualifies for
+    if (penaltyLevel === "SEVERE") {
+      await this.applyPenalty(member, "SEVERE");
+    } else if (penaltyLevel === "MODERATE") {
+      await this.applyPenalty(member, "MODERATE");
+    } else if (penaltyLevel === "MILD") {
+      await this.applyPenalty(member, "MILD");
+    }
+
+    // Grant the highest-level privilege the user qualifies for
+    if (privilegeLevel === "SUPREME_CITIZEN") {
+      await this.grantPrivilege(member, "SUPREME_CITIZEN");
+    } else if (privilegeLevel === "MODEL_CITIZEN") {
+      await this.grantPrivilege(member, "MODEL_CITIZEN");
+    } else if (privilegeLevel === "GOOD_CITIZEN") {
+      await this.grantPrivilege(member, "GOOD_CITIZEN");
+    }
+  }
+
+  private async applyPenalty(
+    member: GuildMember,
+    severity: string
+  ): Promise<void> {
+    const userId = member.id;
+    const guildId = member.guild.id;
+
+    MemeResponses.getPenalties(severity);
+
+    // Apply nickname change for low scores
+    if (severity === "MODERATE" || severity === "SEVERE") {
+      const currentNickname = member.nickname || member.user.username;
+      const newNickname =
+        severity === "SEVERE"
+          ? "💀 Enemy of the State"
+          : "⚠️ Problematic Citizen";
+
+      // Check if already has this effect
+      if (!this.hasEffectType(userId, "NICKNAME_CHANGE")) {
+        try {
+          await member.setNickname(newNickname);
+          await this.applyEffect(
+            userId,
+            guildId,
+            "NICKNAME_CHANGE",
+            CONFIG.EFFECT_DURATIONS.NICKNAME_CHANGE,
+            currentNickname
+          );
+          Logger.info(
+            `Applied nickname penalty to ${member.user.username}: ${newNickname}`
+          );
+        } catch (error) {
+          Logger.error(`Failed to apply nickname penalty: ${error}`);
+        }
+      }
+    }
+
+    Logger.info(`Applying ${severity} penalty to ${member.user.username}`);
+  }
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  private async grantPrivilege(
+    member: GuildMember,
+    level: string
+  ): Promise<void> {
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+    MemeResponses.getPrivileges(level);
+    // Implementation depends on server permissions and roles
+    // This is a placeholder for privilege logic
+    Logger.info(`Granting ${level} privilege to ${member.user.username}`);
+  }
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  private async removePenalty(
+    member: GuildMember,
+    severity: string
+  ): Promise<void> {
+    const userId = member.id;
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+    // Remove nickname effects if score improved
+    if (severity === "MILD" || severity === "MODERATE") {
+      const originalNickname = this.getOriginalValue(userId, "NICKNAME_CHANGE");
+      if (originalNickname) {
+        try {
+          await member.setNickname(originalNickname);
+          await this.removeEffectsByType(userId, "NICKNAME_CHANGE");
+          Logger.info(
+            `Restored original nickname for ${member.user.username}: ${originalNickname}`
+          );
+        } catch (error) {
+          Logger.error(`Failed to restore nickname: ${error}`);
+        }
+      }
+    }
+
+    Logger.info(`Removing ${severity} penalty from ${member.user.username}`);
   }
 
   /**

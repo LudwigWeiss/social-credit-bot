@@ -96,12 +96,14 @@ export class SocialCreditCommands extends BaseCommandHandler {
       (e) => e.effectType === "DAILY_CLAIM_RESET"
     );
     if (lastClaim) {
-      const timeLeft = Math.ceil(
-        (lastClaim.expiresAt.getTime() - Date.now()) / (60 * 60 * 1000)
+      const totalMinutes = Math.ceil(
+        (lastClaim.expiresAt.getTime() - Date.now()) / (60 * 1000)
       );
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
       embed.addFields({
         name: "⏰ Daily Bonus",
-        value: `Available in ${timeLeft} hours`,
+        value: `Available in ${hours} hours and ${minutes} minutes`,
         inline: true,
       });
     } else {
