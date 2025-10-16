@@ -1,4 +1,4 @@
-import {
+  import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   MessageFlags,
@@ -7,6 +7,7 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   StringSelectMenuInteraction,
+  GuildMember,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
@@ -206,6 +207,15 @@ export class PrivilegeCommands extends BaseCommandHandler {
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
+
+    await this.checkAchievements(
+      interaction.member as GuildMember,
+      "enforce-harmony",
+      {
+        scoreChange: CONFIG.SCORE_CHANGES.ENFORCE_HARMONY_TARGET,
+        targetId: targetUser.id,
+      }
+    );
   }
 
   private async handleClaimDailyCommand(
@@ -393,6 +403,11 @@ export class PrivilegeCommands extends BaseCommandHandler {
       embeds: [confirmEmbed],
       flags: MessageFlags.Ephemeral,
     });
+
+    await this.checkAchievements(
+      interaction.member as GuildMember,
+      "spread-propaganda"
+    );
   }
 
   // Enhanced Privilege Commands
@@ -498,6 +513,16 @@ export class PrivilegeCommands extends BaseCommandHandler {
         content:
           "❌ An error occurred while processing your message. It may contain inappropriate content.",
       });
+  
+      await this.checkAchievements(
+        interaction.member as GuildMember,
+        "propaganda-broadcast",
+        {
+          perfect: (await this.moderateAndEnhancePropaganda(message)).includes(
+            "perfect"
+          ),
+        }
+      );
     }
   }
 
@@ -879,6 +904,24 @@ export class PrivilegeCommands extends BaseCommandHandler {
           !interaction.ephemeral
         ) {
           await interaction.followUp({ embeds: [announceEmbed] });
+        }
+    
+        await this.checkAchievements(
+          interaction.member as GuildMember,
+          "decree-from-the-party",
+          { success: true }
+        );
+
+        // This is a bit of a hack, but it's the easiest way to trigger the target's achievement
+        const targetMember = interaction.guild.members.cache.get(
+          interaction.user.id
+        );
+        if (targetMember) {
+          await this.achievementManager!.checkAndAwardAchievements(
+            targetMember,
+            "event",
+            { event: "decree-from-the-party-target" }
+          );
         }
       }
     } catch (error) {

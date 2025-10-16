@@ -1,4 +1,4 @@
-import { Interaction } from "discord.js";
+import { GuildMember, Interaction } from "discord.js";
 import OpenAI from "openai";
 import { CONFIG } from "../config.js";
 import { SocialCreditManager } from "../managers/SocialCreditManager.js";
@@ -106,4 +106,17 @@ export abstract class BaseCommandHandler {
     return displayName || effectType;
   }
 
+  protected async checkAchievements(
+    member: GuildMember,
+    command: string,
+    data: any = {}
+  ): Promise<void> {
+    if (this.achievementManager) {
+      await this.achievementManager.checkAndAwardAchievements(
+        member,
+        "command_used",
+        { command, ...data }
+      );
+    }
+  }
 }

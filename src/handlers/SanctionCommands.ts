@@ -370,6 +370,10 @@ export class SanctionCommands extends BaseCommandHandler {
             .setTimestamp();
 
           await interaction.followUp({ embeds: [successEmbed] });
+          await this.checkAchievements(
+            interaction.member as GuildMember,
+            "labor-for-the-state"
+          );
         } else if (!hasCorrectAnswer) {
           const failureEmbed = new EmbedBuilder()
             .setColor(0xff0000)
@@ -462,6 +466,11 @@ export class SanctionCommands extends BaseCommandHandler {
         interaction.member as GuildMember,
         (interaction.member?.user as any)?.displayName ??
           interaction.user.username
+      );
+
+      await this.checkAchievements(
+        interaction.member as GuildMember,
+        "public-confession"
       );
 
       // Set cooldown
@@ -619,6 +628,11 @@ export class SanctionCommands extends BaseCommandHandler {
             interaction.member as GuildMember,
             (interaction.member?.user as any)?.displayName ??
               interaction.user.username
+          );
+
+          await this.checkAchievements(
+            interaction.member as GuildMember,
+            "community-service"
           );
 
           // Set cooldown
@@ -1094,6 +1108,12 @@ export class SanctionCommands extends BaseCommandHandler {
       interaction.member as GuildMember,
       (interaction.member?.user as any)?.displayName ??
         interaction.user.username
+    );
+
+    await this.checkAchievements(
+      interaction.member as GuildMember,
+      "loyalty-quiz",
+      { perfectScore: score === 100 }
     );
 
     await this.effectManager.applyEffect(

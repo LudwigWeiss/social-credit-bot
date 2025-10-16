@@ -2,6 +2,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   MessageFlags,
+  GuildMember,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
@@ -83,6 +84,11 @@ export class FeedbackCommands extends BaseCommandHandler {
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
+
+    await this.checkAchievements(
+      interaction.member as GuildMember,
+      "praise-bot"
+    );
   }
 
   private async handleReportMistakeCommand(

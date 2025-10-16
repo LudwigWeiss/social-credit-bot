@@ -17,6 +17,7 @@ import * as dotenv from "dotenv";
 import { SocialCreditManager } from "./managers/SocialCreditManager.js";
 import { DatabaseManager } from "./managers/DatabaseManager.js";
 import { EffectManager } from "./managers/EffectManager.js";
+import { RewardManager } from "./managers/RewardManager.js";
 import { AchievementManager } from "./managers/AchievementManager.js";
 import { Scheduler } from "./managers/Scheduler.js";
 import { MemeResponses } from "./utils/MemeResponses.js";
@@ -36,6 +37,7 @@ class SocialCreditBot {
   private socialCreditManager: SocialCreditManager;
   private databaseManager: DatabaseManager;
   private effectManager: EffectManager;
+  private rewardManager: RewardManager;
   private achievementManager: AchievementManager;
   private scheduler: Scheduler;
   private commandHandler: CommandHandler;
@@ -60,10 +62,15 @@ class SocialCreditBot {
     this.databaseManager = new DatabaseManager();
     this.socialCreditManager = new SocialCreditManager(this.databaseManager);
     this.effectManager = new EffectManager(this.databaseManager);
+    this.rewardManager = new RewardManager(
+      this.socialCreditManager,
+      this.effectManager
+    );
     this.achievementManager = new AchievementManager(
       this.databaseManager,
       this.socialCreditManager,
-      this.effectManager
+      this.effectManager,
+      this.rewardManager
     );
     this.effectManager.setSocialCreditManager(this.socialCreditManager);
     this.socialCreditManager.setEffectManager(this.effectManager);

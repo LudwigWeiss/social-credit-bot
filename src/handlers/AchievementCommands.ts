@@ -7,14 +7,11 @@ import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { AchievementManager } from "../managers/AchievementManager.js";
 
 export class AchievementCommands extends BaseCommandHandler {
-  private achievementManager: AchievementManager;
-
   constructor(
-    achievementManager: AchievementManager,
+    protected achievementManager: AchievementManager,
     ...args: ConstructorParameters<typeof BaseCommandHandler>
   ) {
     super(...args);
-    this.achievementManager = achievementManager;
   }
 
   async handleInteraction(
@@ -22,7 +19,7 @@ export class AchievementCommands extends BaseCommandHandler {
   ): Promise<void> {
     switch (interaction.commandName) {
       case "achievements":
-        await this.handleAchievementsCommand(interaction);
+        await this.handleAchievementsViewCommand(interaction);
         break;
       case "achievements-list":
         await this.handleAchievementsListCommand(interaction);
@@ -34,77 +31,55 @@ export class AchievementCommands extends BaseCommandHandler {
     }
   }
 
-  private async handleAchievementsCommand(
+  private async handleAchievementsViewCommand(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
-    const targetUser = interaction.options.getUser("user") || interaction.user;
+    const user = interaction.options.getUser("user") || interaction.user;
     const guildId = interaction.guildId || "dm";
 
-    const achievements = await this.achievementManager.getUserAchievements(
-      targetUser.id,
+    const userAchievements = await this.achievementManager.getUserAchievements(
+      user.id,
       guildId
     );
 
-    if (achievements.length === 0) {
-      await interaction.reply({
-        content: `📜 ${targetUser.username} has not unlocked any achievements yet.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setAuthor({
-        name: `Achievements for ${targetUser.username}`,
-        iconURL: targetUser.displayAvatarURL(),
-      })
-      .setTimestamp();
+      .setTitle(`${user.username}'s Achievements`)
+      .setDescription(
+        `Here are the achievements that ${user.username} has unlocked:`
+      );
 
-    for (const achievement of achievements) {
-      embed.addFields({
-        name: `${achievement.name} (${achievement.tier})`,
-        value: achievement.description,
-        inline: false,
-      });
+    if (userAchievements.length === 0) {
+      embed.setDescription(`${user.username} has not unlocked any achievements yet.`);
+    } else {
+      for (const achievement of userAchievements) {
+        embed.addFields({
+          name: `${achievement.tier} - ${achievement.name}`,
+          value: achievement.description,
+        });
+      }
     }
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
   private async handleAchievementsListCommand(
     interaction: ChatInputCommandInteraction
   ): Promise<void> {
-    const allAchievements = await this.achievementManager.loadAchievements();
+    const allAchievements = this.achievementManager.getAchievements();
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff00)
-      .setTitle("🏆 All Achievements")
-      .setTimestamp();
-
-    const achievementsByTier: Record<string, any[]> = {
-      Gold: [],
-      Silver: [],
-      Bronze: [],
-    };
+      .setTitle("All Achievements")
+      .setDescription("Here is a list of all available achievements:");
 
     for (const achievement of allAchievements) {
-      achievementsByTier[achievement.tier].push(achievement);
+      embed.addFields({
+        name: `${achievement.tier} - ${achievement.name}`,
+        value: achievement.description,
+      });
     }
 
-    for (const tier in achievementsByTier) {
-      const achievements = achievementsByTier[tier];
-      if (achievements.length > 0) {
-        embed.addFields({
-          name: `**${tier}**`,
-          value: achievements
-            .map((ach) => `**${ach.name}**: ${ach.description}`)
-            .join("\n"),
-          inline: false,
-        });
-      }
-    }
-
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 }

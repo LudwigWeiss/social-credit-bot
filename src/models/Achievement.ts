@@ -9,6 +9,9 @@ export interface IAchievement extends Document {
   description: string;
   tier: AchievementTier;
   type: AchievementType;
+  unlockCondition: Record<string, any>;
+  reward: Record<string, any>;
+  enabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +41,18 @@ const AchievementSchema: Schema = new Schema(
       type: String,
       required: true,
       enum: ["Score", "Activity", "Event"],
+    },
+    unlockCondition: {
+      type: Schema.Types.Mixed,
+      required: true,
+    },
+    reward: {
+      type: Schema.Types.Mixed,
+      required: true,
+    },
+    enabled: {
+      type: Boolean,
+      default: true,
     },
   },
   {

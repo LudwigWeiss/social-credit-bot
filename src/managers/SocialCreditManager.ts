@@ -1,6 +1,7 @@
 import { DatabaseManager } from "./DatabaseManager.js";
 import { EffectManager } from "./EffectManager.js";
 import { AchievementManager } from "./AchievementManager.js";
+import { IScoreHistory } from "../models/ScoreHistory.js";
 import { GuildMember } from "discord.js";
 
 export interface SocialCreditEntry {
@@ -68,7 +69,9 @@ export class SocialCreditManager {
 
     // Check for achievements
     if (member) {
-      await this.achievementManager.checkAndAwardAchievements(member, newScore);
+      await this.achievementManager.checkAndAwardAchievements(member, "score_update", {
+        score: newScore,
+      });
     }
 
     return newScore;
@@ -94,7 +97,7 @@ export class SocialCreditManager {
     userId: string,
     guildId: string,
     limit: number = 10
-  ): Promise<ScoreHistory[]> {
+  ): Promise<IScoreHistory[]> {
     return await this.db.getUserHistory(userId, guildId, limit);
   }
 

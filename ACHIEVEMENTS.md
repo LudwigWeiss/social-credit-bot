@@ -34,11 +34,20 @@ These achievements are awarded for using certain commands or participating in sp
 *   **Bronze**:
     *   **Confessor**: Use the `/public-confession` command for the first time.
     *   **Laborer**: Use the `/labor-for-the-state` command 5 times.
+    *   **Snitch**: Use the `/enforce-harmony` command to lower someone's score.
+    *   **Bootlicker**: Use the `/praise-bot` command.
 *   **Silver**:
     *   **Loyalist**: Achieve a perfect score on the `/loyalty-quiz`.
     *   **Community Leader**: Successfully complete 10 `/community-service` tasks.
+    *   **Propagandist**: Use the `/spread-propaganda` command 5 times.
+    *   **Thought Criminal**: Have a message re-educated by an admin.
+    *   **Double-Crosser**: Use `/enforce-harmony` on someone who has enforced harmony on you.
 *   **Gold**:
     *   **The People's Champion**: Reach the #1 spot on the server leaderboard.
+    *   **Unperson**: Be the target of a `/decree-from-the-party` command.
+    *   **Revolutionary Leader**: Successfully use `/decree-from-the-party`.
+    *   **Master of the Arts**: Generate a perfect piece of propaganda.
+    *   **The Incorruptible**: Maintain a score of 1000+ for 7 consecutive days.
 
 ### 3. Event-Related Achievements
 
