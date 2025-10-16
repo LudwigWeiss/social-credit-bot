@@ -767,6 +767,7 @@ class SocialCreditBot {
     await this.databaseManager.initialize();
     await this.effectManager.initialize();
     await this.achievementManager.initialize();
+    await this.commandHandler.initialize();
     this.scheduler.start();
     await this.client.login(process.env.DISCORD_TOKEN);
 

@@ -508,7 +508,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
-      Logger.error(`Error in propaganda broadcast: ${error}`);
+      Logger.error("Error in propaganda broadcast:", error);
       await interaction.editReply({
         content:
           "❌ An error occurred while processing your message. It may contain inappropriate content.",
@@ -613,7 +613,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
 
       await this.applyImaginationFavor(confirmation, selectedOption, guildId);
     } catch (error) {
-      Logger.error(`Error in imagination favor selection: ${error}`);
+      Logger.error("Error in imagination favor selection:", error);
       await interaction.editReply({
         content: "⏰ Selection time expired. Please try the command again.",
         components: [],
@@ -737,12 +737,16 @@ export class PrivilegeCommands extends BaseCommandHandler {
         .setTimestamp();
 
       if (recentHistory && recentHistory.length > 0) {
-        const historyText = recentHistory
+        let historyText = recentHistory
           .map(
             (h) =>
               `• ${h.reason} (${h.scoreChange > 0 ? "+" : ""}${h.scoreChange})`
           )
           .join("\n");
+
+        if (historyText.length > 1024) {
+          historyText = historyText.substring(0, 1021) + "...";
+        }
 
         embed.addFields({
           name: "📝 Recent Activity",
@@ -772,7 +776,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         CONFIG.COOLDOWNS.INVESTIGATION
       );
     } catch (error) {
-      Logger.error(`Error in investigation: ${error}`);
+      Logger.error("Error in investigation:", error);
       await interaction.editReply({
         content:
           "❌ An error occurred during the investigation. Please try again later.",
@@ -808,7 +812,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
       const enhancedMessage = completion.choices?.[0]?.message?.content;
       return enhancedMessage || message;
     } catch (error) {
-      Logger.error(`Error enhancing propaganda: ${error}`);
+      Logger.error("Error enhancing propaganda:", error);
       return message; // Fallback to original message
     }
   }
@@ -925,7 +929,7 @@ export class PrivilegeCommands extends BaseCommandHandler {
         }
       }
     } catch (error) {
-      Logger.error(`Error applying imagination favor: ${error}`);
+      Logger.error("Error applying imagination favor:", error);
       if ("update" in interaction) {
         await interaction.update({
           content: "❌ An error occurred while activating the favor.",

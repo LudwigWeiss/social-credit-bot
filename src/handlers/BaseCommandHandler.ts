@@ -24,7 +24,7 @@ export abstract class BaseCommandHandler {
 
   abstract handleInteraction(interaction: Interaction): Promise<void>;
 
-  protected async loadMonitoredChannels(): Promise<void> {
+  public async loadMonitoredChannels(): Promise<void> {
     try {
       this.monitoredChannels =
         await this.databaseManager.getAllMonitoredChannels();

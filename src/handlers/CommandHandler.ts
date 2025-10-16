@@ -102,6 +102,9 @@ export class CommandHandler {
       messageContextManager
     );
   }
+  async initialize(): Promise<void> {
+    await this.adminCommands.loadMonitoredChannels();
+  }
 
   async handleInteraction(interaction: Interaction): Promise<void> {
     if (!interaction.isChatInputCommand()) return;

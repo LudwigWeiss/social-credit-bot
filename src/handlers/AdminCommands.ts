@@ -237,7 +237,7 @@ export class AdminCommands extends BaseCommandHandler {
 
       await interaction.editReply({ content: "Speech re-education applied successfully."});
     } catch (error) {
-      Logger.error(`Failed to apply manual speech re-education: ${error}`);
+      Logger.error("Failed to apply manual speech re-education:", error);
       await interaction.editReply({ content: "Failed to apply speech re-education."});
     }
   }

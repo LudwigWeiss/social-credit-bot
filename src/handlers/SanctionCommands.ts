@@ -391,7 +391,7 @@ export class SanctionCommands extends BaseCommandHandler {
         }
       });
     } catch (error) {
-      Logger.error(`Error in work-for-the-party: ${error}`);
+      Logger.error("Error in work-for-the-party:", error);
     }
   }
 
@@ -499,7 +499,7 @@ export class SanctionCommands extends BaseCommandHandler {
         flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
-      Logger.error(`Error in public confession: ${error}`);
+      Logger.error("Error in public confession:", error);
       await interaction.editReply({
         content:
           "❌ An error occurred while generating the confession. Please try again later.",
@@ -741,7 +741,7 @@ export class SanctionCommands extends BaseCommandHandler {
       const quiz = await this.generateLoyaltyQuiz();
       await this.conductLoyaltyQuiz(interaction, quiz, guildId);
     } catch (error) {
-      Logger.error(`Error in loyalty quiz: ${error}`);
+      Logger.error("Error in loyalty quiz:", error);
       await interaction.editReply({
         content: "❌ An error occurred while generating the quiz. Please try again later.",
       });
@@ -903,7 +903,7 @@ export class SanctionCommands extends BaseCommandHandler {
         `Citizens! I, ${username}, admit my mistakes before the great Imagination and pledge to correct myself!`
       );
     } catch (error) {
-      Logger.error(`Error generating confession: ${error}`);
+      Logger.error("Error generating confession:", error);
       return `Citizens! I, ${username}, admit my mistakes before the great Imagination and pledge to correct myself!`;
     }
   }
@@ -968,7 +968,7 @@ export class SanctionCommands extends BaseCommandHandler {
 
       return quiz;
     } catch (error) {
-      Logger.error(`Error generating loyalty quiz: ${error}`);
+      Logger.error("Error generating loyalty quiz:", error);
       return {
         questions: [
           {
@@ -1066,7 +1066,7 @@ export class SanctionCommands extends BaseCommandHandler {
         await response.deferUpdate();
         await askQuestion();
       } catch (error) {
-        Logger.error(`Quiz timeout or error: ${error}`);
+        Logger.error("Quiz timeout or error:", error);
         await interaction.editReply({
           content: "⏰ Time to answer has expired. The quiz has been aborted.",
           components: [],
