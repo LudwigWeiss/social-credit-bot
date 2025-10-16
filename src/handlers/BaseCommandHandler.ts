@@ -6,6 +6,7 @@ import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
 import { RateLimitManager } from "../managers/RateLimitManager.js";
 import { MessageContextManager } from "../managers/MessageContextManager.js";
+import { AchievementManager } from "../managers/AchievementManager.js";
 import { Logger } from "../utils/Logger.js";
 
 export abstract class BaseCommandHandler {
@@ -17,7 +18,8 @@ export abstract class BaseCommandHandler {
     protected effectManager: EffectManager,
     protected openai: OpenAI,
     protected rateLimitManager?: RateLimitManager,
-    protected messageContextManager?: MessageContextManager
+    protected messageContextManager?: MessageContextManager,
+    protected achievementManager?: AchievementManager
   ) {}
 
   abstract handleInteraction(interaction: Interaction): Promise<void>;

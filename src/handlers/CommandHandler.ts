@@ -10,12 +10,14 @@ import { DatabaseManager } from "../managers/DatabaseManager.js";
 import { EffectManager } from "../managers/EffectManager.js";
 import { RateLimitManager } from "../managers/RateLimitManager.js";
 import { MessageContextManager } from "../managers/MessageContextManager.js";
+import { AchievementManager } from "../managers/AchievementManager.js";
 import { SocialCreditCommands } from "./SocialCreditCommands.js";
 import { AdminCommands } from "./AdminCommands.js";
 import { SanctionCommands } from "./SanctionCommands.js";
 import { PrivilegeCommands } from "./PrivilegeCommands.js";
 import { FeedbackCommands } from "./FeedbackCommands.js";
 import { UtilityCommands } from "./UtilityCommands.js";
+import { AchievementCommands } from "./AchievementCommands.js";
 
 export class CommandHandler {
   private socialCreditCommands: SocialCreditCommands;
@@ -24,14 +26,16 @@ export class CommandHandler {
   private privilegeCommands: PrivilegeCommands;
   private feedbackCommands: FeedbackCommands;
   private utilityCommands: UtilityCommands;
+  private achievementCommands: AchievementCommands;
 
   constructor(
     socialCreditManager: SocialCreditManager,
     databaseManager: DatabaseManager,
     effectManager: EffectManager,
     openai: OpenAI,
-    rateLimitManager?: RateLimitManager,
-    messageContextManager?: MessageContextManager
+    rateLimitManager: RateLimitManager,
+    messageContextManager: MessageContextManager,
+    achievementManager: AchievementManager
   ) {
     // Initialize all command handlers
     this.socialCreditCommands = new SocialCreditCommands(
@@ -80,6 +84,16 @@ export class CommandHandler {
     );
 
     this.utilityCommands = new UtilityCommands(
+      socialCreditManager,
+      databaseManager,
+      effectManager,
+      openai,
+      rateLimitManager,
+      messageContextManager
+    );
+
+    this.achievementCommands = new AchievementCommands(
+      achievementManager,
       socialCreditManager,
       databaseManager,
       effectManager,
@@ -139,6 +153,8 @@ export class CommandHandler {
         await this.feedbackCommands.handleInteraction(interaction);
       } else if (["rate-limit-status"].includes(commandName)) {
         await this.utilityCommands.handleInteraction(interaction);
+      } else if (["achievements", "achievements-list"].includes(commandName)) {
+        await this.achievementCommands.handleInteraction(interaction);
       } else {
         await interaction.reply({
           content:

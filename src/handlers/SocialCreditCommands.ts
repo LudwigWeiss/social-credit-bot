@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { MemeResponses } from "../utils/MemeResponses.js";
+import { AchievementManager } from "../managers/AchievementManager.js";
 
 export class SocialCreditCommands extends BaseCommandHandler {
   async handleInteraction(
@@ -111,6 +112,20 @@ export class SocialCreditCommands extends BaseCommandHandler {
         name: "⏰ Daily Bonus",
         value: "Available now!",
         inline: true,
+      });
+    }
+
+    // Add achievements info
+    const achievements = await this.achievementManager!.getUserAchievements(
+      targetUser.id,
+      guildId
+    );
+    if (achievements.length > 0) {
+      const latestAchievement = achievements[achievements.length - 1];
+      embed.addFields({
+        name: "🏆 Latest Achievement",
+        value: `**${latestAchievement.name}** - *${latestAchievement.description}*`,
+        inline: false,
       });
     }
 

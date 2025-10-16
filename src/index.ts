@@ -17,6 +17,7 @@ import * as dotenv from "dotenv";
 import { SocialCreditManager } from "./managers/SocialCreditManager.js";
 import { DatabaseManager } from "./managers/DatabaseManager.js";
 import { EffectManager } from "./managers/EffectManager.js";
+import { AchievementManager } from "./managers/AchievementManager.js";
 import { Scheduler } from "./managers/Scheduler.js";
 import { MemeResponses } from "./utils/MemeResponses.js";
 import { CommandHandler } from "./handlers/CommandHandler.js";
@@ -35,6 +36,7 @@ class SocialCreditBot {
   private socialCreditManager: SocialCreditManager;
   private databaseManager: DatabaseManager;
   private effectManager: EffectManager;
+  private achievementManager: AchievementManager;
   private scheduler: Scheduler;
   private commandHandler: CommandHandler;
   private rateLimitManager: RateLimitManager;
@@ -58,8 +60,14 @@ class SocialCreditBot {
     this.databaseManager = new DatabaseManager();
     this.socialCreditManager = new SocialCreditManager(this.databaseManager);
     this.effectManager = new EffectManager(this.databaseManager);
+    this.achievementManager = new AchievementManager(
+      this.databaseManager,
+      this.socialCreditManager,
+      this.effectManager
+    );
     this.effectManager.setSocialCreditManager(this.socialCreditManager);
     this.socialCreditManager.setEffectManager(this.effectManager);
+    this.socialCreditManager.setAchievementManager(this.achievementManager);
     this.scheduler = new Scheduler(this.effectManager, this.databaseManager);
     this.rateLimitManager = new RateLimitManager();
     this.messageContextManager = new MessageContextManager();
@@ -75,7 +83,8 @@ class SocialCreditBot {
       this.effectManager,
       this.openai,
       this.rateLimitManager,
-      this.messageContextManager
+      this.messageContextManager,
+      this.achievementManager
     );
 
     this.setupEventListeners();
@@ -708,6 +717,20 @@ class SocialCreditBot {
             .setDescription("Citizen to investigate")
             .setRequired(true)
         ),
+      
+      new SlashCommandBuilder()
+        .setName("achievements")
+        .setDescription("View your unlocked achievements")
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("User to check achievements for (optional)")
+            .setRequired(false)
+        ),
+
+      new SlashCommandBuilder()
+        .setName("achievements-list")
+        .setDescription("List all available achievements"),
     ];
 
     const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
@@ -736,6 +759,7 @@ class SocialCreditBot {
 
     await this.databaseManager.initialize();
     await this.effectManager.initialize();
+    await this.achievementManager.initialize();
     this.scheduler.start();
     await this.client.login(process.env.DISCORD_TOKEN);
 

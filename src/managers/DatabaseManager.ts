@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { ScoreHistory } from "../models/ScoreHistory.js";
 import { MonitoredChannel } from "../models/MonitoredChannel.js";
+import { Achievement, UserAchievement } from "../models/Achievement.js";
 import {
   SocialCreditEntry,
   ScoreHistory as ScoreHistoryType,
@@ -28,6 +29,7 @@ export class DatabaseManager {
 
       // Create indexes if they don't exist
       await this.createIndexes();
+      await this.seedAchievements();
 
       Logger.info("📊 Database initialized successfully!");
     } catch (error) {
@@ -41,6 +43,8 @@ export class DatabaseManager {
       await User.createIndexes();
       await ScoreHistory.createIndexes();
       await MonitoredChannel.createIndexes();
+      await Achievement.createIndexes();
+      await UserAchievement.createIndexes();
       Logger.info("📊 Database indexes created successfully!");
     } catch (error) {
       Logger.error("Failed to create database indexes:", error);
@@ -399,6 +403,59 @@ export class DatabaseManager {
     } catch (error) {
       Logger.error("Error getting monitored channel info:", error);
       return [];
+    }
+  }
+
+  async seedAchievements(): Promise<void> {
+    try {
+      const achievements = [
+        {
+          achievementId: "GOOD_CITIZEN",
+          name: "Good Citizen",
+          description: "Reach a score of 500.",
+          tier: "Bronze",
+          type: "Score",
+        },
+        {
+          achievementId: "PROBLEMATIC_CITIZEN",
+          name: "Problematic Citizen",
+          description: "Drop to a score of -200.",
+          tier: "Bronze",
+          type: "Score",
+        },
+        {
+          achievementId: "MODEL_CITIZEN",
+          name: "Model Citizen",
+          description: "Reach a score of 1000.",
+          tier: "Silver",
+          type: "Score",
+        },
+        {
+          achievementId: "ENEMY_OF_THE_STATE",
+          name: "Enemy of the State",
+          description: "Drop to a score of -500.",
+          tier: "Silver",
+          type: "Score",
+        },
+        {
+          achievementId: "SUPREME_CITIZEN",
+          name: "Supreme Citizen",
+          description: "Reach a score of 2000.",
+          tier: "Gold",
+          type: "Score",
+        },
+      ];
+
+      for (const ach of achievements) {
+        await Achievement.findOneAndUpdate({ achievementId: ach.achievementId }, ach, {
+          upsert: true,
+          new: true,
+        });
+      }
+
+      Logger.info(`🌱 Seeded ${achievements.length} achievements`);
+    } catch (error) {
+      Logger.error("Error seeding achievements:", error);
     }
   }
 }

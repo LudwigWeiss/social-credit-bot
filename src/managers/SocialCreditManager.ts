@@ -1,5 +1,6 @@
 import { DatabaseManager } from "./DatabaseManager.js";
 import { EffectManager } from "./EffectManager.js";
+import { AchievementManager } from "./AchievementManager.js";
 import { GuildMember } from "discord.js";
 
 export interface SocialCreditEntry {
@@ -22,11 +23,16 @@ export interface ScoreHistory {
 
 export class SocialCreditManager {
   private effectManager!: EffectManager;
+  private achievementManager!: AchievementManager;
 
   constructor(private db: DatabaseManager) {}
 
   setEffectManager(manager: EffectManager): void {
     this.effectManager = manager;
+  }
+
+  setAchievementManager(manager: AchievementManager): void {
+    this.achievementManager = manager;
   }
 
   async updateScore(
@@ -59,6 +65,11 @@ export class SocialCreditManager {
 
     // Update effects
     await this.effectManager.updateEffectsForScore(member, newScore);
+
+    // Check for achievements
+    if (member) {
+      await this.achievementManager.checkAndAwardAchievements(member, newScore);
+    }
 
     return newScore;
   }
