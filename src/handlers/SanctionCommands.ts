@@ -10,6 +10,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ButtonInteraction,
+  GuildMember,
 } from "discord.js";
 import { BaseCommandHandler } from "./BaseCommandHandler.js";
 import { CONFIG } from "../config.js";
@@ -194,6 +195,7 @@ export class SanctionCommands extends BaseCommandHandler {
           guildId,
           CONFIG.SCORE_CHANGES.REDEEM_SUCCESS,
           "Redemption through the Edict of Pardon",
+          interaction.member as GuildMember,
           (interaction.member?.user as any)?.displayName ??
             interaction.user.username
         );
@@ -223,13 +225,14 @@ export class SanctionCommands extends BaseCommandHandler {
     } catch {
       // Failure - penalize
       const newScore = await this.socialCreditManager.updateScore(
-        userId,
-        guildId,
-        CONFIG.SCORE_CHANGES.REDEEM_FAILURE,
-        "Failure of the Edict of Pardon - insufficient zeal",
-        (interaction.member?.user as any)?.displayName ??
-          interaction.user.username
-      );
+       userId,
+       guildId,
+       CONFIG.SCORE_CHANGES.REDEEM_FAILURE,
+       "Failure of the Edict of Pardon - insufficient zeal",
+       interaction.member as GuildMember,
+       (interaction.member?.user as any)?.displayName ??
+         interaction.user.username
+     );
 
       const failureEmbed = new EmbedBuilder()
         .setColor(0xff0000)
@@ -310,8 +313,7 @@ export class SanctionCommands extends BaseCommandHandler {
     );
 
     // Wait for response
-    const filter = (m: Message) =>
-      m.author.id === userId && m.content.trim() === task.answer;
+    const filter = (m: Message) => m.author.id === userId;
 
     try {
       const channel = interaction.channel;
@@ -321,72 +323,69 @@ export class SanctionCommands extends BaseCommandHandler {
 
       const collector = (channel as TextChannel).createMessageCollector({
         filter,
-        max: 1,
         time: 60000,
       });
 
-      const collected: Message[] = await new Promise((resolve) => {
-        collector.on("collect", (message: Message) => {
-          resolve([message]);
-        });
-        collector.on(
-          "end",
-          (collected: ReadonlyCollection<string, Message>, reason: string) => {
-            if (reason === "time") {
-              resolve([]);
-            }
-          }
-        );
+      let hasCorrectAnswer = false;
+
+      collector.on("collect", async (message: Message) => {
+        if (message.content.trim() === task.answer) {
+          hasCorrectAnswer = true;
+          collector.stop("correct");
+        } else {
+          await message.reply("❌ Incorrect answer. Please try again.");
+        }
       });
 
-      if (collected && collected.length > 0) {
-        // Success
-        const newScore = await this.socialCreditManager.updateScore(
-          userId,
-          guildId,
-          CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS,
-          "Successful completion of work for Imagination",
-          (interaction.member?.user as any)?.displayName ??
-            interaction.user.username
-        );
-
-        const successEmbed = new EmbedBuilder()
-          .setColor(0x00ff00)
-          .setTitle("Work Complete")
-          .setDescription(
-            `Excellent work, citizen ${
-              (interaction.member?.user as any)?.displayName ??
+      collector.on("end", async (collected, reason) => {
+        if (reason === "correct") {
+          const newScore = await this.socialCreditManager.updateScore(
+            userId,
+            guildId,
+            CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS,
+            "Successful completion of work for Imagination",
+            interaction.member as GuildMember,
+            (interaction.member?.user as any)?.displayName ??
               interaction.user.username
-            }. Your contribution to the State has been rewarded.`
-          )
-          .addFields(
-            {
-              name: "Reward",
-              value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS}`,
-              inline: true,
-            },
-            { name: "New Score", value: `${newScore}`, inline: true }
-          )
-          .setFooter({ text: "Continue to serve Imagination! 💫" })
-          .setTimestamp();
+          );
 
-        await interaction.followUp({ embeds: [successEmbed] });
-      } else {
-        // No reward for failure, just inform
-        const failureEmbed = new EmbedBuilder()
-          .setColor(0xff0000)
-          .setTitle("Task Failed")
-          .setDescription(
-            `Citizen ${
-              (interaction.member?.user as any)?.displayName ??
-              interaction.user.username
-            }, you have failed to complete your assigned task. No reward will be given.`
-          )
-          .setFooter({ text: "Imagination expects better results! ⚠️" })
-          .setTimestamp();
+          const successEmbed = new EmbedBuilder()
+            .setColor(0x00ff00)
+            .setTitle("Work Complete")
+            .setDescription(
+              `Excellent work, citizen ${
+                (interaction.member?.user as any)?.displayName ??
+                interaction.user.username
+              }. Your contribution to the State has been rewarded.`
+            )
+            .addFields(
+              {
+                name: "Reward",
+                value: `+${CONFIG.SCORE_CHANGES.WORK_FOR_IMAGINATION_SUCCESS}`,
+                inline: true,
+              },
+              { name: "New Score", value: `${newScore}`, inline: true }
+            )
+            .setFooter({ text: "Continue to serve Imagination! 💫" })
+            .setTimestamp();
 
-        await interaction.followUp({ embeds: [failureEmbed] });
-      }
+          await interaction.followUp({ embeds: [successEmbed] });
+        } else if (!hasCorrectAnswer) {
+          const failureEmbed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setTitle("Task Failed")
+            .setDescription(
+              `Citizen ${
+                (interaction.member?.user as any)?.displayName ??
+                interaction.user.username
+              }, you have failed to complete your assigned task. No reward will be given.`
+            )
+            .setFooter({ text: "Imagination expects better results! ⚠️" })
+            .setTimestamp();
+
+          await interaction.followUp({ embeds: [failureEmbed] });
+        }
+      });
     } catch (error) {
       Logger.error(`Error in work-for-the-party: ${error}`);
     }
@@ -460,6 +459,7 @@ export class SanctionCommands extends BaseCommandHandler {
         guildId,
         bonus,
         "Public confession before the people",
+        interaction.member as GuildMember,
         (interaction.member?.user as any)?.displayName ??
           interaction.user.username
       );
@@ -588,69 +588,84 @@ export class SanctionCommands extends BaseCommandHandler {
       });
 
       if (confirmation.customId === "accept_service") {
-        // User accepted - simulate service task
-        await confirmation.update({
-          embeds: [
-            new EmbedBuilder()
-              .setColor(0x0099ff)
-              .setTitle("Performing Community Service...")
-              .setDescription(
-                `Your commitment to the State is being recorded. Please wait.`
-              )
-              .setFooter({ text: "Imagination is watching your progress! 👁️" }),
-          ],
-          components: [],
-        });
+        try {
+          // User accepted - simulate service task
+          await confirmation.update({
+            embeds: [
+              new EmbedBuilder()
+                .setColor(0x0099ff)
+                .setTitle("Performing Community Service...")
+                .setDescription(
+                  `Your commitment to the State is being recorded. Please wait.`
+                )
+                .setFooter({
+                  text: "Imagination is watching your progress! 👁️",
+                }),
+            ],
+            components: [],
+          });
 
-        // Simulate work time (3-5 seconds)
-        await new Promise((resolve) =>
-          setTimeout(resolve, 3000 + Math.random() * 2000)
-        );
+          // Simulate work time (3-5 seconds)
+          await new Promise((resolve) =>
+            setTimeout(resolve, 3000 + Math.random() * 2000)
+          );
 
-        // Apply reward
-        const newScore = await this.socialCreditManager.updateScore(
-          userId,
-          guildId,
-          randomService.reward,
-          `Community Service: ${randomService.name}`,
-          (interaction.member?.user as any)?.displayName ??
-            interaction.user.username
-        );
-
-        // Set cooldown
-        await this.effectManager.applyEffect(
-          userId,
-          guildId,
-          "COMMUNITY_SERVICE_COOLDOWN",
-          CONFIG.COOLDOWNS.COMMUNITY_SERVICE
-        );
-
-        const successEmbed = new EmbedBuilder()
-          .setColor(0x00ff00)
-          .setTitle("Service Complete")
-          .setDescription(
-            `Excellent work, citizen ${
-              (interaction.member?.user as any)?.displayName ??
+          // Apply reward
+          const newScore = await this.socialCreditManager.updateScore(
+            userId,
+            guildId,
+            randomService.reward,
+            `Community Service: ${randomService.name}`,
+            interaction.member as GuildMember,
+            (interaction.member?.user as any)?.displayName ??
               interaction.user.username
-            }. Your service has been noted and your score adjusted.`
-          )
-          .addFields(
-            {
-              name: "Task",
-              value: randomService.name,
-              inline: false,
-            },
-            {
-              name: "Reward",
-              value: `+${randomService.reward}`,
-              inline: true,
-            },
-            { name: "New Score", value: `${newScore}`, inline: true }
-          )
-          .setFooter({ text: "Continue to serve the people! 💫" })
-          .setTimestamp();
+          );
 
-        await confirmation.editReply({ embeds: [successEmbed] });
+          // Set cooldown
+          await this.effectManager.applyEffect(
+            userId,
+            guildId,
+            "COMMUNITY_SERVICE_COOLDOWN",
+            CONFIG.COOLDOWNS.COMMUNITY_SERVICE
+          );
+
+          const successEmbed = new EmbedBuilder()
+            .setColor(0x00ff00)
+            .setTitle("Service Complete")
+            .setDescription(
+              `Excellent work, citizen ${
+                (interaction.member?.user as any)?.displayName ??
+                interaction.user.username
+              }. Your service has been noted and your score adjusted.`
+            )
+            .addFields(
+              {
+                name: "Task",
+                value: randomService.name,
+                inline: false,
+              },
+              {
+                name: "Reward",
+                value: `+${randomService.reward}`,
+                inline: true,
+              },
+              { name: "New Score", value: `${newScore}`, inline: true }
+            )
+            .setFooter({ text: "Continue to serve the people! 💫" })
+            .setTimestamp();
+
+          await interaction.followUp({ embeds: [successEmbed] });
+        } catch (innerError) {
+          Logger.error(
+            `Error processing community service for user ${userId}:`,
+            innerError
+          );
+          await interaction.followUp({
+            content:
+              "🚨 An unexpected error occurred while processing your service. Please try again later.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
       } else {
         // User declined
         const declineEmbed = new EmbedBuilder()
@@ -673,7 +688,10 @@ export class SanctionCommands extends BaseCommandHandler {
         });
       }
     } catch (error) {
-      Logger.error(`Error in community service: ${error}`);
+      // This catch block now specifically handles the timeout from awaitMessageComponent
+      Logger.warn(
+        `Community service offer timed out for user ${userId}: ${error}`
+      );
       await interaction.editReply({
         content: "⏰ Time expired. The opportunity for service has been missed.",
         components: [],
@@ -1073,6 +1091,7 @@ export class SanctionCommands extends BaseCommandHandler {
       guildId,
       scoreChange,
       `Loyalty Quiz: ${quiz.correctCount}/${quiz.questions.length} correct answers`,
+      interaction.member as GuildMember,
       (interaction.member?.user as any)?.displayName ??
         interaction.user.username
     );
