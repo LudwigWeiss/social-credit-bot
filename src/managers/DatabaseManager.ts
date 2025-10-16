@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
-import { ScoreHistory } from "../models/ScoreHistory.js";
+import { ScoreHistory, IScoreHistory } from "../models/ScoreHistory.js";
 import { MonitoredChannel } from "../models/MonitoredChannel.js";
 import { Achievement, UserAchievement } from "../models/Achievement.js";
 import {
@@ -199,22 +199,14 @@ export class DatabaseManager {
     userId: string,
     guildId: string,
     limit: number = 10
-  ): Promise<ScoreHistoryType[]> {
+  ): Promise<IScoreHistory[]> {
     try {
       const history = await ScoreHistory.find({ userId, guildId })
         .sort({ timestamp: -1 })
         .limit(limit)
         .lean();
 
-      return history.map((entry) => ({
-        id: entry._id.toString(),
-        userId: entry.userId,
-        guildId: entry.guildId,
-        scoreChange: entry.scoreChange,
-        reason: entry.reason,
-        timestamp: entry.timestamp,
-        messageContent: entry.messageContent,
-      }));
+      return history;
     } catch (error) {
       Logger.error("Error getting user history:", error);
       return [];
@@ -443,6 +435,104 @@ export class DatabaseManager {
           description: "Reach a score of 2000.",
           tier: "Gold",
           type: "Score",
+        },
+        {
+          achievementId: "CONFESSOR",
+          name: "Confessor",
+          description: "Use the /public-confession command for the first time.",
+          tier: "Bronze",
+          type: "Activity",
+        },
+        {
+          achievementId: "LABORER",
+          name: "Laborer",
+          description: "Use the /labor-for-the-state command 5 times.",
+          tier: "Bronze",
+          type: "Activity",
+        },
+        {
+          achievementId: "SNITCH",
+          name: "Snitch",
+          description: "Use the /enforce-harmony command to lower someone's score.",
+          tier: "Bronze",
+          type: "Activity",
+        },
+        {
+          achievementId: "BOOTLICKER",
+          name: "Bootlicker",
+          description: "Use the /praise-bot command.",
+          tier: "Bronze",
+          type: "Activity",
+        },
+        {
+          achievementId: "LOYALIST",
+          name: "Loyalist",
+          description: "Achieve a perfect score on the /loyalty-quiz.",
+          tier: "Silver",
+          type: "Activity",
+        },
+        {
+          achievementId: "COMMUNITY_LEADER",
+          name: "Community Leader",
+          description: "Successfully complete 10 /community-service tasks.",
+          tier: "Silver",
+          type: "Activity",
+        },
+        {
+          achievementId: "PROPAGANDIST",
+          name: "Propagandist",
+          description: "Use the /spread-propaganda command 5 times.",
+          tier: "Silver",
+          type: "Activity",
+        },
+        {
+          achievementId: "THOUGHT_CRIMINAL",
+          name: "Thought Criminal",
+          description: "Have a message re-educated by an admin.",
+          tier: "Silver",
+          type: "Activity",
+        },
+        {
+          achievementId: "DOUBLE_CROSSER",
+          name: "Double-Crosser",
+          description: "Use /enforce-harmony on someone who has enforced harmony on you.",
+          tier: "Silver",
+          type: "Activity",
+        },
+        {
+          achievementId: "THE_PEOPLES_CHAMPION",
+          name: "The People's Champion",
+          description: "Reach the #1 spot on the server leaderboard.",
+          tier: "Gold",
+          type: "Activity",
+        },
+        {
+          achievementId: "UNPERSON",
+          name: "Unperson",
+          description: "Be the target of a /decree-from-the-party command.",
+          tier: "Gold",
+          type: "Activity",
+        },
+        {
+          achievementId: "REVOLUTIONARY_LEADER",
+          name: "Revolutionary Leader",
+          description: "Successfully use /decree-from-the-party.",
+          tier: "Gold",
+          type: "Activity",
+        },
+        {
+          achievementId: "MASTER_OF_THE_ARTS",
+          name: "Master of the Arts",
+          description: "Generate a perfect piece of propaganda.",
+          tier: "Gold",
+          type: "Activity",
+        },
+        {
+          achievementId: "THE_INCORRUPTIBLE",
+          name: "The Incorruptible",
+          description: "Maintain a score of 1000+ for 7 consecutive days.",
+          tier: "Gold",
+          type: "Activity",
         },
       ];
 
